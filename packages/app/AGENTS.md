@@ -21,6 +21,7 @@ src/app/              App Router: pages, layouts, route handlers
   api/<concept>/      Route handlers, one route.ts per resource (api/health/ – DB health check)
   api/users/          Reference CRUD API: users.crud.ts (makeCrudRoute) → route.ts, [id]/route.ts
 public/               Static assets
+tests/integration/    Integration tests (testcontainers + agent-browser) – see the root AGENTS.md "Testing" section
 next.config.ts        transpilePackages for @devmentor/*, MikroORM server externals, standalone output
 ```
 

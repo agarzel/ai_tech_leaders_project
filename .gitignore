@@ -43,3 +43,5 @@ next-env.d.ts
 
 # test artifacts
 .vitest/
+.next-test/
+packages/app/tests/integration/.artifacts/

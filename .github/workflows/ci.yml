@@ -55,6 +55,33 @@ jobs:
           path: coverage/
           retention-days: 14
 
+  integration-tests:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Chrome for Testing + Linux libraries for the headless browser.
+      - run: npx agent-browser install --with-deps
+
+      # Ephemeral PostgreSQL via testcontainers (Docker is available on the runner),
+      # migrations + seed, the app in dev mode, browser tests with agent-browser.
+      - run: npm run test:integration
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integration-screenshots
+          path: packages/app/tests/integration/.artifacts/
+          retention-days: 14
+
   migrations:
     name: Database migrations
     runs-on: ubuntu-latest

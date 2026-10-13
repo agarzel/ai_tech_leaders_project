@@ -113,7 +113,16 @@ npm run test:coverage    # tests + coverage report (coverage/index.html)
 npm run test:watch       # watch mode
 ```
 
-The `core`, `db` and `ui` packages must have **100% unit test coverage** – CI rejects a PR if coverage drops. Tests live next to the code (`*.test.ts` / `*.test.tsx`). The Next.js app (pages, endpoints) is covered by integration tests.
+The `core`, `db` and `ui` packages must have **100% unit test coverage** – CI rejects a PR if coverage drops. Tests live next to the code (`*.test.ts` / `*.test.tsx`).
+
+### Integration tests
+
+```bash
+npm run test:integration:setup   # once: downloads Chrome for agent-browser
+npm run test:integration         # requires Docker running
+```
+
+Each run starts a fresh PostgreSQL in Docker ([testcontainers](https://testcontainers.com/)), applies the migrations, seeds test data, boots the app and drives it in headless Chrome with [agent-browser](https://agent-browser.dev) – home page, admin panel and the full user CRUD flow. Nothing is left behind afterwards. Screenshots and the app log land in `packages/app/tests/integration/.artifacts/` (CI uploads them as an artifact).
 
 ## Running in Docker
 
