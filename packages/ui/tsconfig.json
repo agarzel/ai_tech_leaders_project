@@ -1,4 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "paths": { "@devmentor/ui/*": ["./src/*"] }
+  },
   "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

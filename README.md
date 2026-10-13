@@ -45,6 +45,7 @@ packages/
 - **Koncepty domenowe zamiast modułów:** każdy koncept (`auth`, `mentors`, `bookings`, …) to podfolder o tej samej nazwie w każdej warstwie, np. `db/src/entities/auth/user.entity.ts` i `core/src/services/auth/user.service.ts`.
 - **Przepływ żądania:** endpoint albo strona (`app`) → `createRequestScope()` (`core`, Awilix) → serwis (`core`) → `EntityManager` (`db`, MikroORM) → PostgreSQL. Każde żądanie dostaje własny fork `EntityManager`.
 - **Baza:** encje przez `defineEntity`, tabele w liczbie mnogiej (`users`), migracje generuje MikroORM, a CI pilnuje ich zgodności z encjami.
+- **Wspólna warstwa API i UI:** endpointy budujemy przez `apiHandler`/`makeCrudRoute` (jednolite odpowiedzi `{ ok, data }` / `{ ok, error }`, walidacja Zod, obsługa błędów), a ekrany przez `apiCall`, `CrudForm` i `DataTable`. Wzorcowy przykład: `/api/users` i `/admin/users`.
 - **Konfiguracja:** jeden plik `.env` w katalogu głównym repozytorium.
 - **Zasady inżynierskie:** [`.ai/docs/engineering-standards.md`](.ai/docs/engineering-standards.md) (standardy z kursu, lekcja 2). Zasady dla agentów AI: [`AGENTS.md`](AGENTS.md) oraz `AGENTS.md` w każdym pakiecie.
 
@@ -91,7 +92,7 @@ npm run dev
 ```
 
 - aplikacja: [http://localhost:3000](http://localhost:3000)
-- panel admina: [http://localhost:3000/admin](http://localhost:3000/admin)
+- panel admina: [http://localhost:3000/admin](http://localhost:3000/admin) (zarządzanie użytkownikami: `/admin/users` – działa tylko w trybie deweloperskim, dopóki nie ma logowania)
 - połączenie z bazą: [http://localhost:3000/api/health](http://localhost:3000/api/health) – `{"status":"ok","database":"ok"}` oznacza, że aplikacja widzi bazę (gdy baza nie działa, endpoint zwraca HTTP 503)
 
 Baza jest dostępna pod `localhost:5432`, a adres połączenia jest w zmiennej `DATABASE_URL` w pliku `.env`.

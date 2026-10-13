@@ -2,6 +2,9 @@
 
 Short, durable findings for AI agents and humans. Newest first. Format: `- YYYY-MM-DD – lesson (context/link)`.
 
+- 2026-10-13 – Next.js passes no `params` to handlers of routes without dynamic segments – treat the route context as optional (`apiHandler`).
+- 2026-10-13 – Zod 4: `z.email()` is a string *format*, not a `ZodString` instance – detect it via `.format === "email"` (`CrudForm`).
+- 2026-10-13 – Client components must not import package roots that reach MikroORM (`@devmentor/core`, `@devmentor/db`) except with `import type`; use the client-safe subpaths `@devmentor/core/validators/*` and `@devmentor/db/constants`.
 - 2026-10-13 – MikroORM generates a table rename (`tableName` change) as drop + create – data loss. Always read generated migrations; rewrite renames as `alter table ... rename` (`packages/db/src/migrations/Migration20261013124642.ts`).
 - 2026-10-13 – The MikroORM migration snapshot file is named after the database (`.snapshot-<dbname>.json`). Running the CLI against another DB name creates a stray snapshot – delete it, never commit it.
 - 2026-10-13 – Tailwind 4 only scans the app package by default; classes used in `@devmentor/ui` need `@source` in `globals.css`, otherwise ui components render unstyled.

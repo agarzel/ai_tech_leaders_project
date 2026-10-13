@@ -17,7 +17,9 @@ General rules and the dependency direction are in the root `AGENTS.md`. Next.js 
 ```
 src/app/              App Router: pages, layouts, route handlers
   admin/              Admin panel – built with @devmentor/ui
+  admin/users/        Reference CRUD screen: apiCall + DataTable + CrudForm
   api/<concept>/      Route handlers, one route.ts per resource (api/health/ – DB health check)
+  api/users/          Reference CRUD API: users.crud.ts (makeCrudRoute) → route.ts, [id]/route.ts
 public/               Static assets
 next.config.ts        transpilePackages for @devmentor/*, MikroORM server externals, standalone output
 ```
@@ -25,6 +27,8 @@ next.config.ts        transpilePackages for @devmentor/*, MikroORM server extern
 ## Rules
 
 - This package owns HTTP wiring and rendering only: validation → auth → service call → response. Business rules live in `@devmentor/core` services; never query the database here (`@devmentor/db` and `@mikro-orm/*` imports are blocked by lint).
+- Route handlers: plain CRUD → `makeCrudRoute` (define it once in `<resource>.crud.ts`, re-export from `route.ts` and `[id]/route.ts`); custom workflows → `apiHandler(async ({ req, params }) => …)`. Never write a bare try/catch or `Response.json` in a route.
+- Client components fetch only through `apiCall` from `@devmentor/ui/backend/api/apiCall`, never raw `fetch`.
 - Get services from a request scope: `const { healthService } = (await createRequestScope()).cradle;` (`createRequestScope` from `@devmentor/core`).
 - Cache Components: code that reads the database or request data calls `await connection()` (from `next/server`) first; in pages such components sit inside `<Suspense>` so the static shell can be prerendered. Do not use `export const dynamic`.
 - Pages: `<segment>/page.tsx` with a default export named `<Segment>Page`. Persona route groups (`(marketing)`, `(auth)`, `(student)`, `(mentor)`) are created with their first page.
