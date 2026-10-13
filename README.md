@@ -105,6 +105,16 @@ npm run db:migrate            # wykonuje oczekujące migracje
 npm run db:migration:check    # sprawdza, czy encje i migracje są zgodne
 ```
 
+## Testy
+
+```bash
+npm test                 # testy jednostkowe (Vitest)
+npm run test:coverage    # testy + raport pokrycia (coverage/index.html)
+npm run test:watch       # tryb ciągły
+```
+
+Pakiety `core`, `db` i `ui` muszą mieć **100% pokrycia testami jednostkowymi** – CI odrzuca PR, jeśli pokrycie spadnie. Testy leżą obok kodu (`*.test.ts` / `*.test.tsx`). Aplikację Next.js (strony, endpointy) sprawdzają testy integracyjne.
+
 ## Uruchomienie w Dockerze
 
 Wymaga zainstalowanego [Docker Desktop](https://www.docker.com/products/docker-desktop/).

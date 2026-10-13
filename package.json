@@ -13,10 +13,19 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "db:migrate": "npm run db:migrate -w @devmentor/db",
     "db:migration:create": "npm run db:migration:create -w @devmentor/db",
-    "db:migration:check": "npm run db:migration:check -w @devmentor/db"
+    "db:migration:check": "npm run db:migration:check -w @devmentor/db",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
+    "@vitest/coverage-v8": "^5.0.4",
     "eslint": "^9",
-    "eslint-config-next": "16.4.0"
+    "eslint-config-next": "16.4.0",
+    "jsdom": "^30.1.2",
+    "vitest": "^5.0.4"
   }
 }

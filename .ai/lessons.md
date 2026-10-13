@@ -2,6 +2,9 @@
 
 Short, durable findings for AI agents and humans. Newest first. Format: `- YYYY-MM-DD – lesson (context/link)`.
 
+- 2026-10-13 – Vitest 5: with `--project <name>` coverage `include` globs are resolved relative to that project's root, without it relative to the repo root. Check coverage with a plain `npm run test:coverage`, not a filtered run.
+- 2026-10-13 – Vitest's diff printer reads arbitrary keys of compared objects; services injected with Awilix PROXY mode (strict) then throw "Could not resolve 'size'". Compare such objects by reference (`a === b`).
+- 2026-10-13 – shadcn `Spinner` has `role="status"`; inside another status region it creates a duplicate live region. Make it decorative there.
 - 2026-10-13 – Next.js passes no `params` to handlers of routes without dynamic segments – treat the route context as optional (`apiHandler`).
 - 2026-10-13 – Zod 4: `z.email()` is a string *format*, not a `ZodString` instance – detect it via `.format === "email"` (`CrudForm`).
 - 2026-10-13 – Client components must not import package roots that reach MikroORM (`@devmentor/core`, `@devmentor/db`) except with `import type`; use the client-safe subpaths `@devmentor/core/validators/*` and `@devmentor/db/constants`.
