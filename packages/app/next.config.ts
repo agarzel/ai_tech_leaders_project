@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   output: "standalone",
   // Monorepo: trace dependencies from the repo root (node_modules is hoisted there).
   outputFileTracingRoot: path.join(__dirname, "../.."),
+  // Internal workspace packages are shipped as TypeScript source.
+  transpilePackages: ["@devmentor/core", "@devmentor/db", "@devmentor/ui"],
   // MikroORM 7 packages not covered by Next.js' built-in external list.
   serverExternalPackages: ["@mikro-orm/sql", "@mikro-orm/postgresql", "kysely"],
   cacheComponents: true,

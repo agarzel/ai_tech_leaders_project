@@ -9,10 +9,14 @@
     "dev": "npm run dev -w @devmentor/app",
     "build": "npm run build -w @devmentor/app",
     "start": "npm run start -w @devmentor/app",
-    "lint": "npm run lint --workspaces --if-present",
+    "lint": "eslint",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "db:migrate": "npm run db:migrate -w @devmentor/app",
-    "db:migration:create": "npm run db:migration:create -w @devmentor/app",
-    "db:migration:check": "npm run db:migration:check -w @devmentor/app"
+    "db:migrate": "npm run db:migrate -w @devmentor/db",
+    "db:migration:create": "npm run db:migration:create -w @devmentor/db",
+    "db:migration:check": "npm run db:migration:check -w @devmentor/db"
+  },
+  "devDependencies": {
+    "eslint": "^9",
+    "eslint-config-next": "16.4.0"
   }
 }
