@@ -8,49 +8,24 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-# @devmentor/app – Next.js app
+# @devmentor/app – Next.js (HTTP + pages)
 
-The main integration package. General rules are in the root `AGENTS.md`; this file adds app-specific ones. Next.js docs are in `node_modules/next/dist/docs/` at the repo root (dependencies are hoisted).
+General rules and the dependency direction are in the root `AGENTS.md`. Next.js docs: `node_modules/next/dist/docs/` at the repo root (dependencies are hoisted).
 
 ## Layout
 
 ```
-app/                  App Router: pages, layouts, route handlers
-  admin/              Admin panel – built with shadcn/ui
-  api/health/         GET – database health check (200 / 503)
-components/ui/        shadcn/ui components (generated – add new ones with the shadcn CLI)
-lib/
-  db/
-    config.ts         MikroORM options used by the app (loads the root .env)
-    orm.ts            getOrm() – one MikroORM instance per server process
-    entities/         Entities (defineEntity); every entity MUST be exported from entities/index.ts
-    migrations/       Generated migrations + schema snapshot – commit both
-  di/container.ts     Awilix container + createRequestScope()
-  services/           Business services, resolved from the container
-  utils.ts            cn() helper for class names
-mikro-orm.config.ts   MikroORM CLI config (adds the Migrator)
+src/app/              App Router: pages, layouts, route handlers
+  admin/              Admin panel – built with @devmentor/ui
+  api/<concept>/      Route handlers, one route.ts per resource (api/health/ – DB health check)
+public/               Static assets
+next.config.ts        transpilePackages for @devmentor/*, MikroORM server externals, standalone output
 ```
 
-## Database (MikroORM 7)
+## Rules
 
-- Define entities with `defineEntity` + `p` from `@mikro-orm/core` – no decorators. Register each new entity in `lib/db/entities/index.ts`.
-- After changing an entity, run `npm run db:migration:create` from the repo root and commit the migration together with `.snapshot-*.json`. CI fails if entities and migrations are out of sync.
-- Never edit an already merged migration – add a new one.
-- Never use the global `orm.em` in request handling – always the request-scoped `em` from `createRequestScope()`.
-- MikroORM 7 is ESM-only and uses Kysely internally (no Knex). Raw SQL: `em.execute(...)` or `em.getKysely()`.
-
-## Dependency injection (Awilix)
-
-- Register services in `lib/di/container.ts` (`asClass(MyService).scoped()`), and add them to the `Cradle` type.
-- Services receive dependencies through a single constructor object, e.g. `constructor(private readonly deps: { em: EntityManager })`.
-- In route handlers, server components and server actions: `const { myService } = (await createRequestScope()).cradle;`
-- Keep business logic in services, not in route handlers or components.
-
-## Rendering (Cache Components)
-
-- Code that reads the database or request data must run at request time: call `await connection()` (from `next/server`) first, and in pages wrap such components in `<Suspense>` so the static shell can be prerendered.
-
-## UI
-
-- Admin pages (`app/admin/**`): shadcn/ui components from `@/components/ui` (Base UI primitives – use the `render` prop, not `asChild`). Add components with `npx shadcn@latest add <name>` run in `packages/app`.
-- Public pages: Tailwind CSS.
+- This package owns HTTP wiring and rendering only: validation → auth → service call → response. Business rules live in `@devmentor/core` services; never query the database here (`@devmentor/db` and `@mikro-orm/*` imports are blocked by lint).
+- Get services from a request scope: `const { healthService } = (await createRequestScope()).cradle;` (`createRequestScope` from `@devmentor/core`).
+- Cache Components: code that reads the database or request data calls `await connection()` (from `next/server`) first; in pages such components sit inside `<Suspense>` so the static shell can be prerendered. Do not use `export const dynamic`.
+- Pages: `<segment>/page.tsx` with a default export named `<Segment>Page`. Persona route groups (`(marketing)`, `(auth)`, `(student)`, `(mentor)`) are created with their first page.
+- UI: admin pages use `@devmentor/ui` components (`@devmentor/ui/components/ui/<name>`); public pages use Tailwind. `src/app/globals.css` holds the theme and `@source`s the ui package.

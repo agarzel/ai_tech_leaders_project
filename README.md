@@ -26,28 +26,27 @@ Aplikację budujemy jak framework: reużywalne komponenty i endpointy, bez dupli
 - **PostgreSQL 17** + **MikroORM 7** (encje, migracje, pula połączeń)
 - **Awilix** – kontener Dependency Injection
 - **Tailwind CSS 4** na stronach publicznych, **shadcn/ui** w panelu admina
-- **Monorepo** – npm workspaces, pakiety w folderze `packages/`
+- **Monorepo** – npm workspaces, pakiety `app`, `core`, `db`, `ui` w folderze `packages/`
 - **ESLint**, **GitHub Actions** (CI), **Docker**
 
 ## Architektura
 
+Monorepo z czterema pakietami i wymuszonym kierunkiem zależności **`app → core → db`** (z `ui` korzysta tylko `app`). Pilnuje tego ESLint – import „pod prąd” kończy się błędem.
+
 ```
 packages/
-  app/                  @devmentor/app – aplikacja Next.js (główny pakiet integracyjny)
-    app/                strony, layouty i endpointy API (App Router)
-      admin/            panel admina (shadcn/ui)
-      api/health/       sprawdzenie połączenia z bazą
-    components/ui/      komponenty shadcn/ui
-    lib/db/             MikroORM: konfiguracja, encje, migracje
-    lib/di/             kontener Awilix
-    lib/services/       serwisy z logiką biznesową
-.ai/                    specyfikacje, logi przebiegów AI, wnioski (lessons)
+  app/    @devmentor/app   Next.js: strony i endpointy API (src/app)
+  core/   @devmentor/core  logika biznesowa: kontener Awilix, serwisy
+  db/     @devmentor/db    MikroORM: encje, migracje (jedyny pakiet z dostępem do @mikro-orm)
+  ui/     @devmentor/ui    komponenty shadcn/ui
+.ai/                       specyfikacje, logi przebiegów AI, wnioski, dokumentacja (docs/)
 ```
 
-- **Przepływ żądania:** route handler albo komponent serwerowy → `createRequestScope()` (Awilix) → serwis → MikroORM `EntityManager` → PostgreSQL. Każde żądanie dostaje własną kopię (fork) `EntityManager`.
-- **Baza:** encje definiujemy przez `defineEntity`, a migracje generuje MikroORM na podstawie zmian w encjach. CI pilnuje, żeby encje i migracje były zgodne.
-- **Konfiguracja:** jeden plik `.env` w katalogu głównym repozytorium, wspólny dla `docker compose`, `npm run dev` i migracji.
-- Zasady dla agentów AI: [`AGENTS.md`](AGENTS.md) i [`packages/app/AGENTS.md`](packages/app/AGENTS.md).
+- **Koncepty domenowe zamiast modułów:** każdy koncept (`auth`, `mentors`, `bookings`, …) to podfolder o tej samej nazwie w każdej warstwie, np. `db/src/entities/auth/user.entity.ts` i `core/src/services/auth/user.service.ts`.
+- **Przepływ żądania:** endpoint albo strona (`app`) → `createRequestScope()` (`core`, Awilix) → serwis (`core`) → `EntityManager` (`db`, MikroORM) → PostgreSQL. Każde żądanie dostaje własny fork `EntityManager`.
+- **Baza:** encje przez `defineEntity`, tabele w liczbie mnogiej (`users`), migracje generuje MikroORM, a CI pilnuje ich zgodności z encjami.
+- **Konfiguracja:** jeden plik `.env` w katalogu głównym repozytorium.
+- **Zasady inżynierskie:** [`.ai/docs/engineering-standards.md`](.ai/docs/engineering-standards.md) (standardy z kursu, lekcja 2). Zasady dla agentów AI: [`AGENTS.md`](AGENTS.md) oraz `AGENTS.md` w każdym pakiecie.
 
 ## Narzędzia
 

@@ -2,6 +2,9 @@ FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY packages/app/package.json ./packages/app/
+COPY packages/core/package.json ./packages/core/
+COPY packages/db/package.json ./packages/db/
+COPY packages/ui/package.json ./packages/ui/
 RUN npm ci
 
 FROM node:22-alpine AS builder

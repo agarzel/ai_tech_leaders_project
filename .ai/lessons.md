@@ -2,7 +2,10 @@
 
 Short, durable findings for AI agents and humans. Newest first. Format: `- YYYY-MM-DD – lesson (context/link)`.
 
-- 2026-10-13 – `@next/env` `loadEnvConfig` caches the first load; calling it again for another dir is a no-op. Use `process.loadEnvFile` for the root `.env` (`lib/db/config.ts`).
+- 2026-10-13 – MikroORM generates a table rename (`tableName` change) as drop + create – data loss. Always read generated migrations; rewrite renames as `alter table ... rename` (`packages/db/src/migrations/Migration20261013124642.ts`).
+- 2026-10-13 – The MikroORM migration snapshot file is named after the database (`.snapshot-<dbname>.json`). Running the CLI against another DB name creates a stray snapshot – delete it, never commit it.
+- 2026-10-13 – Tailwind 4 only scans the app package by default; classes used in `@devmentor/ui` need `@source` in `globals.css`, otherwise ui components render unstyled.
+- 2026-10-13 – `@next/env` `loadEnvConfig` caches the first load; calling it again for another dir is a no-op. Use `process.loadEnvFile` for the root `.env` (`packages/db/src/config.ts`).
 - 2026-10-13 – In this monorepo `next dev` writes its managed AGENTS block to `packages/app/AGENTS.md`, not the root one.
 - 2026-10-13 – shadcn init (Tailwind 4) can write `--font-sans: var(--font-sans)` in `@theme inline` – a self-reference that silently drops the custom font. Check `globals.css` after running shadcn.
 - 2026-10-13 – MikroORM 7 packages `@mikro-orm/sql`/`@mikro-orm/postgresql` are not in Next.js' default server externals; keep them in `serverExternalPackages`.
