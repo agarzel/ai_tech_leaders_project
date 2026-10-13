@@ -33,7 +33,7 @@ Aplikację budujemy jak framework: reużywalne komponenty i endpointy, bez dupli
 - **Skille AI:** [`open-mercato/skills`](https://github.com/open-mercato/skills) (zainstalowane globalnie dla obu agentów)
 - **GitHub:** kod, zadania (issues), Pull Requesty i CI w jednym miejscu; obsługa z terminala przez GitHub CLI (`gh`)
 - **Edytor:** Visual Studio Code
-- **Środowisko:** lokalnie na macOS (Node.js 22)
+- **Środowisko:** lokalnie na macOS (Node.js 22), PostgreSQL i obraz aplikacji w Dockerze (Docker Desktop)
 
 ## Porównanie agentów (zadanie domowe, lekcja 1)
 
@@ -65,3 +65,37 @@ npm run dev
 ```
 
 Aplikacja działa pod adresem [http://localhost:3000](http://localhost:3000).
+
+Bazę danych PostgreSQL najwygodniej uruchomić w Dockerze, a aplikację normalnie przez `npm run dev`:
+
+```bash
+cp .env.example .env
+docker compose up -d db
+npm run dev
+```
+
+Baza jest dostępna pod `localhost:5432`, a adres połączenia jest w zmiennej `DATABASE_URL` w pliku `.env`.
+
+## Uruchomienie w Dockerze
+
+Wymaga zainstalowanego [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+
+Aplikacja i baza danych razem:
+
+```bash
+docker compose up --build
+```
+
+- aplikacja: [http://localhost:3000](http://localhost:3000)
+- PostgreSQL: `localhost:5432` (domyślnie użytkownik, hasło i baza: `devmentor`, można je zmienić w `.env`)
+
+Zatrzymanie: `docker compose down`. Dane bazy zostają w wolumenie `db-data`; żeby je usunąć, użyj `docker compose down -v`.
+
+Sam obraz aplikacji, bez bazy:
+
+```bash
+docker build -t devmentor .
+docker run -p 3000:3000 devmentor
+```
+
+Na co dzień do pracy nad kodem używaj `npm run dev` – na macOS działa szybciej niż aplikacja w kontenerze. Docker służy do uruchamiania bazy i do wdrożeń.
