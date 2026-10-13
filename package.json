@@ -1,29 +1,18 @@
 {
-  "name": "ai_tech_leaders_project",
+  "name": "devmentor",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "typecheck": "next typegen && tsc --noEmit"
-  },
-  "dependencies": {
-    "next": "16.4.0",
-    "pg": "^8.23.1",
-    "react": "19.3.0",
-    "react-dom": "19.3.0"
-  },
-  "devDependencies": {
-    "@tailwindcss/turbopack": "^4",
-    "@types/node": "^20",
-    "@types/pg": "^8.23.1",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.4.0",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "dev": "npm run dev -w @devmentor/app",
+    "build": "npm run build -w @devmentor/app",
+    "start": "npm run start -w @devmentor/app",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:migrate": "npm run db:migrate -w @devmentor/app",
+    "db:migration:create": "npm run db:migration:create -w @devmentor/app",
+    "db:migration:check": "npm run db:migration:check -w @devmentor/app"
   }
 }
