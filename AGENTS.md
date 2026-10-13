@@ -21,9 +21,9 @@ UI language is English. Project documentation (`README.md`) is written in Polish
 ```
 packages/
   app/    @devmentor/app  – Next.js: HTTP (route handlers) and pages, src/app/
-  core/   @devmentor/core – business logic: Awilix container + cradle, services (later: http layer, validators, events)
+  core/   @devmentor/core – business logic: Awilix container + cradle, services, http layer, validators, env, logger
   db/     @devmentor/db   – MikroORM: config, entities, migrations
-  ui/     @devmentor/ui   – presentation: shadcn/ui primitives (later: backend/ panel building blocks)
+  ui/     @devmentor/ui   – presentation: shadcn/ui primitives, backend/ panel building blocks
 .ai/                      Metadata for AI-assisted work (see below)
 .github/workflows/        CI
 Dockerfile, docker-compose.yml
@@ -58,7 +58,11 @@ Every route and every page reuses two shared layers instead of re-implementing f
 - `packages/core/src/http/` – `errors.ts` (typed `AppError` hierarchy), `apiHandler.ts` (wraps a route: catches `AppError`s, maps to status + JSON envelope, logs unexpected failures), `makeCrudRoute.ts` (schema + service in, `{ GET, POST, PUT, DELETE }` out, for plain CRUD resources), `auth.ts` (`requireSession`, `requireRole`, ownership assertions).
 - `packages/ui/src/backend/` – `api/apiCall.ts` (the only sanctioned `fetch()` call site), `forms/CrudForm.tsx`, `tables/DataTable.tsx`, `feedback/{LoadingMessage,ErrorMessage,EmptyState}.tsx`.
 
-Status: being added in the next PR (spec `.ai/specs/2026-10-13-engineering-standards.md`, PR B). Until then do not hand-roll alternatives – build these files as described.
+Implemented. `auth.ts` currently has only a temporary `requireAdmin()` (open in development, 403 in production) – real `requireSession`/`requireRole` arrive with the `auth` concept.
+
+**Reference example – copy it for every new resource:** `UserService` (`core/src/services/auth/user.service.ts`) + validators (`core/src/validators/auth/`) → `api/users/users.crud.ts` (`makeCrudRoute`) re-exported by `api/users/route.ts` and `api/users/[id]/route.ts` → `admin/users/` page using `apiCall`, `DataTable` and `CrudForm`.
+
+JSON envelope: `{ ok: true, data }` / `{ ok: false, error: { code, message, fieldErrors? } }`. State-changing requests must send `x-devmentor-client: 1` (CSRF) – `apiCall` does it for you.
 
 New reusable components have one designated home each – never scattered ad hoc:
 

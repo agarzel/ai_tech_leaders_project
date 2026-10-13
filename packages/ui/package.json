@@ -5,6 +5,8 @@
   "type": "module",
   "exports": {
     "./components/ui/*": "./src/components/ui/*.tsx",
+    "./backend/*": "./src/backend/*.tsx",
+    "./backend/api/*": "./src/backend/api/*.ts",
     "./lib/utils": "./src/lib/utils.ts"
   },
   "scripts": {
@@ -14,7 +16,8 @@
     "@base-ui/react": "^1.9.0",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.4.0",
-    "lucide-react": "^1.56.0"
+    "lucide-react": "^1.56.0",
+    "zod": "^4.6.7"
   },
   "peerDependencies": {
     "react": "19.3.0"

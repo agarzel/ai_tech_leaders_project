@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { Badge } from "@devmentor/ui/components/ui/badge";
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 const sections = [
-  { title: "Users", description: "Mentors, mentees and administrators." },
+  { title: "Users", description: "Mentors, mentees and administrators.", href: "/admin/users" },
   { title: "Mentors", description: "Profiles, verification and visibility." },
   { title: "Sessions", description: "Bookings, availability and calendar." },
   { title: "Payments", description: "Payouts, refunds and disputes." },
@@ -50,14 +51,23 @@ export default function AdminPage() {
       </header>
 
       <section className="grid gap-4 sm:grid-cols-2">
-        {sections.map((section) => (
-          <Card key={section.title}>
-            <CardHeader>
-              <CardTitle>{section.title}</CardTitle>
-              <CardDescription>{section.description}</CardDescription>
-            </CardHeader>
-          </Card>
-        ))}
+        {sections.map((section) => {
+          const card = (
+            <Card className={section.href ? "hover:bg-muted/50 h-full transition-colors" : "h-full opacity-60"}>
+              <CardHeader>
+                <CardTitle>{section.title}</CardTitle>
+                <CardDescription>{section.href ? section.description : `${section.description} Coming soon.`}</CardDescription>
+              </CardHeader>
+            </Card>
+          );
+          return section.href ? (
+            <Link key={section.title} href={section.href} className="rounded-xl">
+              {card}
+            </Link>
+          ) : (
+            <div key={section.title}>{card}</div>
+          );
+        })}
       </section>
     </main>
   );

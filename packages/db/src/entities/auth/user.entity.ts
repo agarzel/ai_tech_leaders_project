@@ -1,7 +1,6 @@
 import { defineEntity, p, type InferEntity } from "@mikro-orm/core";
 import { baseProperties } from "../base.entity";
-
-export const USER_ROLES = ["mentor", "mentee", "admin"] as const;
+import { USER_ROLES } from "./user.constants";
 
 export const User = defineEntity({
   name: "User",

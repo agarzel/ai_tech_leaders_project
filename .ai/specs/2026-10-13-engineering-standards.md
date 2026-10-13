@@ -1,7 +1,7 @@
 # Spec: Engineering Standards – package split and concept folders
 
 - **Date:** 2026-10-13
-- **Status:** PR A implemented (pending review); PR B to do
+- **Status:** PR A merged (#7); PR B implemented (pending review)
 - **Source:** course lesson 2, `2026-09-01-engineering-standards.md` (stored as `.ai/docs/engineering-standards.md`)
 
 ## Goal
