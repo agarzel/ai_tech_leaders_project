@@ -14,7 +14,7 @@ This is an npm-workspaces monorepo. Each package may have its own `AGENTS.md` wi
 
 These are fixed choices from the course (lesson 2). Do not introduce alternative libraries for these concerns (no Prisma/Drizzle/raw `pg`, no other DI container or UI kit).
 
-UI language is English. Project documentation (`README.md`) is written in Polish.
+UI language and all project documentation (`README.md`, `AGENTS.md`, `.ai/`) are in English.
 
 ## Monorepo layout
 
