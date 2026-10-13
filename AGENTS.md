@@ -1,36 +1,33 @@
-<!-- BEGIN:nextjs-agent-rules -->
-
-## This is NOT the Next.js you know
-
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
-
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
-
-<!-- END:nextjs-agent-rules -->
-
 # DevMentor – instructions for coding agents
 
 DevMentor is a mentoring marketplace for developers (mentors, mentees, admins), built during the AI Tech Leaders course. See `README.md` for the product scope.
 
+This is an npm-workspaces monorepo. Each package may have its own `AGENTS.md` with package-specific rules – read it before working inside that package (e.g. `packages/app/AGENTS.md` for the Next.js app).
+
 ## Stack
 
+- Monorepo: npm workspaces, packages in `packages/`
 - Next.js 16 (App Router, Cache Components enabled), React 19, TypeScript
-- Tailwind CSS 4
-- PostgreSQL 17 (via `docker compose`); currently accessed through a plain `pg` pool in `lib/db.ts`
-- Planned (course lesson 2): MikroORM with migrations, Awilix for dependency injection, shadcn/ui for admin pages, monorepo with a `packages/` folder. Do not introduce alternative libraries for these concerns.
+- PostgreSQL 17 (via `docker compose`) with **MikroORM 7** (entities via `defineEntity`, migrations)
+- **Awilix** – dependency injection container
+- Tailwind CSS 4 for frontend pages, **shadcn/ui** (Base UI, `base-nova` style) for admin pages
+
+These are fixed choices from the course (lesson 2). Do not introduce alternative libraries for these concerns (no Prisma/Drizzle/raw `pg`, no other DI container or UI kit).
 
 UI language is English. Project documentation (`README.md`) is written in Polish.
 
 ## Repository layout
 
 ```
-app/              Next.js App Router (pages, layouts, route handlers)
-lib/              Shared server code (e.g. db.ts)
-public/           Static assets
-.ai/              Metadata for AI-assisted work (see below)
-.github/workflows CI
-Dockerfile, docker-compose.yml, .env.example
+packages/
+  app/              @devmentor/app – Next.js app, the main integration package (see its AGENTS.md)
+.ai/                Metadata for AI-assisted work (see below)
+.github/workflows/  CI
+Dockerfile, docker-compose.yml
+.env.example        Copy to .env – the single env file for the whole repo
 ```
+
+Run npm commands from the repo root; root scripts delegate to the workspaces. Add dependencies to the package that uses them: `npm install <pkg> -w @devmentor/app`.
 
 ## The `.ai` folder – mandatory
 
@@ -52,21 +49,24 @@ Use today's date in file names. Never delete specs, runs or lessons – move the
 
 ## Commands
 
+All from the repo root:
+
 ```bash
-npm run dev          # dev server on http://localhost:3000
-npm run lint         # ESLint
-npm run typecheck    # next typegen + tsc --noEmit
-npm run build        # production build (output: standalone)
+npm run dev                    # dev server on http://localhost:3000
+npm run lint                   # ESLint (all workspaces)
+npm run typecheck              # next typegen + tsc --noEmit (all workspaces)
+npm run build                  # production build (output: standalone)
+npm run db:migrate             # apply pending migrations
+npm run db:migration:create    # generate a migration from entity changes
+npm run db:migration:check     # fail if entities and migrations are out of sync
 docker compose up -d db        # PostgreSQL only (for npm run dev)
 docker compose up --build      # app + PostgreSQL in containers
 ```
 
-`GET /api/health` checks the database connection (200 ok / 503 unreachable).
-
 ## Workflow rules
 
 - Work on a feature branch and open a pull request against `main`; never commit directly to `main`.
-- Every PR must pass CI (lint, typecheck, build, Docker image) before merge.
+- Every PR must pass CI (lint, typecheck, build, database migrations, Docker image) before merge.
 - Before finishing, run `npm run lint`, `npm run typecheck` and `npm run build` locally and report the results honestly.
 - Plan before coding anything non-trivial; if the plan turns out wrong, stop and re-plan instead of pushing on.
 - Prefer the simplest change that solves the problem; touch only what the task needs.

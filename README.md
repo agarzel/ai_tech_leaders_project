@@ -22,10 +22,32 @@ Aplikację budujemy jak framework: reużywalne komponenty i endpointy, bez dupli
 
 ## Stack technologiczny
 
-- **Next.js** (App Router) + **React**
-- **TypeScript**
-- **PostgreSQL**
-- **ESLint**
+- **Next.js 16** (App Router) + **React 19** + **TypeScript**
+- **PostgreSQL 17** + **MikroORM 7** (encje, migracje, pula połączeń)
+- **Awilix** – kontener Dependency Injection
+- **Tailwind CSS 4** na stronach publicznych, **shadcn/ui** w panelu admina
+- **Monorepo** – npm workspaces, pakiety w folderze `packages/`
+- **ESLint**, **GitHub Actions** (CI), **Docker**
+
+## Architektura
+
+```
+packages/
+  app/                  @devmentor/app – aplikacja Next.js (główny pakiet integracyjny)
+    app/                strony, layouty i endpointy API (App Router)
+      admin/            panel admina (shadcn/ui)
+      api/health/       sprawdzenie połączenia z bazą
+    components/ui/      komponenty shadcn/ui
+    lib/db/             MikroORM: konfiguracja, encje, migracje
+    lib/di/             kontener Awilix
+    lib/services/       serwisy z logiką biznesową
+.ai/                    specyfikacje, logi przebiegów AI, wnioski (lessons)
+```
+
+- **Przepływ żądania:** route handler albo komponent serwerowy → `createRequestScope()` (Awilix) → serwis → MikroORM `EntityManager` → PostgreSQL. Każde żądanie dostaje własną kopię (fork) `EntityManager`.
+- **Baza:** encje definiujemy przez `defineEntity`, a migracje generuje MikroORM na podstawie zmian w encjach. CI pilnuje, żeby encje i migracje były zgodne.
+- **Konfiguracja:** jeden plik `.env` w katalogu głównym repozytorium, wspólny dla `docker compose`, `npm run dev` i migracji.
+- Zasady dla agentów AI: [`AGENTS.md`](AGENTS.md) i [`packages/app/AGENTS.md`](packages/app/AGENTS.md).
 
 ## Narzędzia
 
@@ -59,24 +81,29 @@ Obu agentom zleciłem to samo zadanie:
 
 ## Uruchomienie lokalne
 
+Wszystkie polecenia uruchamiasz z katalogu głównego repozytorium.
+
 ```bash
 npm install
-npm run dev
-```
-
-Aplikacja działa pod adresem [http://localhost:3000](http://localhost:3000).
-
-Bazę danych PostgreSQL najwygodniej uruchomić w Dockerze, a aplikację normalnie przez `npm run dev`:
-
-```bash
 cp .env.example .env
-docker compose up -d db
+docker compose up -d db     # PostgreSQL w Dockerze
+npm run db:migrate          # tworzy tabele
 npm run dev
 ```
+
+- aplikacja: [http://localhost:3000](http://localhost:3000)
+- panel admina: [http://localhost:3000/admin](http://localhost:3000/admin)
+- połączenie z bazą: [http://localhost:3000/api/health](http://localhost:3000/api/health) – `{"status":"ok","database":"ok"}` oznacza, że aplikacja widzi bazę (gdy baza nie działa, endpoint zwraca HTTP 503)
 
 Baza jest dostępna pod `localhost:5432`, a adres połączenia jest w zmiennej `DATABASE_URL` w pliku `.env`.
 
-Połączenie z bazą sprawdzisz pod [http://localhost:3000/api/health](http://localhost:3000/api/health) – odpowiedź `{"status":"ok","database":"ok"}` oznacza, że aplikacja widzi bazę (gdy baza nie działa, endpoint zwraca HTTP 503). Wspólna pula połączeń jest w `lib/db.ts`.
+### Migracje bazy
+
+```bash
+npm run db:migration:create   # po zmianie encji – generuje nową migrację
+npm run db:migrate            # wykonuje oczekujące migracje
+npm run db:migration:check    # sprawdza, czy encje i migracje są zgodne
+```
 
 ## Uruchomienie w Dockerze
 
@@ -86,6 +113,7 @@ Aplikacja i baza danych razem:
 
 ```bash
 docker compose up --build
+npm run db:migrate          # przy pierwszym uruchomieniu – tworzy tabele (z hosta, przez localhost:5432)
 ```
 
 - aplikacja: [http://localhost:3000](http://localhost:3000)

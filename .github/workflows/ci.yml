@@ -23,8 +23,8 @@ jobs:
 
       - uses: actions/cache@v6
         with:
-          path: ${{ github.workspace }}/.next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/*.ts', '**/*.tsx', '**/*.css') }}
+          path: ${{ github.workspace }}/packages/app/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-${{ hashFiles('packages/**/*.ts', 'packages/**/*.tsx', 'packages/**/*.css') }}
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
 
@@ -32,6 +32,39 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run build
+
+  migrations:
+    name: Database migrations
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: devmentor
+          POSTGRES_PASSWORD: devmentor
+          POSTGRES_DB: devmentor
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U devmentor -d devmentor"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://devmentor:devmentor@localhost:5432/devmentor
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      # Apply all migrations to an empty database...
+      - run: npm run db:migrate
+      # ...and fail if entities changed without a matching migration.
+      - run: npm run db:migration:check
 
   docker:
     name: Docker image
