@@ -14,13 +14,20 @@ const pageQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
 });
 
+type Access = "admin";
+
+// One guard per access level; a new level must add its guard here (enforced by the type).
+const accessGuards: Record<Access, () => void> = {
+  admin: requireAdmin,
+};
+
 type CrudRouteConfig<TDto, TCreate, TUpdate> = {
   /** Picks the service from the request-scoped cradle, e.g. `(cradle) => cradle.userService`. */
   service: (cradle: Cradle) => CrudService<TDto, TCreate, TUpdate>;
   createSchema: z.ZodType<TCreate>;
   updateSchema: z.ZodType<TUpdate>;
   /** Who may call the route. Explicit on purpose – there is no default. */
-  access: "admin";
+  access: Access;
 };
 
 /**
@@ -29,7 +36,7 @@ type CrudRouteConfig<TDto, TCreate, TUpdate> = {
  */
 export function makeCrudRoute<TDto, TCreate, TUpdate>(config: CrudRouteConfig<TDto, TCreate, TUpdate>) {
   async function resolveService() {
-    if (config.access === "admin") requireAdmin();
+    accessGuards[config.access]();
     return config.service((await createRequestScope()).cradle);
   }
 

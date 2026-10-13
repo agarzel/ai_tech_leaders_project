@@ -77,6 +77,17 @@ The full standards – naming table, principles (SRP, DRY, dependency inversion,
 
 Key naming rules: packages `@devmentor/<name>`; tables plural snake_case (`users`), columns snake_case; entities PascalCase singular in `<name>.entity.ts`; services `<Name>Service` in `<name>.service.ts`; cradle keys camelCase; Zod schemas `<name>Schema` in `<name>.schema.ts`; pages default-export `<Segment>Page`.
 
+## Testing – mandatory
+
+**Every new feature and every change must be 100% covered by unit tests** (statements, branches, functions, lines) for `@devmentor/core`, `@devmentor/db` and `@devmentor/ui`. CI fails below 100% – do not lower the thresholds, do not add `/* v8 ignore */` comments and do not widen the coverage `exclude` list to get green. If code is genuinely unreachable, delete it or restructure it.
+
+- **Runner:** Vitest (`vitest.config.mts`, one project per package: `core` and `db` in Node, `ui` in jsdom with Testing Library).
+- **Location:** colocated `<file>.test.ts(x)` next to the code it tests.
+- **Excluded from unit coverage (by design):** barrels (`src/index.ts`), type-only modules, generated shadcn primitives (`ui/src/components/ui/`), migrations (checked by the CI migrations job), and the Next.js app (`packages/app` – pages and route wiring are covered by integration tests).
+- **Style:** test behaviour through the public API; mock only boundaries (database `EntityManager`, `fetch`, the container, env). Arrange / act / assert, one behaviour per test, descriptive names.
+- A bug fix ships with a regression test that fails without the fix.
+- `vi.mock` must be called at the top level of a test file (Vitest 5 throws otherwise); `clearMocks` is on by default.
+
 ## The `.ai` folder – mandatory
 
 All AI agents working in this repository MUST use these structures:
@@ -105,6 +116,9 @@ npm run dev                    # dev server on http://localhost:3000
 npm run lint                   # ESLint (all packages, incl. dependency boundaries)
 npm run typecheck              # next typegen + tsc --noEmit (all workspaces)
 npm run build                  # production build (output: standalone)
+npm test                       # unit tests (Vitest, all packages)
+npm run test:coverage          # unit tests + 100% coverage gate (what CI runs)
+npm run test:watch             # watch mode
 npm run db:migrate             # apply pending migrations
 npm run db:migration:create    # generate a migration from entity changes
 npm run db:migration:check     # fail if entities and migrations are out of sync
@@ -115,8 +129,8 @@ docker compose up --build      # app + PostgreSQL in containers
 ## Workflow rules
 
 - Work on a feature branch and open a pull request against `main`; never commit directly to `main`.
-- Every PR must pass CI (lint, typecheck, build, database migrations, Docker image) before merge.
-- Before finishing, run `npm run lint`, `npm run typecheck` and `npm run build` locally and report the results honestly.
+- Every PR must pass CI (lint, typecheck, build, unit tests with 100% coverage, database migrations, Docker image) before merge.
+- Before finishing, run `npm run lint`, `npm run typecheck`, `npm run test:coverage` and `npm run build` locally and report the results honestly.
 - Plan before coding anything non-trivial; if the plan turns out wrong, stop and re-plan instead of pushing on.
 - Prefer the simplest change that solves the problem; touch only what the task needs.
 - Keep this file up to date: when you add a convention, command, folder or tool, document it here in the same PR.

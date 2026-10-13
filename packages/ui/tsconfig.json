@@ -1,7 +1,15 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "paths": { "@devmentor/ui/*": ["./src/*"] }
+    "paths": {
+      "@devmentor/ui/*": [
+        "./src/*"
+      ]
+    }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "vitest.setup.ts"
+  ]
 }

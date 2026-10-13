@@ -23,6 +23,7 @@ components.json       shadcn config (theme CSS lives in packages/app/src/app/glo
 - Standalone: never import `@devmentor/core`, `@devmentor/db`, `@devmentor/app` or `@mikro-orm/*` – data comes in through props (lint enforces it).
 - Add a shadcn primitive by running `npx shadcn@latest add <name>` in `packages/ui`; check the result imports `cn` and nothing from `@/…`.
 - Base UI primitives: use the `render` prop, not `asChild`.
+- Tests: Testing Library + `user-event`, query by role/label (what users and screen readers see), jest-dom matchers. Watch for duplicate live regions – shadcn `Spinner` already has `role="status"`.
 - Consumers import by path: `@devmentor/ui/components/ui/<name>`, `@devmentor/ui/backend/<category>/<Name>`, `@devmentor/ui/backend/api/apiCall`, `@devmentor/ui/lib/utils`.
 - Use `CrudForm` for every create/edit form, `DataTable` for every list and the `feedback/` components for loading/error/empty states; write a bespoke one only when the UX genuinely does not fit (say why in the PR).
 - `CrudForm` infers inputs from the Zod schema: `z.enum` → select, `z.email()` → email, `z.number()` → number, otherwise text.
