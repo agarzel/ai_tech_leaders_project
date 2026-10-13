@@ -76,6 +76,8 @@ npm run dev
 
 Baza jest dostępna pod `localhost:5432`, a adres połączenia jest w zmiennej `DATABASE_URL` w pliku `.env`.
 
+Połączenie z bazą sprawdzisz pod [http://localhost:3000/api/health](http://localhost:3000/api/health) – odpowiedź `{"status":"ok","database":"ok"}` oznacza, że aplikacja widzi bazę (gdy baza nie działa, endpoint zwraca HTTP 503). Wspólna pula połączeń jest w `lib/db.ts`.
+
 ## Uruchomienie w Dockerze
 
 Wymaga zainstalowanego [Docker Desktop](https://www.docker.com/products/docker-desktop/).
