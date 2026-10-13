@@ -6,17 +6,17 @@ export default function Home() {
           DevMentor
         </p>
         <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
-          Rozwijaj się z mentorem, który zna drogę.
+          Grow with a mentor who knows the way.
         </h1>
         <p className="mx-auto max-w-xl text-lg leading-8 text-slate-300">
-          Znajdź doświadczonego mentora, który pomoże Ci zrobić kolejny krok w
-          karierze IT.
+          Find an experienced mentor who will help you take the next step in
+          your tech career.
         </p>
         <a
-          href="#mentorzy"
+          href="#mentors"
           className="inline-flex items-center justify-center rounded-lg bg-cyan-400 px-6 py-3 font-semibold text-slate-950 transition-colors hover:bg-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-300"
         >
-          Znajdź mentora
+          Find a mentor
         </a>
       </div>
     </main>

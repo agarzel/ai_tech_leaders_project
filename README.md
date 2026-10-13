@@ -18,6 +18,8 @@ Planowany zakres:
 
 Aplikację budujemy jak framework: reużywalne komponenty i endpointy, bez duplikacji.
 
+**Język interfejsu: angielski** – zgodnie z makietami DevMentora z kursu. Dokumentacja projektu (README) jest po polsku.
+
 ## Stack technologiczny
 
 - **Next.js** (App Router) + **React**
@@ -53,7 +55,7 @@ Obu agentom zleciłem to samo zadanie:
 - Oba agenty wykonały zadanie poprawnie i nie ruszyły innych plików.
 - Codex zinterpretował prompt bardziej kreatywnie (własny styl, hasło), Claude Code trzymał się dosłownej treści i konwencji projektu.
 - Im mniej szczegółów w prompcie, tym więcej decyzji agent podejmuje sam – wygląd, teksty, cel przycisku. W kolejnych zadaniach warto to doprecyzowywać w specyfikacji.
-- Do projektu weszła wersja Codexa – lepiej wygląda jako ekran startowy i ma obsłużoną dostępność przycisku.
+- Do projektu weszła wersja Codexa – lepiej wygląda jako ekran startowy i ma obsłużoną dostępność przycisku. Teksty zostały potem przetłumaczone na angielski.
 
 ## Uruchomienie lokalne
 
