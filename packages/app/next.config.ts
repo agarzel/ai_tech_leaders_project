@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Integration tests run their own dev server; a separate build dir avoids clashing with `npm run dev`.
+  distDir: process.env.NEXT_DIST_DIR ?? ".next",
   // Monorepo: trace dependencies from the repo root (node_modules is hoisted there).
   outputFileTracingRoot: path.join(__dirname, "../.."),
   // Internal workspace packages are shipped as TypeScript source.

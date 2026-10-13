@@ -118,19 +118,20 @@ export function UsersAdmin() {
         rowActions={(user) =>
           pendingDeleteId === user.id ? (
             <div className="flex justify-end gap-1">
-              <Button size="sm" variant="destructive" onClick={() => void deleteUser(user)}>
+              <Button size="sm" variant="destructive" aria-label={`Confirm delete ${user.name}`} onClick={() => void deleteUser(user)}>
                 Confirm delete
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => setPendingDeleteId(null)}>
+              <Button size="sm" variant="ghost" aria-label={`Keep ${user.name}`} onClick={() => setPendingDeleteId(null)}>
                 Keep
               </Button>
             </div>
           ) : (
             <div className="flex justify-end gap-1">
-              <Button size="sm" variant="outline" onClick={() => setForm({ mode: "edit", user })}>
+              {/* aria-label: every row has these buttons, so their accessible names must say which user they act on. */}
+              <Button size="sm" variant="outline" aria-label={`Edit ${user.name}`} onClick={() => setForm({ mode: "edit", user })}>
                 Edit
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => setPendingDeleteId(user.id)}>
+              <Button size="sm" variant="ghost" aria-label={`Delete ${user.name}`} onClick={() => setPendingDeleteId(user.id)}>
                 Delete
               </Button>
             </div>

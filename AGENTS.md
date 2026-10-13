@@ -88,6 +88,15 @@ Key naming rules: packages `@devmentor/<name>`; tables plural snake_case (`users
 - A bug fix ships with a regression test that fails without the fix.
 - `vi.mock` must be called at the top level of a test file (Vitest 5 throws otherwise); `clearMocks` is on by default.
 
+### Integration tests
+
+- **What:** the real app in a real browser. `packages/app/tests/integration/*.int.test.ts`, config `vitest.integration.config.mts`.
+- **How:** `global-setup.ts` starts an ephemeral PostgreSQL with testcontainers, runs all migrations, seeds known rows, boots the app (`next dev` on port 3100, build dir `.next-test`) and tears everything down afterwards. Tests drive headless Chrome through the agent-browser CLI (`support/browser.ts`).
+- **Requires:** Docker running and Chrome for agent-browser (`npm run test:integration:setup`, once).
+- **Rule:** every new page or user-facing flow gets an integration test of its main path, plus a screenshot (`browser.screenshot(name)` → `.artifacts/`, uploaded by CI).
+- Locate elements the way users do – by role + accessible name or by label (`browser.click("button", "Create user")`, `browser.fill("Email", …)`). Repeated controls (row actions) need unique accessible names, e.g. `aria-label="Delete {name}"`.
+- Each test file uses its own browser session; files run sequentially against one app and database, so tests must not depend on data created by another file.
+
 ## The `.ai` folder – mandatory
 
 All AI agents working in this repository MUST use these structures:
@@ -119,6 +128,7 @@ npm run build                  # production build (output: standalone)
 npm test                       # unit tests (Vitest, all packages)
 npm run test:coverage          # unit tests + 100% coverage gate (what CI runs)
 npm run test:watch             # watch mode
+npm run test:integration       # integration tests (needs Docker; first run: npm run test:integration:setup)
 npm run db:migrate             # apply pending migrations
 npm run db:migration:create    # generate a migration from entity changes
 npm run db:migration:check     # fail if entities and migrations are out of sync
@@ -129,7 +139,7 @@ docker compose up --build      # app + PostgreSQL in containers
 ## Workflow rules
 
 - Work on a feature branch and open a pull request against `main`; never commit directly to `main`.
-- Every PR must pass CI (lint, typecheck, build, unit tests with 100% coverage, database migrations, Docker image) before merge.
+- Every PR must pass CI (lint, typecheck, build, unit tests with 100% coverage, integration tests, database migrations, Docker image) before merge.
 - Before finishing, run `npm run lint`, `npm run typecheck`, `npm run test:coverage` and `npm run build` locally and report the results honestly.
 - Plan before coding anything non-trivial; if the plan turns out wrong, stop and re-plan instead of pushing on.
 - Prefer the simplest change that solves the problem; touch only what the task needs.
