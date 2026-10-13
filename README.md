@@ -33,6 +33,28 @@ Aplikację budujemy jak framework: reużywalne komponenty i endpointy, bez dupli
 - **Edytor:** Visual Studio Code
 - **Środowisko:** lokalnie na macOS (Node.js 22)
 
+## Porównanie agentów (zadanie domowe, lekcja 1)
+
+Obu agentom zleciłem to samo zadanie:
+
+> Na stronie głównej (`app/page.tsx`) zamień domyślną treść na prosty ekran powitalny DevMentor: nagłówek, jedno zdanie opisu i przycisk „Znajdź mentora”. Użyj Tailwinda.
+
+| | Codex | Claude Code |
+|---|---|---|
+| Nagłówek | Hasło marketingowe, „DevMentor” jako mała etykieta nad nim | „DevMentor” jako główny nagłówek |
+| Wygląd | Własny ciemny motyw (granat + turkus) | Kolory i jasny/ciemny tryb z istniejącego szablonu |
+| Przycisk | Link `#mentorzy`, wyraźne obramowanie przy nawigacji klawiaturą | `Link` z Next.js do `/mentorzy` (podstrona jeszcze nie istnieje) |
+| Przygotowanie | – | Przeczytał `AGENTS.md`, sprawdził wersje bibliotek i `layout.tsx` |
+| Zakres zmian | Tylko `app/page.tsx` | Tylko `app/page.tsx` |
+| Lint i typy | ✅ | ✅ |
+
+**Wnioski:**
+
+- Oba agenty wykonały zadanie poprawnie i nie ruszyły innych plików.
+- Codex zinterpretował prompt bardziej kreatywnie (własny styl, hasło), Claude Code trzymał się dosłownej treści i konwencji projektu.
+- Im mniej szczegółów w prompcie, tym więcej decyzji agent podejmuje sam – wygląd, teksty, cel przycisku. W kolejnych zadaniach warto to doprecyzowywać w specyfikacji.
+- Do projektu weszła wersja Codexa – lepiej wygląda jako ekran startowy i ma obsłużoną dostępność przycisku.
+
 ## Uruchomienie lokalne
 
 ```bash
