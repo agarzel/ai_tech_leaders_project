@@ -51,3 +51,8 @@ packages/app/tests/integration/.artifacts/
 
 # Claude Code personal settings (permissions etc.)
 .claude/settings.local.json
+
+# om-* QA working state (generated per run)
+.ai/qa/artifacts_*/
+.ai/qa/test-env.json
+.ai/qa/test-env.env

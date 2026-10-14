@@ -97,6 +97,17 @@ Key naming rules: packages `@devmentor/<name>`; tables plural snake_case (`users
 - Locate elements the way users do – by role + accessible name or by label (`browser.click("button", "Create user")`, `browser.fill("Email", …)`). Repeated controls (row actions) need unique accessible names, e.g. `aria-label="Delete {name}"`.
 - Each test file uses its own browser session; files run sequentially against one app and database, so tests must not depend on data created by another file.
 
+## Delivery process (SDLC)
+
+The `om-*` skills run this repository's process from `.ai/agentic.config.json` (tracker `github`, browser `agent-browser`, QA gate on, full label taxonomy). Humans and agents read:
+
+- `SDLC.md` – ticket → PR → review → QA → merge flow, label state machine, QA gate, claim protocol (`in-progress`).
+- `CODE_REVIEW.md` – review priorities, repo-specific checks and severities (applied automatically by `om-code-review`).
+- `BACKWARD_COMPATIBILITY.md` – protected contract surfaces (API envelope, migrations, package exports, env, npm scripts) and the required path for changing them. Warn the user when a change violates it.
+- `.ai/trackers/github.md`, `.ai/browsers/agent-browser.md` – how skills talk to GitHub and the browser; edit these to change that behaviour.
+
+The validation gate in the config (`lint`, `typecheck`, `test:coverage`, `build`, `test:integration`) and the one in `SDLC.md` must stay in sync with CI; change them together and re-run `om-setup-agent-pipeline` when the toolchain or labels change.
+
 ## AI skills
 
 The Open Mercato skills (`om-*`, from [open-mercato/skills](https://github.com/open-mercato/skills)) are installed **per project**:
