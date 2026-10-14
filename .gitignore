@@ -48,3 +48,6 @@ packages/app/tests/integration/.artifacts/
 
 # personal study notes (course test prep) – not part of the project
 /study/
+
+# Claude Code personal settings (permissions etc.)
+.claude/settings.local.json

@@ -97,6 +97,15 @@ Key naming rules: packages `@devmentor/<name>`; tables plural snake_case (`users
 - Locate elements the way users do – by role + accessible name or by label (`browser.click("button", "Create user")`, `browser.fill("Email", …)`). Repeated controls (row actions) need unique accessible names, e.g. `aria-label="Delete {name}"`.
 - Each test file uses its own browser session; files run sequentially against one app and database, so tests must not depend on data created by another file.
 
+## AI skills
+
+The Open Mercato skills (`om-*`, from [open-mercato/skills](https://github.com/open-mercato/skills)) are installed **per project**:
+
+- `.agents/skills/` – the skill files (read by Codex and other agents); `.claude/skills/` – symlinks to them for Claude Code.
+- `skills-lock.json` – pinned versions. Update with `npx skills update -p`; reinstall from the lock file with `npx skills experimental_install`.
+- Do not edit installed skills. To adapt a skill to this project, create a skill with the same name in `.ai/skills/` – it overrides the matching parts of the generic one.
+- Run them as `/om-<name>` in Claude Code, `$om-<name>` in Codex.
+
 ## The `.ai` folder – mandatory
 
 All AI agents working in this repository MUST use these structures:
@@ -110,6 +119,7 @@ All AI agents working in this repository MUST use these structures:
   - File name: `YYYY-MM-DD-slug.md`.
   - Contents: goal, plan, decisions made and why, what was verified (commands + results), open issues, and a handoff section so another agent can resume if the run is interrupted.
 - `.ai/docs/` – long-lived project documentation (e.g. `engineering-standards.md`).
+- `.ai/skills/` – project-specific overrides of installed skills (same name as the skill they adapt).
 - `.ai/lessons.md` – short, durable lessons learned (bugs found, gotchas, conventions discovered). Append an entry after fixing a bug, after a correction from the user, or whenever something is worth remembering long term.
   - `.ai/lessons/` – longer write-ups; link them from `lessons.md`.
   - Read `.ai/lessons.md` before starting work.
