@@ -52,7 +52,7 @@ packages/
 ## Tooling
 
 - **Coding agents:** Claude Code and Codex
-- **AI skills:** [`open-mercato/skills`](https://github.com/open-mercato/skills) (installed globally for both agents)
+- **AI skills:** [`open-mercato/skills`](https://github.com/open-mercato/skills) – installed per project in `.agents/skills` (Codex) with `.claude/skills` symlinks (Claude Code); install/refresh with `npx skills add open-mercato/skills --skill '*' --agent claude-code codex`
 - **GitHub:** code, issues, pull requests and CI in one place; driven from the terminal with GitHub CLI (`gh`)
 - **Editor:** Visual Studio Code
 - **Environment:** local macOS (Node.js 22), PostgreSQL and the app image in Docker (Docker Desktop)
