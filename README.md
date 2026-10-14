@@ -81,7 +81,17 @@ Both agents got the same task:
 
 ## Running locally
 
-Run all commands from the repository root.
+Run all commands from the repository root. Requires Node.js 22 and Docker Desktop running.
+
+```bash
+npm run setup     # installs dependencies, creates .env, starts PostgreSQL, applies migrations
+npm run dev
+```
+
+`npm run setup` is safe to run again at any time: it checks each step and skips what is already done (it never overwrites an existing `.env`), so it also brings an older checkout up to date – new dependencies, pending migrations, a stopped database.
+
+<details>
+<summary>Manual steps (what <code>npm run setup</code> does)</summary>
 
 ```bash
 npm install
@@ -90,6 +100,8 @@ docker compose up -d db     # PostgreSQL in Docker
 npm run db:migrate          # creates the tables
 npm run dev
 ```
+
+</details>
 
 - app: [http://localhost:3000](http://localhost:3000)
 - admin panel: [http://localhost:3000/admin](http://localhost:3000/admin) (user management at `/admin/users` – development mode only until login exists)
