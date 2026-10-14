@@ -45,3 +45,6 @@ next-env.d.ts
 .vitest/
 .next-test/
 packages/app/tests/integration/.artifacts/
+
+# personal study notes (course test prep) – not part of the project
+/study/
