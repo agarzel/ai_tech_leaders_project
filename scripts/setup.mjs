@@ -19,6 +19,8 @@ export function runCommand(command, args, { cwd, inherit = false } = {}) {
     cwd,
     encoding: "utf8",
     stdio: inherit ? "inherit" : "pipe",
+    // npm is a .cmd shim on Windows, which spawnSync can only start through a shell.
+    shell: process.platform === "win32",
   });
   return { status: result.status ?? 1, stdout: result.stdout ?? "", stderr: result.stderr ?? "" };
 }
@@ -87,7 +89,11 @@ export const steps = [
     name: "Environment file (.env)",
     skip: (ctx) => (ctx.fs.existsSync(path.join(ctx.root, ".env")) ? ".env exists (left untouched)" : null),
     run: (ctx) => {
-      ctx.fs.copyFileSync(path.join(ctx.root, ".env.example"), path.join(ctx.root, ".env"));
+      const example = path.join(ctx.root, ".env.example");
+      if (!ctx.fs.existsSync(example)) {
+        throw new SetupError("`.env.example` is missing – restore it with `git checkout .env.example` and run `npm run setup` again.");
+      }
+      ctx.fs.copyFileSync(example, path.join(ctx.root, ".env"));
       return "created from .env.example";
     },
   },
@@ -95,7 +101,7 @@ export const steps = [
     name: "PostgreSQL (docker compose)",
     skip: (ctx) => {
       if (ctx.run("docker", ["info"], { cwd: ctx.root }).status !== 0) {
-        throw new SetupError("Docker is not running. Start Docker Desktop and run `npm run setup` again.");
+        throw new SetupError("Docker is not installed or not running. Install/start Docker Desktop and run `npm run setup` again.");
       }
       const { running, healthy } = dbStatus(ctx);
       return running && healthy ? "db container running and healthy" : null;

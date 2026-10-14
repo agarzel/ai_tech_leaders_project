@@ -57,10 +57,11 @@ describe("runCommand", () => {
     vi.mocked(spawnSync).mockReturnValue({ status: 0, stdout: "hi", stderr: "" });
 
     expect(runCommand("echo", ["hi"], { cwd: "/repo" })).toEqual({ status: 0, stdout: "hi", stderr: "" });
-    expect(spawnSync).toHaveBeenCalledWith("echo", ["hi"], { cwd: "/repo", encoding: "utf8", stdio: "pipe" });
+    const shell = process.platform === "win32";
+    expect(spawnSync).toHaveBeenCalledWith("echo", ["hi"], { cwd: "/repo", encoding: "utf8", stdio: "pipe", shell });
 
     runCommand("npm", ["install"], { cwd: "/repo", inherit: true });
-    expect(spawnSync).toHaveBeenLastCalledWith("npm", ["install"], { cwd: "/repo", encoding: "utf8", stdio: "inherit" });
+    expect(spawnSync).toHaveBeenLastCalledWith("npm", ["install"], { cwd: "/repo", encoding: "utf8", stdio: "inherit", shell });
   });
 
   it("treats a killed or unstartable process as a failure without output", async () => {

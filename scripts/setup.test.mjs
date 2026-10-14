@@ -26,6 +26,7 @@ function setup({ responses = {}, files = {}, nodeVersion = "22.22.2", dbHealthAf
     [path.join(ROOT, "node_modules/.package-lock.json")]: { mtimeMs: 200 },
     [path.join(ROOT, "package-lock.json")]: { mtimeMs: 100 },
     [path.join(ROOT, ".env")]: {},
+    [path.join(ROOT, ".env.example")]: {},
     ...files,
   };
   const calls = [];
@@ -164,9 +165,19 @@ describe("runSetup", () => {
       const { ctx, calls, output } = setup({ responses: { "docker info": fail("Cannot connect") } });
 
       expect(await runSetup(ctx)).toBe(1);
-      expect(output()).toContain("✗ PostgreSQL (docker compose): failed – Docker is not running. Start Docker Desktop");
+      expect(output()).toContain("✗ PostgreSQL (docker compose): failed – Docker is not installed or not running.");
       expect(calls).not.toContain("npm run db:migrate");
       expect(output()).not.toContain("Ready.");
+    });
+
+    it(".env.example is missing", async () => {
+      const { ctx, output } = setup({
+        files: { [path.join(ROOT, ".env")]: undefined, [path.join(ROOT, ".env.example")]: undefined },
+      });
+
+      expect(await runSetup(ctx)).toBe(1);
+      expect(output()).toContain("✗ Environment file (.env): failed – `.env.example` is missing");
+      expect(ctx.fs.copyFileSync).not.toHaveBeenCalled();
     });
 
     it("npm install fails", async () => {
