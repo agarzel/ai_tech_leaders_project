@@ -28,6 +28,7 @@ packages/
 .github/workflows/        CI
 Dockerfile, docker-compose.yml
 .env.example              Copy to .env – the single env file for the whole repo
+scripts/                  Repo scripts in plain Node (no dependencies), e.g. setup.mjs – unit-tested like the packages
 tsconfig.base.json        Shared TypeScript options
 eslint.config.mjs         Lint rules for all packages, incl. dependency boundaries
 ```
@@ -79,7 +80,7 @@ Key naming rules: packages `@devmentor/<name>`; tables plural snake_case (`users
 
 ## Testing – mandatory
 
-**Every new feature and every change must be 100% covered by unit tests** (statements, branches, functions, lines) for `@devmentor/core`, `@devmentor/db` and `@devmentor/ui`. CI fails below 100% – do not lower the thresholds, do not add `/* v8 ignore */` comments and do not widen the coverage `exclude` list to get green. If code is genuinely unreachable, delete it or restructure it.
+**Every new feature and every change must be 100% covered by unit tests** (statements, branches, functions, lines) for `@devmentor/core`, `@devmentor/db`, `@devmentor/ui` and the repo `scripts/`. CI fails below 100% – do not lower the thresholds, do not add `/* v8 ignore */` comments and do not widen the coverage `exclude` list to get green. If code is genuinely unreachable, delete it or restructure it.
 
 - **Runner:** Vitest (`vitest.config.mts`, one project per package: `core` and `db` in Node, `ui` in jsdom with Testing Library).
 - **Location:** colocated `<file>.test.ts(x)` next to the code it tests.
@@ -142,6 +143,7 @@ Use today's date in file names. Never delete specs, runs or lessons – move the
 All from the repo root:
 
 ```bash
+npm run setup                  # idempotent local setup: deps, .env, PostgreSQL, migrations (scripts/setup.mjs)
 npm run dev                    # dev server on http://localhost:3000
 npm run lint                   # ESLint (all packages, incl. dependency boundaries)
 npm run typecheck              # next typegen + tsc --noEmit (all workspaces)
