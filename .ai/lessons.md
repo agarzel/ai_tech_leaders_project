@@ -2,6 +2,7 @@
 
 Short, durable findings for AI agents and humans. Newest first. Format: `- YYYY-MM-DD – lesson (context/link)`.
 
+- 2026-10-14 – Never run `docker compose down -v` (or anything else that deletes a developer's local data) to verify a change – use temporary resources or ask first. It wiped the local dev database while verifying PR #14; now enforced by review rule R3 (`.ai/skills/om-code-review`).
 - 2026-10-13 – agent-browser does not support Playwright pseudo-selectors like `:has-text()`. Use semantic locators (`find role button click --name …`) and give repeated controls unique accessible names.
 - 2026-10-13 – Integration tests start their own `next dev`; use `NEXT_DIST_DIR=.next-test` so they don't collide with a developer's running dev server.
 - 2026-10-13 – Vitest 5: with `--project <name>` coverage `include` globs are resolved relative to that project's root, without it relative to the repo root. Check coverage with a plain `npm run test:coverage`, not a filtered run.
