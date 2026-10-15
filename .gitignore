@@ -46,8 +46,9 @@ next-env.d.ts
 .next-test/
 packages/app/tests/integration/.artifacts/
 
-# personal study notes (course test prep) – not part of the project
+# personal course notes (lessons, study bank) – kept outside the repo; ignored in case they are copied in
 /study/
+/lessons/
 
 # Claude Code personal settings (permissions etc.)
 .claude/settings.local.json
