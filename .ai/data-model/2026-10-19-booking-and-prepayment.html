@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data model: booking and prepayment</title>
+<style>
+  body { margin: 0; font: 14px system-ui, sans-serif; background: #f8fafc; color: #111; }
+  header { padding: 12px 16px; border-bottom: 1px solid #e5e7eb; background: #fff; }
+  svg { width: 100vw; height: calc(100vh - 50px); cursor: grab; display: block; }
+  .node rect { rx: 8; stroke-width: 1.5; }
+  .node text { font-size: 13px; pointer-events: none; }
+  .dim { opacity: 0.15; }
+</style>
+</head>
+<body>
+<header>Spec <code>.ai/specs/2026-10-19-booking-and-prepayment.md</code> · drag to pan, wheel to zoom, click a node to focus · blue = new, grey = existing (changed)</header>
+<svg id="g"><g id="vp"></g></svg>
+<script>
+const data = {"nodes": [{"id": "entity_1", "label": "Booking", "fields": ["slot → Slot", "mentee → User", "mentor → MentorProfile", "lengthMinutes 25|50", "priceAmount, currency", "question (≤ 2,000)", "status", "holdExpiresAt, acceptBy", "entryPoint link|list"], "isNew": true, "x": 380, "y": 260}, {"id": "entity_2", "label": "Payment", "fields": ["booking → Booking (1-1)", "provider", "checkoutSessionId", "paymentIntentId", "amount, currency", "status", "refundId, lastError"], "isNew": true, "x": 380, "y": 20}, {"id": "entity_3", "label": "Slot (existing)", "fields": ["startsAt", "status open|booked"], "isNew": false, "x": 20, "y": 540}, {"id": "entity_4", "label": "User (existing)", "fields": ["id", "name", "role"], "isNew": false, "x": 380, "y": 560}, {"id": "entity_5", "label": "MentorProfile (existing)", "fields": ["user", "prices", "shareSlug"], "isNew": false, "x": 740, "y": 540}], "edges": [["entity_1", "entity_3", "n-1"], ["entity_1", "entity_4", "n-1 mentee"], ["entity_1", "entity_5", "n-1 mentor"], ["entity_2", "entity_1", "1-1"]]};
+const NS = "http://www.w3.org/2000/svg", vp = document.getElementById("vp"), svg = document.getElementById("g");
+const el = (t, a) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); return e; };
+const W = 250, LH = 18, box = n => ({ w: W, h: 30 + n.fields.length * LH });
+const byId = Object.fromEntries(data.nodes.map(n => [n.id, n]));
+const edgeEls = [], nodeEls = {};
+data.edges.forEach(([a, b, label], i) => {
+  const A = byId[a], B = byId[b], ba = box(A), bb = box(B), off = (i % 2) * 12;
+  const x1 = A.x + ba.w / 2 + off, y1 = A.y, x2 = B.x + bb.w / 2 + off, y2 = B.y + bb.h;
+  const g = el("g", {}); g.appendChild(el("line", { x1, y1, x2, y2, stroke: "#64748b", "stroke-width": 1.5 }));
+  const t = el("text", { x: (x1 + x2) / 2 + 6, y: (y1 + y2) / 2, fill: "#334155" }); t.textContent = label; g.appendChild(t);
+  vp.appendChild(g); edgeEls.push({ g, a, b });
+});
+data.nodes.forEach(n => {
+  const b = box(n), g = el("g", { class: "node", transform: `translate(${n.x},${n.y})` });
+  g.appendChild(el("rect", { width: b.w, height: b.h, fill: n.isNew ? "#2f6feb" : "#e5e7eb", stroke: n.isNew ? "#1b4fb0" : "#9ca3af" }));
+  const c = n.isNew ? "#fff" : "#111", title = el("text", { x: 10, y: 20, fill: c, "font-weight": "bold" }); title.textContent = n.label; g.appendChild(title);
+  n.fields.forEach((f, i) => { const t = el("text", { x: 10, y: 40 + i * LH, fill: c }); t.textContent = f; g.appendChild(t); });
+  g.addEventListener("click", ev => { ev.stopPropagation(); focus(n.id); });
+  vp.appendChild(g); nodeEls[n.id] = g;
+});
+function focus(id) {
+  const keep = new Set([id]); edgeEls.forEach(e => { if (e.a === id || e.b === id) { keep.add(e.a); keep.add(e.b); } });
+  Object.entries(nodeEls).forEach(([k, g]) => g.classList.toggle("dim", !keep.has(k)));
+  edgeEls.forEach(e => e.g.classList.toggle("dim", !(e.a === id || e.b === id)));
+}
+svg.addEventListener("click", () => { Object.values(nodeEls).forEach(g => g.classList.remove("dim")); edgeEls.forEach(e => e.g.classList.remove("dim")); });
+let s = 1, tx = 0, ty = 0, drag = null;
+const apply = () => vp.setAttribute("transform", `translate(${tx},${ty}) scale(${s})`);
+svg.addEventListener("wheel", e => { e.preventDefault(); s = Math.min(3, Math.max(0.3, s * (e.deltaY < 0 ? 1.1 : 0.9))); apply(); }, { passive: false });
+svg.addEventListener("mousedown", e => { drag = [e.clientX - tx, e.clientY - ty]; });
+window.addEventListener("mousemove", e => { if (drag) { tx = e.clientX - drag[0]; ty = e.clientY - drag[1]; apply(); } });
+window.addEventListener("mouseup", () => { drag = null; });
+apply();
+</script>
+</body>
+</html>

@@ -12,7 +12,7 @@ Four phases, each shippable on its own (see Phasing):
 1. **Accounts and sessions (`auth`)** — email + password registration for mentees, login/logout, a signed session cookie, and `requireSession` / `requireRole` / `assertOwner` replacing the temporary guard.
    **1b. Mentor invitations (`mentors`)** — mentor registration only through a founder-issued invitation link (creates the User only).
 2. **Mentor profile and prices (`mentors`)** — profile (name, headline, bio, stack tags, public-work links), the two prices in PLN, and the share slug, created on the mentor's first visit to `/mentor`.
-3. **Slots (`availability`)** — a mentor publishes start times; each blocks 50 minutes; only slots starting at least 12 hours ahead are bookable.
+3. **Slots (`availability`)** — a mentor publishes start times; each blocks 50 minutes; only slots starting at least 24 hours ahead are bookable (D13).
 4. **Share link and public list (`mentors`)** — a public mentor page at a stable link, and a public list of opted-in, bookable mentors.
 
 Decisions taken with the owner on 2026-10-19 (gate answers, recorded as D09–D12 below): email + password only (GitHub is a profile link, not a login); mentors join by invitation; Q02 answered — slots starting less than 12 hours ahead are not bookable in 1.0; PLN only.
@@ -69,8 +69,8 @@ Known limitations (accepted for 1.0, Grill Me 2026-10-19): no email verification
 | `requireSession`, `requireRole`, `assertOwner`, `Session` type | `core/src/http/auth.ts` | every authenticated route (#29–#36) |
 | `RateLimiter` (in-memory, per key, attempts + cooldown, reads `Clock`) | `core/src/http/rateLimit.ts` | login, register; later any abuse-prone endpoint |
 | `Clock` (`now(): Date`) in the cradle | `core/src/services/system/clock.ts` | rate limiter (Phase 1), slot visibility (Phase 3), acceptance deadline (R05), cancellation window (R04) |
-| Constants: `SESSION_LENGTHS = [25, 50]`, `SLOT_BLOCK_MINUTES = 50`, `BOOKING_LEAD_TIME_HOURS = 12`, `CURRENCY = "PLN"`, `MENTOR_TAGS` | `db/src/constants.ts` (client-safe, for validators and services; the UI gets values through DTOs) | validators, booking, cancellation |
-| `SlotService.listBookable(mentorId)` — one definition of "bookable" (open ∧ starts ≥ now + 12 h) | `core/src/services/availability/` | public pages (Phase 4), finding a mentor (#29); booking (#30) adds `assertBookable` on the same service |
+| Constants: `SESSION_LENGTHS = [25, 50]`, `SLOT_BLOCK_MINUTES = 50`, `BOOKING_LEAD_TIME_HOURS = 24` (D13), `CURRENCY = "PLN"`, `MENTOR_TAGS` | `db/src/constants.ts` (client-safe, for validators and services; the UI gets values through DTOs) | validators, booking, cancellation |
+| `SlotService.listBookable(mentorId)` — one definition of "bookable" (open ∧ starts ≥ now + 24 h, D13) | `core/src/services/availability/` | public pages (Phase 4), finding a mentor (#29); booking (#30) adds `assertBookable` on the same service |
 | `Slot.status` (`open` / `booked`) + unique `(mentor, starts_at)` | `db/src/entities/availability/` | booking flips `open → booked` in a transaction (idempotency rule); created now so #30 needs no migration on `slots` |
 | `MentorCard`, `SlotList` (grouped by day, viewer's local time with zone label), `formatPrice(minor, currency)` | `ui/src/components/mentors/`, `ui/src/components/availability/`, `ui/src/lib/` | public list, #29 search, booking pages |
 
@@ -125,7 +125,7 @@ New error: `TooManyRequestsError` (429, code `rate_limited`). Error codes are a 
 Public and mentor pages use Tailwind; admin pages use `@devmentor/ui` (shadcn). Forms use `CrudForm`, extended so a field declared `z.string().meta({ input: "password" })` renders `type="password"` with `autocomplete` set; lists use `DataTable`; loading, error and empty states use `feedback/`.
 
 - **(auth)** `/login`, `/register`, `/register/mentor?token=…` — after success everyone lands on `/` in Phase 1; from Phase 2 mentors land on `/mentor`. An expired or used invitation shows that the link is no longer valid and that the mentor should ask the founders for a new one (no form shown).
-- **(mentor)** `/mentor` — a checklist that drives the mentor to bookable, growing one item per phase: *profile* and *prices* (Phase 2), *at least one bookable slot* (Phase 3), *share link* and *public list* (Phase 4), each with its state, so a mentor never wonders why they are not visible. `/mentor/profile` edits profile and prices; from Phase 4 it also toggles "Show me on the public list". `/mentor/slots` lists upcoming slots grouped by day in the mentor's local time; adding a slot takes a date and time; slots inside the next 12 hours are shown as "not bookable — starts too soon".
+- **(mentor)** `/mentor` — a checklist that drives the mentor to bookable, growing one item per phase: *profile* and *prices* (Phase 2), *at least one bookable slot* (Phase 3), *share link* and *public list* (Phase 4), each with its state, so a mentor never wonders why they are not visible. `/mentor/profile` edits profile and prices; from Phase 4 it also toggles "Show me on the public list". `/mentor/slots` lists upcoming slots grouped by day in the mentor's local time; adding a slot takes a date and time; slots inside the next 24 hours are shown as "not bookable — starts too soon".
 - **Public** `/mentors` — cards (`MentorCard`): name, headline, tags, public-work links, both prices, soonest bookable slot; no ratings (N02). `/m/[slug]` — the share page: profile, prices, bookable slots (`SlotList`); the *Book* action is a disabled placeholder until #30.
 - **Admin** `/admin/invitations` — create an invitation by email; the link is shown once with a copy button; list shows pending / used / expired.
 - Header shows *Log in* / *Register*, or the user's name and *Log out*.
@@ -134,10 +134,10 @@ Public and mentor pages use Tailwind; admin pages use `@devmentor/ui` (shadcn). 
 - **Brute force:** 5 failed logins per IP + email within 15 min → 429 with a retry time; registration (both routes) is limited to 10 accounts per IP per hour. The limiter is in-memory, per process: acceptable for one container in 1.0; documented as needing a shared store before scaling out.
 - **Invitation misuse:** used, expired or unknown token → one generic "This invitation is no longer valid" (no detail on which). Two parallel registrations with one token → the transaction's `usedAt IS NULL` condition lets exactly one succeed.
 - **Existing email at mentor registration** (someone registered as a mentee first) → `conflict`; the admin can promote the account instead (admin user edit already sets `role`; the profile is created on the first visit to `/mentor`, as for invited mentors).
-- **Slot rules (server-side, in `SlotService`, inside a transaction):** `startsAt` must be at least 12 h from now and at most 60 days ahead, on a 15-minute grid, and at least 50 minutes from any other slot of the same mentor; violations → `validation_error` with a field message. Duplicate start → unique constraint → `conflict`.
+- **Slot rules (server-side, in `SlotService`, inside a transaction):** `startsAt` must be at least 24 h from now (D13) and at most 60 days ahead, on a 15-minute grid, and at least 50 minutes from any other slot of the same mentor; violations → `validation_error` with a field message. Duplicate start → unique constraint → `conflict`.
 - **Concurrent slot writes:** two requests adding slots 20 minutes apart could both pass the spacing check. `SlotService.publish` first locks the mentor's `mentor_profiles` row (`LockMode.PESSIMISTIC_WRITE`, i.e. `SELECT … FOR UPDATE`) inside the transaction, then checks spacing and inserts, so one mentor's slot writes are serialized. An integration-level test fires two overlapping publishes in parallel and expects exactly one `201` and one `validation_error`.
 - **Deleting a slot:** only `open` slots of the owner; a `booked` slot → `conflict` "Cancel the booking instead" (cancellation is R04, #34).
-- **Slot becomes too soon:** visibility is computed at read time with `Clock` (`startsAt ≥ now + 12 h`); nothing is mutated, so there is no job to fail.
+- **Slot becomes too soon:** visibility is computed at read time with `Clock` (`startsAt ≥ now + 24 h`); nothing is mutated, so there is no job to fail.
 - **Time zones and DST:** the browser converts the mentor's local date-time to an ISO UTC string, using the browser's zone (`Intl.DateTimeFormat().resolvedOptions().timeZone`, shown on the form); every display shows the viewer's local time with a zone label. The mentor and mentee may see different clock times for the same slot, by design.
   - *Nonexistent local time* (spring-forward gap, e.g. 02:30 on the last Sunday of March in Europe/Warsaw): the form converts and converts back; if the round trip does not return the entered time, it refuses with "This time does not exist in your time zone".
   - *Ambiguous local time* (fall-back, 02:00–02:59 occurs twice): the browser picks the first occurrence; before saving, the form previews "Starts {weekday, date, time} ({zone}, UTC{offset})" so the mentor sees which one. No server-side zone logic.
@@ -148,7 +148,7 @@ Public and mentor pages use Tailwind; admin pages use `@devmentor/ui` (shadcn). 
 ## 📝 Risks & Impact Review
 - **Hard to reverse:** the `users.password_hash` column and the three new tables (migrations); the share slug format once links are shared publicly (slugs are never regenerated); the `rate_limited` error code (contract).
 - **Behavior change for developers:** admin pages are no longer open in development. Integration tests and local work need a seeded admin — Phase 1 adds it to the integration global setup and a `npm run auth:set-password` script (a new root npm script: additive contract, documented in `AGENTS.md`). Coordinate with #17 (db seeder).
-- **Product limitation, owner-accepted (D09):** no same-day help in 1.0 — every bookable slot is at least 12 h away, which the brief's Decision summary and the synthetic panel flagged as the most likely reason urgent developers leave (A01). Measured once bookings exist.
+- **Product limitation, owner-accepted (D09, tightened by D13):** no same-day help in 1.0 — every bookable slot is at least 24 h away, which the brief's Decision summary and the synthetic panel flagged as the most likely reason urgent developers leave (A01). Measured once bookings exist.
 - **Security review required:** `risk-high` (auth, sessions, money fields, migrations) — needs QA and a second reviewer per `SDLC.md`; no self-QA.
 - **Dependencies:** `bcryptjs` and `jose` in `@devmentor/core` (both pure JS, no native build).
 
@@ -159,7 +159,7 @@ New decisions from this spec's gate, owner Arkadiusz, 2026-10-19 — recorded in
 
 | Id | Decision | Why |
 |---|---|---|
-| D09 | Answers Q02: slots starting less than 12 h ahead are not bookable in 1.0 | keeps R05/D07 intact; revisit with A01 data after the first bookings |
+| D09 | Answers Q02: slots starting less than 12 h ahead are not bookable in 1.0 — **superseded by D13 (24 h)**, decided in the booking spec's gate | keeps R05/D07 intact; revisit with A01 data after the first bookings |
 | D10 | Sign-in is email + password only in 1.0; GitHub is a public-work link on the profile | no new provider; standards already define the password path |
 | D11 | Mentors register only through an invitation link issued by an admin; every admin is a founder (the first admin exists only via `auth:set-password --admin`); mentees self-register | matches the recruitment test (A02) and keeps the mentor list curated |
 | D12 | Prices are in PLN only, stored in grosze | the evidence comes from a Polish developer community |
@@ -205,7 +205,7 @@ Owner decisions on the reviews, 2026-10-19:
 ### Phase 3 — Slots (#27)
 1. `BOOKING_LEAD_TIME_HOURS`, `SLOT_BLOCK_MINUTES`; `Slot` + migration with the unique constraint and index.
 2. `SlotService` (publish, delete own open slot, `listForOwner`, `listBookable`) with all Edge Case rules in one transaction; unit tests with a fake clock for each rule (lead time, horizon, grid, 50-minute spacing, duplicate; booked delete via a mocked `booked` slot).
-3. `/api/mentor/slots`, `/mentor/slots` page with `SlotList`; checklist gains *at least one bookable slot*. Integration test: publish, see it, delete it; a slot inside 12 h is refused. Screenshot.
+3. `/api/mentor/slots`, `/mentor/slots` page with `SlotList`; checklist gains *at least one bookable slot*. Integration test: publish, see it, delete it; a slot inside 24 h is refused. Screenshot.
 
 ### Phase 4 — Share link and public list (#28)
 1. Share link shown on `/mentor` (checklist gains *share link* and *public list*); `listed` toggle on the profile page.
