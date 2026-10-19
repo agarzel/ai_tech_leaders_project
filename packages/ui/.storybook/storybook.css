@@ -27,6 +27,8 @@
 }
 @custom-variant focus-visible (&:focus-visible, &[data-preview-state~="focus-visible"]);
 @custom-variant active (&:active, &[data-preview-state~="active"]);
+/* Menu items are highlighted by real focus (Base UI moves focus), so `focus:` gets a preview too. */
+@custom-variant focus (&:focus, &[data-preview-state~="focus"]);
 
 /* link-text is a CSS utility, not a Tailwind variant chain: mirror its :hover / :focus-visible here. */
 .link-text[data-preview-state~="hover"] {

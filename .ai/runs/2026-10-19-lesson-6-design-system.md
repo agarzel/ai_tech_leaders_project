@@ -127,3 +127,17 @@ Verified: lint OK, typecheck OK, test:coverage OK (170, 100%), build OK, build-s
 Found on the way: `lint:tokens` also scans comments (three comments reworded); the base `ItemGroup role="list"` had no `listitem` children – `Item` now has `role="listitem"`.
 
 Handoff: owner decisions on B34–B46, then batch 4 (Dialog, AlertDialog, DropdownMenu, Popover, Tooltip, Tabs).
+
+## Stage 2, batch 4 (2026-10-19)
+
+Goal: Dialog, AlertDialog, DropdownMenu, Popover, Tooltip, Tabs. Batch 3 committed by the coordinator (5b1ea6c, lint:tokens 0, test:integration 11/11). A separate read-only audit agent was running the dev server on port 3000 concurrently (left untouched); `lekcja-06/audyt-aplikacji.md` appeared from it, not from this run.
+
+Decisions: proposals B47–B59 in POSTEP.md, each in a conservative reversible form (new `--overlay` token without blur; fade/zoom-only motion; one dialog width; AlertDialog without media/size; dropdown menu items ≥28px/40px touch; no submenus/checkbox/radio items; tooltip without an arrow, default 600ms delay; tabs in one line style, manual activation).
+
+Verified: lint OK, typecheck OK, test:coverage OK (170, 100%), build OK, build-storybook OK (8 new docs pages checked for 13 sections and valid tables), test:storybook OK (272/272, both themes, after fixing one flaky Tabs test). lint:tokens OK (0 findings, 105 files). CLI: no overwrites (button.tsx), package.json and lockfile unchanged. No `git stash`; nothing committed.
+
+Rule 9 (overlay theme from `<html>`) verified explicitly in a headless browser: dropdown/popover popups take the dark `--card`/`--popover` colour when `<html>` carries `.dark`; tooltip's inverted colours are by design.
+
+Bugs found and fixed: Field's invalid-state colour was applied to the whole container instead of just the label/error (fixed with a scoped selector); a flaky Tabs interaction test (Base UI keeps the outgoing panel `inert` in the DOM during its exit transition — test now filters `[inert]` and waits); a Dialog story used `"x".repeat(290)` as decline-reason text — replaced with a realistic sentence (prompt rule 7, no invented filler data).
+
+Handoff: owner decisions on B47–B59, then batch 5 (Skeleton, Spinner, Table — adapting existing primitives — and a review of the `backend/` blocks), which closes the stage-2 minimal set.

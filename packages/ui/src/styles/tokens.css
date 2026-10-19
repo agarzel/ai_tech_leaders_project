@@ -76,6 +76,7 @@
   --border: var(--raw-stone-200); /* 1 px row separators, list/panel frame – decorative, below 3:1 by decision T5 – R01.3 */
   --input: var(--raw-stone-500); /* form control outline – WCAG 1.4.11, T3 */
   --ring: var(--raw-stone-900); /* focus ring, neutral – T4 */
+  --overlay: color-mix(in oklab, var(--raw-stone-950) 30%, transparent); /* dialog backdrop, no blur – B47, A01 */
 
   /* Charts – unchanged, unused (T16) */
   --chart-1: var(--raw-neutral-300);
@@ -150,4 +151,5 @@
   --border: var(--raw-white-10); /* decorative separator, below 3:1 by decision – T5 */
   --input: var(--raw-stone-500); /* T3 */
   --ring: var(--raw-stone-100); /* T4 */
+  --overlay: color-mix(in oklab, var(--raw-stone-950) 70%, transparent); /* B47 – darker, the page is already dark */
 }

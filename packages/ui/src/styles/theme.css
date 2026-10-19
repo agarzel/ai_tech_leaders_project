@@ -5,7 +5,7 @@
  * Classes this file adds (besides the shadcn colour names):
  *   spacing   gap-in-group, gap-between-groups, p-panel, gap-section / mt-section,
  *             py-list-row, px-list-row, gap-message-group, gap-message, h-control / size-control, h-control-sm / size-control-sm
- *   colour    bg-secondary-hover (B14)
+ *   colour    bg-secondary-hover (B14), bg-overlay (B47)
  *   grid      grid-cols-icon-content, grid-cols-content-action (B20)
  *   link      link-text – links in running text (T11, B34)
  *   type      type-page-title, type-section-title, type-body, type-label, type-meta, type-code
@@ -35,6 +35,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-overlay: var(--overlay);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);

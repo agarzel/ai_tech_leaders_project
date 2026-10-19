@@ -16,14 +16,16 @@ const themeProject = (theme: "light" | "dark") => ({
   define: { __SB_THEME__: JSON.stringify(theme) },
   // Pre-bundle what the primitives import, so Vite does not reload the browser mid-run on a cold cache.
   optimizeDeps: {
-    include: ["@base-ui/react/button", "@base-ui/react/input", "@base-ui/react/separator", "@base-ui/react/checkbox", "@base-ui/react/radio", "@base-ui/react/radio-group", "@base-ui/react/switch", "@base-ui/react/avatar", "@base-ui/react/merge-props", "@base-ui/react/use-render", "class-variance-authority", "lucide-react"],
+    include: ["@base-ui/react/button", "@base-ui/react/input", "@base-ui/react/separator", "@base-ui/react/checkbox", "@base-ui/react/radio", "@base-ui/react/radio-group", "@base-ui/react/switch", "@base-ui/react/avatar", "@base-ui/react/merge-props", "@base-ui/react/use-render", "@base-ui/react/dialog", "@base-ui/react/alert-dialog", "@base-ui/react/menu", "@base-ui/react/popover", "@base-ui/react/tooltip", "@base-ui/react/tabs", "class-variance-authority", "lucide-react"],
   },
   test: {
     name: `storybook-${theme}`,
     browser: {
       enabled: true,
       headless: true,
-      provider: playwright(),
+      // Reduced motion: overlays open and close without animation, so axe and focus checks see the
+      // final state (and the motion-reduce variants are exercised).
+      provider: playwright({ contextOptions: { reducedMotion: "reduce" } }),
       instances: [{ browser: "chromium" as const }],
     },
   },

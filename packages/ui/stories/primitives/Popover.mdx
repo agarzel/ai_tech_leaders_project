@@ -1,0 +1,109 @@
+import { Canvas, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as PopoverStories from "./Popover.stories";
+
+<Meta of={PopoverStories} />
+
+# Popover
+
+`import { Popover, PopoverTrigger, PopoverContent, PopoverHeader, PopoverTitle, PopoverDescription } from "@devmentor/ui/components/ui/popover"`
+
+## 1. Purpose
+
+Shows a short explanation or a small piece of interactive content next to the thing it explains, without blocking the page.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Why a slot time differs between mentor and mentee (time zones, DST) | mentor-accounts spec (time zones and DST) |
+| A short explanation with a link that people may want to follow | **proposal** |
+
+## 3. When not to use
+
+| Instead of a popover… | Use | Why |
+|---|---|---|
+| Information needed to complete a task (format, limit, price) | visible text: `FieldDescription`, the page | never hide what is needed to act (prompt stage 4) |
+| A name for an icon button | `Tooltip` | – |
+| A decision or a form | `Dialog` | modal, focus trapped |
+| Actions | `DropdownMenu` | menu semantics |
+
+## 4. Anatomy
+
+| Part | Optional | Notes |
+|---|---|---|
+| `PopoverTrigger` | no | a `Button` (often `variant="link"`) via `render` |
+| `PopoverContent` | no | `popover` surface, 1 px border, `rounded-lg`, no shadow; `p-panel`, `gap-in-group`; 288 px, narrower if the viewport is |
+| `PopoverHeader` → `PopoverTitle`, `PopoverDescription` | yes | `type-label` / `type-body muted-foreground`; links via `link-text` |
+
+<Canvas of={PopoverStories.Open} />
+
+## 5. Variants
+
+None (rule 6). Position via `side` and `align`.
+
+## 6. States
+
+Closed (Playground) and open (Open). The trigger shows `aria-expanded`. Opening fades/zooms in 100 ms, instant with reduced motion (F3 **proposal**, B48). Hover, disabled and error do not apply to the panel.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Opens on click/Enter/Space, not on hover. | WAI-ARIA disclosure / dialog (non-modal) |
+| Focus moves into the panel; Escape or a click outside closes it; focus returns to the trigger. | WAI-ARIA, WCAG 2.4.3 |
+| The panel is a non-modal dialog named by `PopoverTitle`. | WAI-ARIA |
+| Portalled to `<body>`, themed from `<html>`. | prompt rule 9 |
+
+## 8. Content
+
+- Title: the answer in a few words (*Shown in your time zone*); description: one or two sentences.
+- The trigger asks the question people have (*Why this time?*). (**proposal**)
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | Width limited to the available space; flips sides to stay visible. |
+| 768 px and 1440 px | 288 px, aligned to the trigger. |
+
+<Canvas of={PopoverStories.Narrow} />
+
+## 10. API
+
+| Part | Props | Notes |
+|---|---|---|
+| `Popover` | Base UI `Popover.Root`: `open`, `defaultOpen`, `onOpenChange` | |
+| `PopoverTrigger` | Base UI props + `render` | |
+| `PopoverContent` | Base UI `Popover.Popup` + `side` (`"bottom"`), `align` (`"center"`), `sideOffset` (4), `alignOffset` (0) | |
+| `PopoverHeader`, `PopoverTitle`, `PopoverDescription` | – | |
+
+## 11. Code
+
+<Source
+  dark
+  code={`<Popover>
+  <PopoverTrigger render={<Button variant="link" />}>Why this time?</PopoverTrigger>
+  <PopoverContent align="start">
+    <PopoverHeader>
+      <PopoverTitle>Shown in your time zone</PopoverTitle>
+      <PopoverDescription>{zone}. The mentor may see a different clock time for the same slot.</PopoverDescription>
+    </PopoverHeader>
+  </PopoverContent>
+</Popover>`}
+/>
+
+## 12. Do and don't
+
+| Do | Don't | Why |
+|---|---|---|
+| The price on the page before the question box | the price inside a popover | needed to decide (R01.5/P5) |
+| A popover explaining time zones | a popover that opens on hover | keyboard and touch users cannot hover (WCAG 1.4.13) |
+
+## 13. Related
+
+- **Confused with:** `Tooltip` (a label), `Dialog` (modal), `DropdownMenu` (actions).
+- **Used in:** `SlotTimeField`, `SlotList` (time zone explanation, stage 3).
+
+### Interaction test
+
+<Canvas of={PopoverStories.KeyboardAndFocusReturn} />

@@ -8,15 +8,15 @@ Plik roboczy zadania z `lekcja-06/prompt-storybook.md`. Nowa sesja: przeczytaj p
 |---|---|
 | 0. Inwentaryzacja i plan | zakończony 2026-10-19 – decyzje właściciela zapisane niżej |
 | 1. Fundamenty | zakończony 2026-10-19 – F1 wdrożone, F2–F6 zapisane; czeka na „dalej” |
-| 2. Komponenty bazowe | w toku – partie 1 (1710f15), 2 (661d3c7) i 3 (2026-10-19, niezacommitowana) zakończone; czekają decyzje B34–B46; `lint:tokens` = 0 |
+| 2. Komponenty bazowe | w toku – partie 1 (1710f15), 2 (661d3c7), 3 (5b1ea6c) i 4 (2026-10-19, niezacommitowana) zakończone; czekają decyzje B47–B59; `lint:tokens` = 0 |
 | 3. Komponenty produktu, wzorce, ekrany | nie rozpoczęty |
 | 4. Strony, które uczą | nie rozpoczęty |
 | 5. Sprawdzenie i raport | nie rozpoczęty |
 
 ## Następny krok
 
-Decyzje B34–B46 (partia 3, sekcja niżej) – wszystkie wdrożone w zachowawczej, odwracalnej wersji. Po commicie partii 3 przez koordynatora i „dalej” → partia 4: Dialog, AlertDialog, DropdownMenu, Popover, Tooltip, Tabs (motyw na `<html>` – zasada 9, sprawdzić nakładki w obu motywach). Te same zasady procesu.
-Nic z partii 3 nie jest zacommitowane – commit robi właściciel.
+Decyzje B47–B59 (partia 4, sekcja niżej) – wszystkie wdrożone w zachowawczej, odwracalnej wersji. Po commicie partii 4 przez koordynatora i „dalej” → partia 5: Skeleton, Spinner (istniejący – dopasowanie), Table (istniejący – dopasowanie) i przegląd bloków `backend/` (EmptyState, ErrorMessage, LoadingMessage). To zamyka listę minimalnego zestawu z etapu 0/2; potem etap 3 (komponenty produktu, wzorce, ekrany).
+Nic z partii 4 nie jest zacommitowane – commit robi właściciel.
 
 ## Zatwierdzone decyzje (źródła: `lekcja-06/referencje.md`, `lekcja-06/tokeny.md`)
 
@@ -403,3 +403,62 @@ Wynika wprost: Card – ramka `border` zamiast `ring`, `rounded-lg`, `p-panel`/`
 - Testy integracyjne aplikacji (Docker) – wygląd `/admin`, `/admin/users` zmieniony (Card, Badge, Alert).
 - Prawdziwe urządzenie dotykowe (Alert 48 px z akcją).
 - Czytnik ekranu na żywo (role list/listitem, link rozciągnięty na wiersz) – tylko axe i testy play.
+
+### Decyzje właściciela B34–B46 (Arkadiusz, 2026-10-19)
+
+- B34–B46 przyjęte w całości. B41 w opisanej formie: Alert z błędem bez czerwonej ramki – sygnał to ikona, tytuł i tekst.
+- Partia 3 zacommitowana przez koordynatora (wszystkie sprawdzenia, w tym test:integration 11/11 i lint:tokens 0).
+- „dalej” → partia 4: Dialog, AlertDialog, DropdownMenu, Popover, Tooltip, Tabs.
+
+## Etap 2 – partia 4, wynik (2026-10-19)
+
+Dialog, AlertDialog, DropdownMenu, Popover, Tooltip, Tabs. Wszystkie nakładki portalowane na `<body>` i sprawdzone w obu motywach (zasada 9): tło bierze motyw z klasy na `<html>`, co widać w zrzutach i w teście `npx vitest` (`html.dark: true`, tło panelu = `--card`/`--popover` ciemnego motywu).
+
+### Propozycje B47–B59 (materiały milczą; wdrożone zachowawczo, odwracalnie – do zatwierdzenia)
+| # | Propozycja | Źródło / dlaczego |
+|---|---|---|
+| B47 | Nowy token `--overlay`: tło pod nakładką bez rozmycia – jasny: stone-950 przy 30%, ciemny: stone-950 przy 70% (strona już ciemna, więc mocniejsze zaciemnienie oddziela nakładkę) | R01.3/A01 (bez `backdrop-blur`), T5 |
+| B48 | Ruch nakładek: tylko fade/zoom 100 ms, bez `slide-in-from-*`; `motion-reduce:animate-none` wszędzie | F3 (propozycja strony Motion), WCAG 2.3.3 |
+| B49 | Dialog i AlertDialog: jedna szerokość `max-w-sm` (384 px), 16 px odstępu od krawędzi na wąskich ekranach, zamiast arbitralnego `calc(100%-2rem)` | zasada 3, T8 |
+| B50 | AlertDialog bez `size="sm"`, bez `AlertDialogMedia` (ikonka 40 px w kółku), nagłówek wyrównany do lewej zamiast wyśrodkowany | zasada 6; prompt etap 4 „wszystko wyśrodkowane” to generyczny wygląd AI |
+| B51 | AlertDialogCancel pierwszy w DOM i dostaje fokus przy otwarciu (zachowanie Base UI) – bezpieczny wybór jest łatwiejszy do trafienia | prompt etap 3 (potwierdzenie usunięcia: „przycisk rezygnacji łatwy do znalezienia”) |
+| B52 | Pozycja menu: min. wysokość `control-sm` (28 px, 40 px dotyk) zamiast sztywnych `py-1` | B2, P4, WCAG 2.5.8 |
+| B53 | DropdownMenu bez submenu, bez checkbox/radio items – tylko akcje | zasada 6; żadny ekran nie potrzebuje zagnieżdżonego menu ani wyboru w menu |
+| B54 | DropdownMenuItem podświetlenie = `accent` (neutralny stone), nie akcent | P4, P5/K3 |
+| B55 | Tooltip bez strzałki (`Arrow`) – wymagała arbitralnych przesunięć zależnych od strony | zasada 3 |
+| B56 | Tooltip: domyślne opóźnienie Base UI (600 ms), bez wymuszania 0 ms jak w bazie | charakter „spokojny”; natychmiastowe podpowiedzi migoczą przy przesuwaniu myszą |
+| B57 | Tabs: jeden styl „linia” (podkreślenie), bez segmentowanego `default` z bazy i bez orientacji pionowej | R01 (referencje GitHub/zakładki w stylu linii), zasada 6 |
+| B58 | Lista zakładek przewija się w bok na wąskim ekranie zamiast zawijać | WCAG 1.4.10 (dozwolone dla paska narzędziowego) |
+| B59 | Tabs: aktywacja ręczna (Enter/Space wybiera), zgodnie z domyślnym zachowaniem Base UI, nie automatyczna przy przesuwaniu fokusu strzałkami | WAI-ARIA (oba wzorce dozwolone; ręczna bezpieczniejsza, gdy zmiana karty jest kosztowna) |
+
+Wynika wprost: popover/dialog/menu bez cienia i pierścienia, tylko `border` 1 px i `rounded-lg` (R01.3, B3); `type-section-title` dla tytułów dialogów (B37, P2); linki w opisach przez `link-text` (T11).
+
+### Co się zmieniło
+- CLI `add dialog alert-dialog dropdown-menu popover tooltip tabs`: 6 nowych plików; nadpisanie `button.tsx` odmówione; `package.json` i lockfile bez zmian (porównane z kopią sprzed CLI).
+- `tokens.css`/`theme.css`: token i klasa `overlay`/`bg-overlay` (jasny i ciemny, policzony jako mieszanie koloru – nieprzezroczysty orientacyjnie, dekoracyjny jak maska, nie tekst).
+- `.storybook/storybook.css`: dodany wariant `focus` (obok `hover`/`focus-visible`/`active`) do zamrożonych podglądów podświetlenia pozycji menu.
+- `vitest.storybook.config.mts`: `optimizeDeps` rozszerzone o moduły nakładek Base UI; `provider: playwright({ contextOptions: { reducedMotion: "reduce" } })` – testy nakładek czekały na animacje wejścia/wyjścia (100 ms), co przy przeładowaniach Vite dawało sporadyczne niezgodności; z redukcją ruchu stany końcowe są natychmiastowe i powtarzalne.
+- Nowe strony i stories: Dialog, AlertDialog, DropdownMenu, Popover, Tooltip, Tabs (13 sekcji, macierze stanów, wąski ekran, testy klawiatury i powrotu fokusu po zamknięciu).
+- `Field`: naprawiona kolejność selektorów (`data-[invalid=true]:**:data-[slot=field-label]:text-destructive` zamiast koloru na całym kontenerze) – przy błędzie tylko etykieta i tekst błędu są czerwone, nie cała zawartość pola; dodane `min-w-0`, żeby pole w gęstej siatce (np. w Dialogu) nie wypychało karty.
+- Naprawiony niestabilny test Tabs: Base UI trzyma znikający panel w DOM z `inert` podczas przejścia, więc test filtruje `[inert]` i czeka (`waitFor`) zamiast zakładać dokładnie jeden `tabpanel` od razu.
+- Treść przykładu w Dialog (powód odrzucenia > 280 znaków) zamieniona z ciągu `"x".repeat(290)` na prawdziwe, realistyczne zdanie (zasada 7 promptu – żadnych sztucznych danych).
+
+### Sprawdzenie zasady 9 (motyw z `<html>`)
+Zrzuty i zapytanie w przeglądarce (motyw ciemny ustawiony przez toolbar Storybooka na `<html>`) potwierdzają: `DropdownMenuContent` i `PopoverContent` mają tło `--card`/`--popover` ciemnego motywu (`oklch(0.216 …)`, czyli stone-900); `TooltipContent` odwraca kolory celowo (tło `foreground`, czyli w ciemnym motywie jasne stone-50 – zamierzone, bo to napis na plakietce, nie panel). Żadna nakładka nie zażółciła się/nie została jasna przez przypadek.
+
+### Wyniki sprawdzeń
+| Komenda | Wynik |
+|---|---|
+| `npm run lint` | OK |
+| `npm run typecheck` | OK |
+| `npm run test:coverage` | OK – 170 testów, 100% |
+| `npm run build` | OK |
+| `npm run build-storybook` | OK; 8 nowych stron: po 13 sekcji, tabele równe, bez widocznych błędów |
+| `npm run test:storybook` | OK – 272/272 (136 stories × 2 motywy; po jednej niestabilności w Tabs, naprawionej i potwierdzonej powtórnym przebiegiem) |
+| `npm run lint:tokens` | OK – 0 wartości spoza tokenów (105 plików) |
+
+### Czego nie sprawdzono
+- Testy integracyjne aplikacji (Docker) – app nie używa jeszcze tych komponentów.
+- Prawdziwe urządzenie dotykowe (otwieranie nakładek, 40 px pozycji menu).
+- Ręczna obsługa klawiaturą poza testami play (np. zagnieżdżone nakładki jedna nad drugą – nie występuje w zaplanowanych ekranach).
+- Zachowanie przy `prefers-reduced-motion` na prawdziwej przeglądarce z włączoną redukcją ruchu systemowo (testy ustawiają to przez kontekst Playwrighta, nie przez CSS media query ręcznie sprawdzony wizualnie).
