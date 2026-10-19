@@ -1,0 +1,148 @@
+import { Canvas, Meta, Source, Unstyled } from "@storybook/addon-docs/blocks";
+import * as ItemStories from "./Item.stories";
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "../../src/components/ui/item";
+import { Card, CardContent } from "../../src/components/ui/card";
+import { DoDont } from "../../.storybook/blocks/Docs";
+
+<Meta of={ItemStories} />
+
+# Item (dense list row)
+
+`import { ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemLink, ItemDescription, ItemActions } from "@devmentor/ui/components/ui/item"`
+
+## 1. Purpose
+
+Shows many things of one kind – bookings, slots, invitations – as short rows, so a person can scan dozens of them without scrolling and open the one that needs attention.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Mentor's bookings (`/mentor/bookings`): question as the title, mentee, local time with zone, length and price as the metadata line, status and *Accept* | R01.1, booking spec, S21 |
+| Mentee's bookings (`/bookings`) | booking spec |
+| Mentor's slots (`/mentor/slots`), grouped by day | mentor-accounts spec |
+| Admin invitations (pending / used / expired) when not tabular | mentor-accounts spec |
+
+## 3. When not to use
+
+| Instead of rows… | Use | Why |
+|---|---|---|
+| Admin data with many comparable columns | `DataTable` | S21 |
+| One topic with a title and a form | `Card` | a panel, not a list |
+| Cards per item with shadows | rows in one frame | R01.3/P3 |
+| The session conversation | message groups (product component) | K1, K4 |
+
+## 4. Anatomy
+
+| Part | Optional | Notes |
+|---|---|---|
+| `ItemGroup` | no | the list: `role="list"`, one 1 px frame, 1 px lines between rows, `card` surface (R01.3, B35) |
+| `Item` | no | a row: `role="listitem"`, padding `py-list-row` / `px-list-row` (8 / 12 px, T9) |
+| `ItemMedia` | yes | an icon (`variant="icon"`, 16 px, `muted-foreground`) |
+| `ItemContent` | no | title + metadata, no gap (T12) |
+| `ItemTitle` | no | `type-label` (14 px / 500, T12), one line, ellipsis |
+| `ItemLink` | when the row opens a page | inside `ItemTitle`; covers the whole row (B36) |
+| `ItemDescription` | yes | the one metadata line: `type-meta` (12 px), `muted-foreground`, one line (R01.1, T12) |
+| `ItemActions` | yes | status badge and at most one or two `sm` buttons; stays clickable above the row link |
+
+<Canvas of={ItemStories.Anatomy} />
+
+## 5. Variants
+
+None (B35): the base-nova variants (`outline`, `muted`), sizes (`sm`, `xs`), `ItemHeader`, `ItemFooter`, `ItemSeparator` and image media were not taken – one row style for every list (R01.1, rule 6).
+
+## 6. States
+
+<Canvas of={ItemStories.States} />
+
+| State | Looks | Source |
+|---|---|---|
+| Default | `card` surface, line below | R01.3 |
+| Hover (linked row) | row `muted`, title underlined | P4 (`muted` = row hover) |
+| Focus (linked row) | inset neutral ring around the whole row | T4, WCAG 2.4.7 |
+| Selected, pressed, disabled | not used; a row that cannot be opened has no link | rule 6 |
+| Loading, empty, error of the list | skeleton rows, `EmptyState`, `ErrorMessage` (stage 3 patterns) | prompt stage 3 |
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| `ItemGroup` is a list and each `Item` a list item; screen readers announce "list, 3 items". | WCAG 1.3.1 |
+| A clickable row is one link (the title) stretched over the row – not a `div` with `onClick`, not a row wrapped in `<a>` (that would break the list and nest buttons in a link). | WAI-ARIA, B36 |
+| Tab order: row link, then the row's actions. Enter opens the row. | WCAG 2.4.3 |
+| Status in words (`Badge`), not colour. | WCAG 1.4.1 |
+| Row actions have unique names when repeated (*Accept booking from Jan Nowak* via `aria-label` when the visible text is the same in every row). | WCAG 2.4.6, `AGENTS.md` (integration tests) |
+
+## 8. Content
+
+- Title: the most specific thing – the question for bookings, date and time for slots. One line; cut with an ellipsis, full text on the detail page. (R01.1)
+- Metadata line: who · when (local time with zone) · length · price, separated by ` · `. (R01.1, mentor-accounts spec: time with zone label)
+- No counters, no ratings, no "years of experience". (A03, A05, P10)
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | Title and metadata truncate; status and actions stay at the end; the row link still covers the row. |
+| 768 px | Same; more text fits. |
+| 1440 px | List at most `max-w-5xl` (F2); dozens of rows visible (R01.1). |
+
+<Canvas of={ItemStories.LongTextNarrow} />
+
+## 10. API
+
+| Part | Props | Notes |
+|---|---|---|
+| `ItemGroup` | `<div>` props | `role="list"` |
+| `Item` | `<div>` props + `render` (Base UI) | `role="listitem"`; variants and sizes removed (B35) |
+| `ItemMedia` | `<div>` props + `variant?: "default" \| "icon"` | |
+| `ItemContent`, `ItemTitle`, `ItemActions` | `<div>` props | |
+| `ItemLink` | `<a>` props | new part (B36) |
+| `ItemDescription` | `<p>` props | |
+
+## 11. Code
+
+<Source
+  dark
+  code={`<ItemGroup>
+  <Item><ItemContent><ItemTitle>Tue 3 Nov, 18:00 CET</ItemTitle></ItemContent></Item>
+</ItemGroup>`}
+/>
+
+<Source
+  dark
+  code={`<ItemGroup>
+  {bookings.map((b) => (
+    <Item key={b.id}>
+      <ItemContent>
+        <ItemTitle><ItemLink href={\`/mentor/bookings/\${b.id}\`}>{b.question}</ItemLink></ItemTitle>
+        <ItemDescription>{b.menteeName} · {formatLocal(b.startsAt)} · {b.lengthMinutes} min · {formatPrice(b.priceAmount, b.currency)}</ItemDescription>
+      </ItemContent>
+      <ItemActions>
+        <BookingStatus status={b.status} />
+        {b.status === "awaiting_acceptance" && <Button size="sm" variant="outline" aria-label={\`Accept booking from \${b.menteeName}\`}>Accept</Button>}
+      </ItemActions>
+    </Item>
+  ))}
+</ItemGroup>`}
+/>
+
+## 12. Do and don't
+
+<Unstyled>
+  <DoDont
+    doExample={<ItemGroup><Item><ItemContent><ItemTitle>Ingress-nginx restarts</ItemTitle><ItemDescription>Jan Nowak · Tue 3 Nov, 18:00 CET</ItemDescription></ItemContent></Item><Item><ItemContent><ItemTitle>React compiler migration</ItemTitle><ItemDescription>Ola Wójcik · Thu 5 Nov, 19:30 CET</ItemDescription></ItemContent></Item></ItemGroup>}
+    doText="One frame, thin lines, title + one metadata line (R01.1, R01.3)."
+    dontExample={<div className="flex w-full flex-col gap-in-group"><Card><CardContent>Ingress-nginx restarts</CardContent></Card><Card><CardContent>React compiler migration</CardContent></Card></div>}
+    dontText="A card per booking wastes space and hides the order (R01.3/P3)."
+  />
+</Unstyled>
+
+## 13. Related
+
+- **Confused with:** `Card` (one topic), `DataTable` (admin tables).
+- **Used in:** product `BookingRow`, `MentorBookingRow`, `SlotRow` (stage 3); pattern *List with filters* (stage 3).
+
+### Interaction test
+
+<Canvas of={ItemStories.KeyboardAndActions} />

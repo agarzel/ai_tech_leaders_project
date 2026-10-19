@@ -1,0 +1,122 @@
+import { Canvas, Meta, Source, Unstyled } from "@storybook/addon-docs/blocks";
+import * as AvatarStories from "./Avatar.stories";
+import { Avatar, AvatarFallback } from "../../src/components/ui/avatar";
+import { DoDont } from "../../.storybook/blocks/Docs";
+
+<Meta of={AvatarStories} />
+
+# Avatar
+
+`import { Avatar, AvatarImage, AvatarFallback } from "@devmentor/ui/components/ui/avatar"`
+
+## 1. Purpose
+
+Lets a person see at a glance who wrote which group of messages in a session, next to the name and time.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| The author of a message group in the session view: avatar on the left, bold name, time in `muted-foreground` | R02.3 |
+| The signed-in person in the account menu (`AccountMenu`, stage 3) | **proposal** |
+
+## 3. When not to use
+
+| Instead of an avatar… | Use | Why |
+|---|---|---|
+| A wall of mentor cards led by faces | name, headline, tags and public-work links | A05 (no avatar walls), N02 |
+| Presence (online dot), "+3 people" stacks | nothing | P9 (no presence), P10 (no counters) – `AvatarBadge`, `AvatarGroup`, `AvatarGroupCount` removed (B45) |
+| Decoration of a list row | text | R01.1 |
+
+## 4. Anatomy
+
+| Part | Optional | Notes |
+|---|---|---|
+| `Avatar` | no | 32 px, `rounded-full` – the only full circle in the system (P13); 1 px inner border |
+| `AvatarImage` | yes | the photo; `alt=""` when the name is written next to it |
+| `AvatarFallback` | no | shown while the photo loads or when there is none |
+
+## 5. Variants
+
+One size, 32 px (B43): the base-nova `sm` and `lg` sizes have no use case in the specs.
+
+**Fallback (B44, proposal):** 1–2 initials of the name in `muted-foreground` on `muted` (7.01 : 1), the same neutral colours for everyone; with no usable name, a neutral person icon. Never a colour derived from the name, never a gradient. (A01 – generic look; P9 – nothing that signals status)
+
+<Canvas of={AvatarStories.Fallbacks} />
+
+## 6. States
+
+<Canvas of={AvatarStories.States} />
+
+Static: default only. Loading the photo shows the fallback; a broken photo keeps the fallback. No hover, focus, selected or presence state (P9).
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| When the name is visible next to it, hide the avatar from screen readers (`aria-hidden="true"` on `Avatar`, `alt=""` on the image) – otherwise the name is read twice. | WCAG 1.1.1 |
+| Without a visible name, give the image `alt` with the name. | WCAG 1.1.1 |
+| Initials are not a name: never rely on them alone. | WCAG 1.1.1 |
+| Initials `muted-foreground` on `muted`: 7.01 : 1 light, 5.87 : 1 dark. | tokeny.md |
+
+## 8. Content
+
+- Initials: first letter of the first and last word of the name, uppercase (*Marta Kowalczyk* → *MK*); one word → one letter. Letters with diacritics stay (*Ł*). (**proposal**)
+- Long names wrap beside the avatar; the avatar never shrinks.
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | 32 px; the name and time wrap next to it. |
+| 768 px and 1440 px | Same size – the conversation column stays the main element (R02.1, K1). |
+
+<Canvas of={AvatarStories.LongNameNarrow} />
+
+## 10. API
+
+| Part | Props | Notes |
+|---|---|---|
+| `Avatar` | Base UI `Avatar.Root` props | `size` removed (B43) |
+| `AvatarImage` | Base UI `Avatar.Image` props (`src`, `alt`) | |
+| `AvatarFallback` | Base UI `Avatar.Fallback` props (`delay`) | no children → neutral person icon |
+
+## 11. Code
+
+<Source dark code={`<Avatar><AvatarFallback>MK</AvatarFallback></Avatar>`} />
+
+<Source
+  dark
+  code={`<div className="flex items-start gap-in-group">
+  <Avatar aria-hidden="true">
+    {author.photoUrl ? <AvatarImage src={author.photoUrl} alt="" /> : null}
+    <AvatarFallback>{initials(author.name)}</AvatarFallback>
+  </Avatar>
+  <div>
+    <p><span className="type-label">{author.name}</span> <time className="type-meta text-muted-foreground">18:04</time></p>
+    {messages}
+  </div>
+</div>`}
+/>
+
+## 12. Do and don't
+
+<Unstyled>
+  <DoDont
+    doExample={<Avatar><AvatarFallback>MK</AvatarFallback></Avatar>}
+    doText="Neutral initials, the same for everyone (B44)."
+    dontExample={<Avatar><AvatarFallback className="bg-primary text-primary-foreground">MK</AvatarFallback></Avatar>}
+    dontText="A coloured fallback uses the accent as decoration and makes people look ranked (P5, A01)."
+  />
+</Unstyled>
+
+## 13. Related
+
+- **Confused with:** a profile card (mentor list uses work, not faces – A05).
+- **Used in:** session message groups (R02.3), `AccountMenu` (stage 3).
+
+### Interaction test
+
+Avatar has no behaviour; the test checks that initials are hidden when the name is written next to them.
+
+<Canvas of={AvatarStories.NameReadOnce} />

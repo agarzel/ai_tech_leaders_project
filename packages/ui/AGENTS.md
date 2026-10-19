@@ -29,6 +29,7 @@ components.json       shadcn config (CSS variables go to src/styles/tokens.css; 
 - Standalone: never import `@devmentor/core`, `@devmentor/db`, `@devmentor/app` or `@mikro-orm/*` – data comes in through props (lint enforces it).
 - Add a shadcn primitive by running `npx shadcn@latest add <name>` in `packages/ui`; check the result imports `cn` and nothing from `@/…`.
 - Base UI primitives: use the `render` prop, not `asChild`.
+- Links in running text: `className="link-text"` on a plain `<a>` (utility in `theme.css`, T11); clickable list rows use `ItemLink` inside `ItemTitle`.
 - Every value comes from a token: no colour literals outside `src/styles/tokens.css`, no Tailwind palette classes (`bg-zinc-900`, `text-white`), no arbitrary values (`p-[13px]`). `npm run lint:tokens` checks it. Use semantic classes (`bg-card`, `text-muted-foreground`, `gap-in-group`, `type-meta`).
 - After `npx shadcn@latest add`, adapt the primitive to the tokens, import `cn` from `@devmentor/ui/lib/utils` (the configured one – ESLint rejects `"cn"` inside `src/components/**`), and check `package.json` for dependencies outside the plan. Refuse overwriting existing files; compare with `git show HEAD:<file>`, never `git stash`.
 - Component docs: `stories/primitives/<Name>.mdx` (13 sections) + `<Name>.stories.tsx` (Playground, variants/sizes, state matrix with frozen hover/focus via `data-preview-state`, long content at 320 px, a play-function test).

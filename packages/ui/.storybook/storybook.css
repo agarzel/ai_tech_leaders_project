@@ -27,3 +27,18 @@
 }
 @custom-variant focus-visible (&:focus-visible, &[data-preview-state~="focus-visible"]);
 @custom-variant active (&:active, &[data-preview-state~="active"]);
+
+/* link-text is a CSS utility, not a Tailwind variant chain: mirror its :hover / :focus-visible here. */
+.link-text[data-preview-state~="hover"] {
+  text-decoration-thickness: 2px;
+}
+.link-text[data-preview-state~="focus-visible"] {
+  outline-style: solid;
+  outline-width: 3px;
+  outline-offset: 2px;
+}
+
+/* Item: the row ring comes from :has(a:focus-visible) – mirror it for a link marked as focused. */
+[data-slot="item"]:has([data-slot="item-link"][data-preview-state~="focus-visible"]) {
+  box-shadow: inset 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+}

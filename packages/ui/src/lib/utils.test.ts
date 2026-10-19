@@ -20,6 +20,11 @@ describe("cn with design-system utilities", () => {
     expect(cn("size-8", "size-control-sm")).toBe("size-control-sm");
   });
 
+  it("merges the named grid templates (B20) with numeric ones", () => {
+    expect(cn("grid-cols-2", "grid-cols-icon-content")).toBe("grid-cols-icon-content");
+    expect(cn("grid-cols-content-action", "grid-cols-3")).toBe("grid-cols-3");
+  });
+
   it("keeps a typography role next to a colour class (roles use the type- prefix, not text-)", () => {
     expect(cn("type-meta", "text-muted-foreground")).toBe("type-meta text-muted-foreground");
     expect(cn("type-label text-foreground", "text-primary")).toBe("type-label text-primary");

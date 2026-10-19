@@ -115,3 +115,15 @@ Bugs found: an `id` with a space broke the checkbox label; `cn` dropped `font-sa
 Handoff: owner decisions on B26–B33, then batch 3 (Card, Badge, Alert, Avatar, Item, text link) – see "Następny krok" in POSTEP.md.
 
 Owner decisions on batch 2: B26–B30, B32, B33 accepted; B31 replaced by the alternative – on coarse pointers an InputGroup holding an inline button grows to 48 px so the button keeps 40 px (P4). Applied and re-verified: lint OK, typecheck OK, test:coverage OK (169, 100%), build-storybook OK (rule present in the built CSS), test:storybook 148/148 in both themes.
+
+## Stage 2, batch 3 (2026-10-19)
+
+Goal: Card, Badge, Alert, Avatar, Item, in-content link; B20/B21 so `lint:tokens` reaches zero. Batch 2 committed by the coordinator (661d3c7); B31 replaced by the 48 px group alternative.
+
+Decisions: proposals B34–B46 in POSTEP.md (B41 not applied – base kept). Avatar fallback (B44): neutral initials in muted-foreground on muted for everyone, a neutral person icon without a name, never a per-person colour.
+
+Verified: lint OK, typecheck OK, test:coverage OK (170, 100%), build OK, build-storybook OK, test:storybook OK (214/214, both themes), lint:tokens OK (0 findings, 87 files). CLI: no overwrites, package.json and lockfile unchanged. No `git stash`; nothing committed.
+
+Found on the way: `lint:tokens` also scans comments (three comments reworded); the base `ItemGroup role="list"` had no `listitem` children – `Item` now has `role="listitem"`.
+
+Handoff: owner decisions on B34–B46, then batch 4 (Dialog, AlertDialog, DropdownMenu, Popover, Tooltip, Tabs).

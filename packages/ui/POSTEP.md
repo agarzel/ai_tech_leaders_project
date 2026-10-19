@@ -8,15 +8,15 @@ Plik roboczy zadania z `lekcja-06/prompt-storybook.md`. Nowa sesja: przeczytaj p
 |---|---|
 | 0. Inwentaryzacja i plan | zakończony 2026-10-19 – decyzje właściciela zapisane niżej |
 | 1. Fundamenty | zakończony 2026-10-19 – F1 wdrożone, F2–F6 zapisane; czeka na „dalej” |
-| 2. Komponenty bazowe | w toku – partie 1 (1710f15) i 2 zakończone, B26–B33 rozstrzygnięte; czeka na „dalej” do partii 3 |
+| 2. Komponenty bazowe | w toku – partie 1 (1710f15), 2 (661d3c7) i 3 (2026-10-19, niezacommitowana) zakończone; czekają decyzje B34–B46; `lint:tokens` = 0 |
 | 3. Komponenty produktu, wzorce, ekrany | nie rozpoczęty |
 | 4. Strony, które uczą | nie rozpoczęty |
 | 5. Sprawdzenie i raport | nie rozpoczęty |
 
 ## Następny krok
 
-Decyzje B26–B33 podjęte (niżej). Po commicie partii 2 przez koordynatora i „dalej” → partia 3: Card, Badge, Alert, Avatar, Item, link w treści (B22) + poprawki lint:tokens w card/alert/badge (B20, B21). Te same zasady: CLI bez nadpisywania, `git show HEAD:<plik>`, nigdy `git stash`, kontrola `package.json`/lockfile, 13 sekcji, macierz stanów, testy play.
-Nic z partii 2 nie jest zacommitowane – commit robi właściciel.
+Decyzje B34–B46 (partia 3, sekcja niżej) – wszystkie wdrożone w zachowawczej, odwracalnej wersji. Po commicie partii 3 przez koordynatora i „dalej” → partia 4: Dialog, AlertDialog, DropdownMenu, Popover, Tooltip, Tabs (motyw na `<html>` – zasada 9, sprawdzić nakładki w obu motywach). Te same zasady procesu.
+Nic z partii 3 nie jest zacommitowane – commit robi właściciel.
 
 ## Zatwierdzone decyzje (źródła: `lekcja-06/referencje.md`, `lekcja-06/tokeny.md`)
 
@@ -356,3 +356,50 @@ Znalezione i naprawione po drodze: `id` z spacją (`tag-AI agents`) psuł etykie
 - B26, B27, B28, B29, B30, B32, B33 – przyjęte.
 - B31 – przyjęta alternatywa: przy `pointer: coarse` InputGroup z przyciskiem (addon `inline-*`) rośnie do 48 px, przycisk ma 40 px (P4); bez przycisku grupa zostaje 40 px. Wdrożone (`pointer-coarse:has-[>[data-align^=inline]_button]:h-12`, usunięte 36 px przycisku), dokumentacja InputGroup zaktualizowana.
 - Po B31: lint, typecheck, test:coverage, build-storybook, test:storybook – wyniki w logu przebiegu.
+
+## Etap 2 – partia 3, wynik (2026-10-19)
+
+Card, Badge, Alert (istniejące – dopasowane), Avatar, Item (CLI), link w treści (utility `link-text`). B20/B21 wdrożone: `npm run lint:tokens` = 0.
+
+### Propozycje B34–B46 (materiały milczą; wdrożone zachowawczo, odwracalnie – do zatwierdzenia)
+| # | Propozycja | Źródło / dlaczego |
+|---|---|---|
+| B34 | Link w treści = utility `link-text` w `theme.css` na zwykłym `<a>` (nie komponent): `foreground`, stałe podkreślenie, hover 2 px, fokus: obrys 3 px `ring/50`. Stany zamrożone zdublowane w `storybook.css`. Używają go `AlertTitle/Description` i `FieldDescription` (`[&_a]:link-text`) | T11, WCAG 1.4.1; prymitywy shadcn tylko z CLI, a link nie jest prymitywem shadcn |
+| B35 | Item = gęsty wiersz: `ItemGroup` rysuje jedną ramkę i linie 1 px (`divide-y`), `Item` bez wariantów i rozmiarów; usunięte ItemHeader, ItemFooter, ItemSeparator, media „image” | R01.1, R01.3/P3, T9, T12, zasada 6 |
+| B36 | Klikalny wiersz = nowa część `ItemLink` w `ItemTitle`, rozciągnięta na wiersz (`after:inset-0`); hover wiersza `muted`, fokus = wewnętrzny pierścień całego wiersza; akcje wiersza nad linkiem. `Item` ma `role="listitem"` (baza dawała `role="list"` bez `listitem`) | WAI-ARIA, WCAG 1.3.1; część dopisana ręcznie do prymitywu z CLI |
+| B37 | `CardTitle` w roli `type-section-title` (18 px / 600) | P2 |
+| B38 | `CardFooter` bez tła `muted/50`, tylko linia u góry | R01.3 (linie, nie wypełnienia) |
+| B39 | Badge bez wariantów `ghost` i `link` | zasada 6; mylą się z przyciskiem i linkiem |
+| B40 | Alert: padding 12 × 8 px (jak wiersz kontrolki), przy dotyku min. 48 px wysokości, gdy ma akcję | B8, R01.1, P4 |
+| B41 | (nie wdrożone) Alert `destructive` z czerwoną ramką – zostawiona ramka `border`, bo ikona + tytuł już niosą znaczenie | zachowawczo: baza |
+| B42 | Alert zostaje `role="alert"` domyślnie; dokumentacja: komunikat obecny przy ładowaniu strony → `role="status"` | WAI-ARIA |
+| B43 | Avatar w jednym rozmiarze 32 px (bez `sm`, `lg`) | zasada 6; jedyne użycie: autor grupy wiadomości (R02.3) |
+| B44 | **Fallback awatara**: 1–2 inicjały w `muted-foreground` na `muted` (7,01 : 1), te same neutralne kolory dla wszystkich; bez imienia – neutralna ikona osoby; nigdy kolor wyliczany z imienia ani gradient. Obok widocznego imienia awatar `aria-hidden` | A01, P9, R02.3, WCAG 1.1.1 |
+| B45 | Usunięte `AvatarBadge` (kropka obecności), `AvatarGroup`, `AvatarGroupCount` („+N”) | P9, P10 |
+| B46 | Badge: domyślny wariant `secondary` zamiast `default` (akcent) | T10 – statusy nie w akcencie; app zawsze podaje wariant jawnie |
+
+Wynika wprost: Card – ramka `border` zamiast `ring`, `rounded-lg`, `p-panel`/`gap-between-groups`, bez `size` (B21, B3, T8); siatki `grid-cols-icon-content` i `grid-cols-content-action` w `theme.css` (B20) i w `cn`; Badge `rounded-md` (B3, A01), `ring-3`; linki w Alert w `foreground` (T11).
+
+### Co się zmieniło
+- CLI `add avatar item`: 2 nowe pliki, nadpisania `separator.tsx` odmówiłem; `package.json` i lockfile bez zmian.
+- `theme.css`: szablony siatki, utility `link-text`; `utils.ts` + test: `grid-cols-*` scalają się w `cn`.
+- `.storybook/storybook.css`: lustrzane stany `link-text` i pierścienia wiersza Item; `optimizeDeps` + avatar, merge-props, use-render.
+- Nowe strony i stories: Card, Badge, Alert, Avatar, Item, Text link (13 sekcji, macierze stanów, wąski ekran, testy play).
+- Skrypt `lint:tokens` liczy też komentarze – trzy komentarze z przykładowymi klasami arbitralnymi przeredagowane.
+- Wpływ na app (bez zmian w jej kodzie): Card w `/admin/users` – ramka zamiast pierścienia, tytuł 18 px; Badge w `/admin` – prostokąt zamiast pigułki; `ErrorMessage` – Alert z nowym paddingiem.
+
+### Wyniki sprawdzeń
+| Komenda | Wynik |
+|---|---|
+| `npm run lint` | OK |
+| `npm run typecheck` | OK |
+| `npm run test:coverage` | OK – 170 testów, 100% |
+| `npm run build` | OK |
+| `npm run build-storybook` | OK; 6 nowych stron: po 13 sekcji, tabele równe, bez widocznych błędów |
+| `npm run test:storybook` | OK – 214/214 (107 stories × 2 motywy; 33 nowe, 6 nowych testów interakcji) |
+| `npm run lint:tokens` | **OK – 0 wartości spoza tokenów** (87 plików) |
+
+### Czego nie sprawdzono
+- Testy integracyjne aplikacji (Docker) – wygląd `/admin`, `/admin/users` zmieniony (Card, Badge, Alert).
+- Prawdziwe urządzenie dotykowe (Alert 48 px z akcją).
+- Czytnik ekranu na żywo (role list/listitem, link rozciągnięty na wiersz) – tylko axe i testy play.

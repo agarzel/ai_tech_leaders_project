@@ -13,6 +13,7 @@ export const cn = createCn({
   extend: {
     theme: { spacing: SPACING },
     classGroups: {
+      "grid-cols": [{ "grid-cols": ["icon-content", "content-action"] }],
       py: [{ py: ["list-row"] }],
       px: [{ px: ["list-row"] }],
       "type-role": [{ type: TYPE_ROLES }],
