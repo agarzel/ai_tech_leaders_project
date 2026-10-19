@@ -167,7 +167,7 @@ New decisions from this spec's gate, owner Arkadiusz, 2026-10-19 — recorded in
 ## 🔍 Review decisions
 Owner decisions on the reviews, 2026-10-19:
 
-- **Grill Me** (after both reviews): 11 questions, all recommendations accepted — the limitations listed under Architecture, `auth:set-password` replacing `auth:create-admin`, slot constants kept (60-day horizon, 15-minute grid, 50-minute spacing), public list ordered by soonest bookable slot, one name field (`User.name`), a registration limit, and a requirement handed to the booking spec: a price change applies only to new bookings, so #30 stores the price on the booking at payment time.
+- **Grill Me** (after both reviews): 11 questions, all recommendations accepted — the limitations listed under Architecture, `auth:set-password` replacing `auth:create-admin`, slot constants kept (60-day horizon, 15-minute grid, 50-minute spacing), public list ordered by soonest bookable slot, one name field (`User.name`), a registration limit, and a requirement handed to the booking spec: a price change applies only to new bookings, so #30 stores the server-computed price on the booking when it is created — the amount charged in Checkout (clarified in the booking spec).
 
 - **Scope-cohesion review** (fresh-context subagent, same model family): verdict *revise*; all ten findings accepted and applied — lazy profile creation so Phase 1 ships alone, `shareSlug`/`listed` in the Phase 2 migration, UI receives domain values through DTOs, `priceFor`/`assertBookable` left to the booking spec, invitations split into Phase 1b, open implementation choices stated.
 - **Cross-model review** (Codex, GPT): verdict *revise*.
