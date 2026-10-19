@@ -1,0 +1,10 @@
+<script>
+  // Prompt rule 10: only the product name in the UI – the tab title ends with "DevMentor", not "Storybook".
+  (function () {
+    var fix = function () {
+      if (document.title.indexOf("Storybook") !== -1) document.title = document.title.replace("Storybook", "DevMentor");
+    };
+    new MutationObserver(fix).observe(document.querySelector("title") || document.head, { childList: true, subtree: true, characterData: true });
+    fix();
+  })();
+</script>

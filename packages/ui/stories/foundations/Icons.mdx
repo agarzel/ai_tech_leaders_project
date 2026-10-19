@@ -1,0 +1,21 @@
+import { Meta, Unstyled } from "@storybook/addon-docs/blocks";
+import * as IconStories from "./Icons.stories";
+import { IconGallery } from "../../.storybook/blocks/Foundations";
+
+<Meta of={IconStories} />
+
+# Icons
+
+Library: **lucide-react** (already the shadcn icon library of this project, `components.json`). Import icons by name: `import { Copy } from "lucide-react"`.
+
+<Unstyled>
+  <IconGallery />
+</Unstyled>
+
+| Rule | Source |
+|---|---|
+| 16 px (`size-4`) next to text and in controls; 20 px (`size-5`) only for a stand-alone status icon. | base-nova default, proposal |
+| An icon next to a visible text label is decorative: `aria-hidden="true"`. | WAI-ARIA, WCAG 1.1.1 |
+| An icon-only button needs an accessible name (`aria-label="Copy share link"`) and a tooltip with the same text. | WCAG 4.1.2, 2.5.3 |
+| An icon never carries meaning alone: an error icon always comes with the error text. | WCAG 1.4.1 |
+| No sparkles, no emoji instead of icons, no decorative icon grids. | A01, R02.5 |

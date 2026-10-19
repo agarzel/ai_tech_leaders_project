@@ -57,6 +57,7 @@ const eslintConfig = defineConfig([
     "packages/db/src/migrations/**",
     "coverage/**",
     ".vitest/**",
+    "**/storybook-static/**",
   ]),
 ]);
 

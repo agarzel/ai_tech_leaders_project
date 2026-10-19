@@ -9,8 +9,11 @@
     "setup": "node scripts/setup.mjs",
     "dev": "npm run dev -w @devmentor/app",
     "build": "npm run build -w @devmentor/app",
+    "storybook": "npm run storybook -w @devmentor/ui",
+    "build-storybook": "npm run build-storybook -w @devmentor/ui",
     "start": "npm run start -w @devmentor/app",
     "lint": "eslint",
+    "lint:tokens": "node scripts/check-tokens.mjs",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "db:migrate": "npm run db:migrate -w @devmentor/db",
     "db:migration:create": "npm run db:migration:create -w @devmentor/db",
@@ -19,7 +22,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:integration": "vitest run --config vitest.integration.config.mts",
-    "test:integration:setup": "agent-browser install"
+    "test:integration:setup": "agent-browser install",
+    "test:storybook": "npm run test:storybook -w @devmentor/ui"
   },
   "devDependencies": {
     "@testcontainers/postgresql": "^12.2.1",

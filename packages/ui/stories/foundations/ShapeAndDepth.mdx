@@ -1,0 +1,27 @@
+import { Meta, Unstyled } from "@storybook/addon-docs/blocks";
+import * as ShapeStories from "./ShapeAndDepth.stories";
+import { ShapeScale, SpacingExample } from "../../.storybook/blocks/Foundations";
+
+<Meta of={ShapeStories} />
+
+# Shape and depth
+
+Small radii, thin lines, no shadows. Depth comes from surfaces (`background` → `card`) and 1 px borders, not from elevation.
+
+<Unstyled>
+  <ShapeScale />
+</Unstyled>
+
+| Rule | Source |
+|---|---|
+| `--radius` is 6 px; use the `rounded-*` scale. Never larger than `rounded-xl`, except `rounded-full` for avatars. | T7, A01/P13 |
+| Rows are separated by a 1 px `border-border` line; a list has one frame of the same weight. | R01.3 |
+| No box in a box: a panel never contains another framed panel. | R01.3/P3 |
+| No shadows on lists, cards or panels. Overlays (menu, popover, dialog) are separated by their `popover` surface and 1 px border. | R01.3, tokeny.md (no shadow tokens) |
+| No glow, no glass (`backdrop-blur`), no gradients. | A01 |
+
+## A separated list
+
+<Unstyled>
+  <SpacingExample />
+</Unstyled>

@@ -2,6 +2,10 @@
 
 Short, durable findings for AI agents and humans. Newest first. Format: `- YYYY-MM-DD – lesson (context/link)`.
 
+- 2026-10-19 – Never run `git stash` (or any command that hides or discards local changes) in an agent run, not even to compare with HEAD – use `git show HEAD:<file>` or `git diff`. A stray stash hid the whole uncommitted stage-1 work until `git stash pop` (review rule R3: never destroy local state; `.ai/runs/2026-10-19-lesson-6-design-system.md`).
+- 2026-10-19 – `cn` (tailwind-merge semantics) does not know custom Tailwind utilities: `cn("gap-2", "gap-in-group")` keeps both. Register design-system spacing/type classes in `createCn` (`packages/ui/src/lib/utils.ts`), and name type roles `type-*`, not `text-*`, so they never collide with colour classes.
+- 2026-10-19 – Measure contrast of translucent tokens composited over their surface: dark `--border` is white 10%, and painting it alone on a transparent canvas reads as pure white (17:1 instead of 1.25:1) (`packages/ui/.storybook/blocks/Foundations.tsx`).
+- 2026-10-19 – A multi-package `npm install -D -w @devmentor/ui …` with Storybook crashed npm 10 (ERESOLVE on `react-dom`, then `Cannot read properties of null (reading 'edgesOut')`). Declaring the `react-dom` peer and installing the packages one at a time worked with the same versions.
 - 2026-10-14 – Never run `docker compose down -v` (or anything else that deletes a developer's local data) to verify a change – use temporary resources or ask first. It wiped the local dev database while verifying PR #14; now enforced by review rule R3 (`.ai/skills/om-code-review`).
 - 2026-10-13 – agent-browser does not support Playwright pseudo-selectors like `:has-text()`. Use semantic locators (`find role button click --name …`) and give repeated controls unique accessible names.
 - 2026-10-13 – Integration tests start their own `next dev`; use `NEXT_DIST_DIR=.next-test` so they don't collide with a developer's running dev server.

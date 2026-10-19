@@ -1,0 +1,30 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
+import tailwindcss from "@tailwindcss/vite";
+import { playwright } from "@vitest/browser-playwright";
+import { defineConfig } from "vitest/config";
+
+// Every story runs as a test in a real browser (Chromium): render, play function, accessibility
+// check (a11y test: "error"). One project per theme, so both themes are checked (P1).
+// Not part of `test:coverage` – stories are documentation, not unit-tested logic (S5).
+const dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const themeProject = (theme: "light" | "dark") => ({
+  plugins: [storybookTest({ configDir: path.join(dirname, ".storybook") }), tailwindcss()],
+  define: { __SB_THEME__: JSON.stringify(theme) },
+  test: {
+    name: `storybook-${theme}`,
+    browser: {
+      enabled: true,
+      headless: true,
+      provider: playwright(),
+      instances: [{ browser: "chromium" as const }],
+    },
+  },
+});
+
+export default defineConfig({
+  test: { projects: [themeProject("light"), themeProject("dark")] },
+});
