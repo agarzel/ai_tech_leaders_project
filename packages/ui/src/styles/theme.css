@@ -1,0 +1,119 @@
+/*
+ * Connects the tokens (tokens.css) to Tailwind 4, so utility classes use them.
+ * Import after `@import "tailwindcss"` and after tokens.css. No colour literals here.
+ *
+ * Classes this file adds (besides the shadcn colour names):
+ *   spacing   gap-in-group, gap-between-groups, p-panel, gap-section / mt-section,
+ *             py-list-row, px-list-row, gap-message-group, gap-message, h-control / min-h-control
+ *   type      type-page-title, type-section-title, type-body, type-label, type-meta, type-code
+ * Typography roles use the `type-` prefix (not `text-`) so `cn` never mistakes them for a colour (S17).
+ */
+
+/* Dark theme: class `dark` on <html> (Storybook theme switch sets it there – prompt rule 9). */
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --font-sans: var(--font-family-sans);
+  --font-mono: var(--font-family-mono);
+  --font-heading: var(--font-family-sans);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  --spacing-in-group: var(--space-in-group);
+  --spacing-between-groups: var(--space-between-groups);
+  --spacing-panel: var(--space-panel);
+  --spacing-section: var(--space-section);
+  --spacing-message-group: var(--message-group-gap);
+  --spacing-message: var(--message-gap);
+  --spacing-control: var(--control-height);
+}
+
+/* List-row padding (component tokens T9): py-list-row / px-list-row. */
+@utility py-list-row {
+  padding-block: var(--list-row-py);
+}
+@utility px-list-row {
+  padding-inline: var(--list-row-px);
+}
+
+/* Typography roles (P2). */
+@utility type-page-title {
+  font-size: var(--text-2xl);
+  line-height: var(--text-2xl--line-height);
+  font-weight: var(--font-weight-semibold);
+}
+@utility type-section-title {
+  font-size: var(--text-lg);
+  line-height: var(--text-lg--line-height);
+  font-weight: var(--font-weight-semibold);
+}
+@utility type-body {
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+  font-weight: var(--font-weight-normal);
+}
+@utility type-label {
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+  font-weight: var(--font-weight-medium);
+}
+@utility type-meta {
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+  font-weight: var(--font-weight-normal);
+}
+@utility type-code {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}

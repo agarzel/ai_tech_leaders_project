@@ -1,0 +1,26 @@
+import { Meta, Unstyled } from "@storybook/addon-docs/blocks";
+import * as TypographyStories from "./Typography.stories";
+import { TypeRoles } from "../../.storybook/blocks/Foundations";
+
+<Meta of={TypographyStories} />
+
+# Typography
+
+Geist for the interface and text, Geist Mono for code (P2). Both are bundled with the project (`next/font` in the app, `@fontsource-variable` in Storybook) – never loaded from a CDN.
+
+Use a **role** class, not a raw size. Role classes start with `type-` so `cn` never confuses them with colour classes.
+
+<Unstyled>
+  <TypeRoles />
+</Unstyled>
+
+## Rules
+
+| Rule | Source |
+|---|---|
+| Body text is 14 px (`type-body`) – dense like GitHub; running text is at most about 65 characters per line (`max-w-prose`). | P2, R01.1, WCAG 1.4.8 |
+| A list row is a `type-label` title plus **one** `type-meta` line in `text-muted-foreground`. | R01.1, T12 |
+| Monospace only for code, paths, file and branch names, versions – never for headings, numbers or a "terminal" look. | R01.2/P2 |
+| Prices, times and counters use `tabular-nums`. | P2 |
+| One page title per page; section titles group, they do not decorate. | R01.5 |
+| No emoji in interface text. | R02.5/P11 |

@@ -30,7 +30,7 @@ Each package exposes only what its `package.json` `exports` map lists:
 
 - `@devmentor/db` – `.` (ORM config, `getOrm`, entities, `EntityManager`/`MikroORM` types, `UniqueConstraintViolationException`) and `./constants` (client-safe, e.g. `USER_ROLES`).
 - `@devmentor/core` – `.` (container, `createRequestScope`, `apiHandler`, `makeCrudRoute`, errors, logger, env, services, DTO types) and `./validators/*` (client-safe Zod schemas).
-- `@devmentor/ui` – `./components/ui/*`, `./backend/*`, `./backend/api/*`, `./lib/utils`.
+- `@devmentor/ui` – `./components/ui/*`, `./backend/*`, `./backend/api/*`, `./lib/utils`, `./styles/*` (design tokens `tokens.css` and the Tailwind mapping `theme.css`, imported by the app's `globals.css`).
 - **Breaking:** removing or renaming an export or subpath, changing a function signature or DTO shape, moving a client-safe entry point so that it pulls server code (MikroORM) into the browser.
 - **Required path:** update all importers in the same PR (the monorepo makes this checkable with `npm run typecheck`); keep client-safe entry points free of server imports.
 
@@ -44,7 +44,7 @@ Each package exposes only what its `package.json` `exports` map lists:
 
 ### 5. Developer commands
 
-Root npm scripts are used by CI, the validation gate, docs and agents: `setup`, `dev`, `build`, `start`, `lint`, `typecheck`, `test`, `test:coverage`, `test:watch`, `test:integration`, `test:integration:setup`, `db:migrate`, `db:migration:create`, `db:migration:check`.
+Root npm scripts are used by CI, the validation gate, docs and agents: `setup`, `dev`, `build`, `start`, `lint`, `typecheck`, `test`, `test:coverage`, `test:watch`, `test:integration`, `test:integration:setup`, `db:migrate`, `db:migration:create`, `db:migration:check`, `storybook`, `build-storybook`, `test:storybook`, `lint:tokens`.
 
 - **Breaking:** renaming or removing a script, or changing what it checks so that it proves less.
 - **Required path:** update `.github/workflows/ci.yml`, `.ai/agentic.config.json`, `SDLC.md`, `AGENTS.md` and README in the same PR.

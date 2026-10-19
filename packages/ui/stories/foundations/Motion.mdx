@@ -1,0 +1,18 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Foundations/Motion" />
+
+# Motion
+
+DevMentor is calm (character: *spokojny*): motion confirms an action, it never decorates. The references cover only "fast" (R02.2); everything marked **proposal** below waits for the owner's approval (P5).
+
+| Rule | Status | Source |
+|---|---|---|
+| A sent message appears in the stream immediately, without an entry animation. | decided | R02.2, P8 |
+| No sounds. | decided | R02.4/P10 |
+| Hover and focus colour changes use Tailwind's default transition (150 ms). | **proposal** | P5 |
+| Menus, popovers and dialogs fade/zoom in about 100–150 ms (the shadcn `tw-animate-css` defaults); nothing slides across the page. | **proposal** | P5 |
+| Loading: a skeleton for content that keeps its shape, the spinner only inside a button or a short status. No progress bars as a gamified "journey". | **proposal** | P5, A02 |
+| With `prefers-reduced-motion: reduce`, animations and transitions are removed (`motion-reduce:` variants); state changes stay instant and visible. | **proposal** | WCAG 2.3.3 |
+
+There are deliberately no duration tokens yet (tokeny.md). If the proposals are approved, they become `--duration-*` tokens in `tokens.css`.

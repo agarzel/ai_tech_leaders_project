@@ -1,0 +1,49 @@
+import { Meta, Unstyled } from "@storybook/addon-docs/blocks";
+import * as ColorStories from "./Color.stories";
+import { ColorRoles, ContrastTable } from "../../.storybook/blocks/Foundations";
+
+<Meta of={ColorStories} />
+
+# Color
+
+Warm greys carry the whole interface; one teal accent marks the single most important thing on a screen. Values live only in `packages/ui/src/styles/tokens.css`; components use the semantic classes below.
+
+## Rules
+
+| Rule | Source |
+|---|---|
+| Use semantic classes only (`bg-card`, `text-muted-foreground`). Never palette classes (`bg-stone-100`) or colour values. | Prompt rule 3, T1 |
+| `primary` marks **one** element per screen: the main action and its status (accept or decline by…, pay, enter the session). | R01.5/P5, K3 |
+| Links in running text are `foreground` with an underline, not the accent. | T11 |
+| Status badges use `secondary` or `outline`, never the `default` (primary) badge. | T10, P1 |
+| No purple, no gradients, no glow. | A01, K2 |
+| Colour is never the only carrier of meaning: a status also has a word, an error also has text. | WCAG 1.4.1 |
+| Row separators (`border`) are decorative and may stay below 3:1; everything that identifies a control (input outline, focus ring, error outline) meets 3:1. | T5, WCAG 1.4.11 |
+
+## Roles (current theme)
+
+<Unstyled>
+  <ColorRoles />
+</Unstyled>
+
+## Contrast – measured
+
+Measured in this browser from the real variables: text needs 4.5 : 1, UI elements 3 : 1 (WCAG 1.4.3, 1.4.11). Opacity layers (hover `primary/80`, `destructive/10`) are composited the way the browser paints them.
+
+### Light
+
+<Unstyled>
+  <ContrastTable theme="light" />
+</Unstyled>
+
+### Dark
+
+<Unstyled>
+  <ContrastTable theme="dark" />
+</Unstyled>
+
+Below the threshold: only the decorative separators (`border`, T5, approved).
+
+The dark `--destructive` is Tailwind red-300 (decision F1, 2026-10-19): the shadcn destructive button uses `destructive/20` (hover `/30`) in dark, and with the earlier red-400 that gave 4.48 : 1 (and 3.72 : 1 on hover) on a card. With red-300 the measured values are in the table above.
+
+The pale `aria-invalid` ring of the shadcn primitives (`ring-destructive/20`) is an extra, not the error signal: the error is the full `border-destructive` outline plus the message text.

@@ -10,7 +10,7 @@ This is an npm-workspaces monorepo. Each package may have its own `AGENTS.md` wi
 - Next.js 16 (App Router, Cache Components enabled), React 19, TypeScript
 - PostgreSQL 17 (via `docker compose`) with **MikroORM 7** (entities via `defineEntity`, migrations)
 - **Awilix** – dependency injection container
-- Tailwind CSS 4 for frontend pages, **shadcn/ui** (Base UI, `base-nova` style) for admin pages
+- Tailwind CSS 4 and **shadcn/ui** (Base UI, `base-nova` style) for every page – public, mentee, mentor and admin – through the DevMentor design system in `@devmentor/ui` (tokens, components, Storybook)
 
 These are fixed choices from the course (lesson 2). Do not introduce alternative libraries for these concerns (no Prisma/Drizzle/raw `pg`, no other DI container or UI kit).
 
@@ -23,12 +23,12 @@ packages/
   app/    @devmentor/app  – Next.js: HTTP (route handlers) and pages, src/app/
   core/   @devmentor/core – business logic: Awilix container + cradle, services, http layer, validators, env, logger
   db/     @devmentor/db   – MikroORM: config, entities, migrations
-  ui/     @devmentor/ui   – presentation: shadcn/ui primitives, backend/ panel building blocks
+  ui/     @devmentor/ui   – presentation and design system: tokens (src/styles/), shadcn/ui primitives, backend/ panel building blocks, Storybook (.storybook/, stories/)
 .ai/                      Metadata for AI-assisted work (see below)
 .github/workflows/        CI
 Dockerfile, docker-compose.yml
 .env.example              Copy to .env – the single env file for the whole repo
-scripts/                  Repo scripts in plain Node (no dependencies), e.g. setup.mjs – unit-tested like the packages
+scripts/                  Repo scripts in plain Node (no dependencies), e.g. setup.mjs, check-tokens.mjs – unit-tested like the packages
 tsconfig.base.json        Shared TypeScript options
 eslint.config.mjs         Lint rules for all packages, incl. dependency boundaries
 ```
@@ -84,6 +84,7 @@ Key naming rules: packages `@devmentor/<name>`; tables plural snake_case (`users
 
 - **Runner:** Vitest (`vitest.config.mts`, one project per package: `core` and `db` in Node, `ui` in jsdom with Testing Library).
 - **Location:** colocated `<file>.test.ts(x)` next to the code it tests.
+- **Storybook story tests** are separate from unit coverage: stories live in `packages/ui/stories/` (outside the coverage glob) and run in Chromium through `npm run test:storybook` (`packages/ui/vitest.storybook.config.mts`, light and dark theme, accessibility violations fail). Not in CI yet (planned with the design-system work, stage 5).
 - **Excluded from unit coverage (by design):** barrels (`src/index.ts`), type-only modules, generated shadcn primitives (`ui/src/components/ui/`), migrations (checked by the CI migrations job), and the Next.js app (`packages/app` – pages and route wiring are covered by integration tests).
 - **Style:** test behaviour through the public API; mock only boundaries (database `EntityManager`, `fetch`, the container, env). Arrange / act / assert, one behaviour per test, descriptive names.
 - A bug fix ships with a regression test that fails without the fix.
@@ -154,6 +155,10 @@ npm test                       # unit tests (Vitest, all packages)
 npm run test:coverage          # unit tests + 100% coverage gate (what CI runs)
 npm run test:watch             # watch mode
 npm run test:integration       # integration tests (needs Docker; first run: npm run test:integration:setup)
+npm run storybook              # design-system Storybook on http://localhost:6006
+npm run build-storybook        # static Storybook build (packages/ui/storybook-static)
+npm run test:storybook         # every story as a browser test, both themes, a11y errors fail (first run: npx playwright install chromium)
+npm run lint:tokens            # fails on colour literals outside packages/ui/src/styles/tokens.css, Tailwind palette classes and arbitrary values
 npm run db:migrate             # apply pending migrations
 npm run db:migration:create    # generate a migration from entity changes
 npm run db:migration:check     # fail if entities and migrations are out of sync

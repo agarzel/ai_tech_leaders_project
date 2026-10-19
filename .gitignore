@@ -57,3 +57,7 @@ packages/app/tests/integration/.artifacts/
 .ai/qa/artifacts_*/
 .ai/qa/test-env.json
 .ai/qa/test-env.env
+
+# Storybook build output and Vitest browser-mode failure screenshots
+storybook-static/
+packages/ui/stories/**/__screenshots__/

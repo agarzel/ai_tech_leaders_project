@@ -1,0 +1,149 @@
+/*
+ * DevMentor design tokens – the only file allowed to contain colour literals.
+ *
+ * Three layers:
+ *   1. Raw values (--raw-*): palette steps. Never used by components or pages.
+ *   2. Semantic tokens: named by purpose (background, muted-foreground, space-panel …).
+ *      shadcn names are already semantic, so the decisions map onto them (lekcja-06/tokeny.md).
+ *   3. Component tokens: only where a component needs its own value (list row, message stream, control).
+ *
+ * Sources: lekcja-06/referencje.md (R…, A…, K…, P…) and lekcja-06/tokeny.md (T1–T16, accent),
+ * owner decisions in .ai/specs/2026-10-19-design-system-storybook.md (P1, P2, P4).
+ * Contrast of every text and UI pair is measured in Storybook: Foundations/Color.
+ */
+
+/* ---------- 1. Raw values (Tailwind 4.3 palette steps, copied – not referenced) ---------- */
+:root {
+  --raw-white: oklch(1 0 0);
+  --raw-white-10: oklch(1 0 0 / 10%);
+  --raw-stone-50: oklch(98.5% 0.001 106.423);
+  --raw-stone-100: oklch(97% 0.001 106.424);
+  --raw-stone-200: oklch(92.3% 0.003 48.717);
+  --raw-stone-300: oklch(86.9% 0.005 56.366);
+  --raw-stone-400: oklch(70.9% 0.01 56.259);
+  --raw-stone-500: oklch(55.3% 0.013 58.071);
+  --raw-stone-600: oklch(44.4% 0.011 73.639);
+  --raw-stone-700: oklch(37.4% 0.01 67.558);
+  --raw-stone-800: oklch(26.8% 0.007 34.298);
+  --raw-stone-900: oklch(21.6% 0.006 56.043);
+  --raw-stone-950: oklch(14.7% 0.004 49.25);
+  --raw-teal-400: oklch(77.7% 0.152 181.912);
+  --raw-teal-800: oklch(43.7% 0.078 188.216);
+  --raw-red-300: oklch(80.8% 0.114 19.571);
+  --raw-red-800: oklch(44.4% 0.177 26.899);
+  /* Chart steps: unchanged shadcn neutral values, not a decision (T16). */
+  --raw-neutral-300: oklch(0.87 0 0);
+  --raw-neutral-500: oklch(0.556 0 0);
+  --raw-neutral-600: oklch(0.439 0 0);
+  --raw-neutral-700: oklch(0.371 0 0);
+  --raw-neutral-800: oklch(0.269 0 0);
+
+  /* Fonts (P2: Geist + Geist Mono). The app sets --font-geist-* via next/font;
+     Storybook loads the same families from @fontsource-variable (no CDN). */
+  --raw-font-sans: var(--font-geist-sans, "Geist Variable"), ui-sans-serif, system-ui, sans-serif;
+  --raw-font-mono: var(--font-geist-mono, "Geist Mono Variable"), ui-monospace, monospace;
+}
+
+/* ---------- 2 + 3. Semantic and component tokens – light theme ---------- */
+/* `.light` forces the light theme on a subtree (docs previews show both themes side by side). */
+:root,
+.light {
+  color-scheme: light;
+
+  /* Surfaces */
+  --background: var(--raw-stone-50); /* page – R01.4/P4, T13 */
+  --card: var(--raw-white); /* lists, panels, session view – R01.1, R01.3, T13 */
+  --popover: var(--raw-white); /* menus, popovers, dialogs – T13 */
+  --muted: var(--raw-stone-100); /* table header, row hover, quiet fills – R01.4/P4 */
+
+  /* Text */
+  --foreground: var(--raw-stone-950); /* main text, row titles, links in text – R01.1, T11 */
+  --card-foreground: var(--raw-stone-950); /* R01.1 */
+  --popover-foreground: var(--raw-stone-950); /* R01.1 */
+  --muted-foreground: var(--raw-stone-600); /* metadata line, message time – R01.1, R02.3, T2 */
+
+  /* Actions */
+  --primary: var(--raw-teal-800); /* the one emphasised element per screen – R01.5/P5, K3, accent option A */
+  --primary-foreground: var(--raw-white); /* text on primary – 7.53:1 */
+  --secondary: var(--raw-stone-100); /* secondary buttons, status badges – P4, T10 */
+  --secondary-foreground: var(--raw-stone-900); /* P4 */
+  --accent: var(--raw-stone-100); /* neutral hover/selection in menus – NOT the brand accent – P4 */
+  --accent-foreground: var(--raw-stone-900); /* P4 */
+  --destructive: var(--raw-red-800); /* errors, decline, irreversible actions – T6 */
+
+  /* Lines and focus */
+  --border: var(--raw-stone-200); /* 1 px row separators, list/panel frame – decorative, below 3:1 by decision T5 – R01.3 */
+  --input: var(--raw-stone-500); /* form control outline – WCAG 1.4.11, T3 */
+  --ring: var(--raw-stone-900); /* focus ring, neutral – T4 */
+
+  /* Charts – unchanged, unused (T16) */
+  --chart-1: var(--raw-neutral-300);
+  --chart-2: var(--raw-neutral-500);
+  --chart-3: var(--raw-neutral-600);
+  --chart-4: var(--raw-neutral-700);
+  --chart-5: var(--raw-neutral-800);
+
+  /* Role navigation – mapped onto the main tokens (R02.6/P12, T14) */
+  --sidebar: var(--background);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+
+  /* Shape – 6 px, no larger than xl except avatars (A01/P13, T7) */
+  --radius: 0.375rem;
+
+  /* Type (P2) */
+  --font-family-sans: var(--raw-font-sans); /* interface and body text – P2 */
+  --font-family-mono: var(--raw-font-mono); /* code, paths, file names, versions only – R01.2/P2 */
+
+  /* Spacing by relation (T8), steps of the Tailwind 0.25rem scale */
+  --space-in-group: 0.5rem; /* 8 px – between items of one group – R01.1, T8 */
+  --space-between-groups: 1rem; /* 16 px – between groups in a panel – K1, T8 */
+  --space-panel: 1rem; /* 16 px – padding inside a panel or list – R01.3, T8 */
+  --space-section: 2rem; /* 32 px – between page sections – K1, T8 */
+
+  /* Component tokens (T9, P4) */
+  --list-row-py: 0.5rem; /* 8 px – dense list row, vertical – R01.1, T9 */
+  --list-row-px: 0.75rem; /* 12 px – dense list row, horizontal – R01.1, T9 */
+  --message-group-gap: 0.75rem; /* 12 px – between authors' message groups – R02.1, R02.3, T9 */
+  --message-gap: 0.25rem; /* 4 px – between one author's messages – R02.3, T9 */
+  --control-height: 2rem; /* 32 px – buttons, inputs, selects on fine pointers – P4 */
+}
+
+/* Coarse pointers (touch): taller controls – P4. */
+@media (pointer: coarse) {
+  :root {
+    --control-height: 2.5rem; /* 40 px – P4 */
+  }
+}
+
+/* ---------- Dark theme (P1: a product theme; values from tokeny.md, T15) ---------- */
+.dark {
+  color-scheme: dark;
+
+  --background: var(--raw-stone-950); /* T13, T15 */
+  --card: var(--raw-stone-900); /* T13, T15 */
+  --popover: var(--raw-stone-900); /* T15 */
+  --muted: var(--raw-stone-800); /* T15 */
+
+  --foreground: var(--raw-stone-50); /* T15 */
+  --card-foreground: var(--raw-stone-50); /* T15 */
+  --popover-foreground: var(--raw-stone-50); /* T15 */
+  --muted-foreground: var(--raw-stone-400); /* T2 */
+
+  --primary: var(--raw-teal-400); /* accent option A, dark */
+  --primary-foreground: var(--raw-stone-950); /* 10.59:1 */
+  --secondary: var(--raw-stone-800); /* T15 */
+  --secondary-foreground: var(--raw-stone-50); /* T15 */
+  --accent: var(--raw-stone-800); /* T15 */
+  --accent-foreground: var(--raw-stone-50); /* T15 */
+  --destructive: var(--raw-red-300); /* F1 (2026-10-19): red-300 so the dark tinted button passes – 5.97:1 on card at /20, 4.64:1 at /30 hover; replaces the shadcn red-400 – T6 */
+
+  --border: var(--raw-white-10); /* decorative separator, below 3:1 by decision – T5 */
+  --input: var(--raw-stone-500); /* T3 */
+  --ring: var(--raw-stone-100); /* T4 */
+}

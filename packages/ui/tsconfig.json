@@ -10,6 +10,11 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
-    "vitest.setup.ts"
+    "vitest.setup.ts",
+    "stories/**/*.ts",
+    "stories/**/*.tsx",
+    ".storybook/**/*.ts",
+    ".storybook/**/*.tsx",
+    "vitest.storybook.config.mts"
   ]
 }

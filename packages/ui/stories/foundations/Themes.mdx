@@ -1,0 +1,23 @@
+import { Meta, Unstyled } from "@storybook/addon-docs/blocks";
+import * as ThemeStories from "./Themes.stories";
+import { ThemeProbe } from "../../.storybook/blocks/Foundations";
+
+<Meta of={ThemeStories} />
+
+# Themes
+
+DevMentor has a light and a dark theme (P1). Both use the same semantic tokens; only `tokens.css` differs (`:root` and `.dark`).
+
+| Rule | Source |
+|---|---|
+| The theme is a class on the document root (`<html class="dark">`), so dialogs, menus and popovers rendered outside the page tree get it too. | prompt rule 9 |
+| Components never branch on the theme in code; use semantic classes. `dark:` variants are allowed only inside primitives. | prompt rule 3 |
+| Every story is tested in both themes (`npm run test:storybook`), including the accessibility check. | P1 |
+| The app has no theme switch yet; it renders the light theme. | S16, T15 |
+| `.light` forces the light theme on a subtree (used by documentation previews). | – |
+
+Switch the theme with the **Theme** button in the toolbar.
+
+<Unstyled>
+  <ThemeProbe />
+</Unstyled>
