@@ -1,0 +1,125 @@
+import { Canvas, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as MenuStories from "./DropdownMenu.stories";
+
+<Meta of={MenuStories} />
+
+# DropdownMenu
+
+`import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuGroup, DropdownMenuLabel, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuShortcut } from "@devmentor/ui/components/ui/dropdown-menu"`
+
+## 1. Purpose
+
+Keeps secondary actions of a row or an account out of sight until needed, so dense lists stay readable (R01.1) and the main action stays the only accented one (P5).
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Row actions of a slot or an invitation (*Change time*, *Copy share link*, *Delete slot*) | mentor-accounts spec, R01.1 |
+| The account menu (*Profile*, *Sign out*) – `AccountMenu`, stage 3 | P12 (short role navigation) |
+
+## 3. When not to use
+
+| Instead of a menu… | Use | Why |
+|---|---|---|
+| One or two actions | visible `Button`s (`sm` in rows) | hidden actions are found less often (**proposal**) |
+| The main action (*Accept*, *Pay*) | a visible `default` button | P5 |
+| Choosing a value | `NativeSelect` / `RadioGroup` | a menu runs actions, it does not hold a value |
+| Navigation of the app | role navigation | P12 |
+
+## 4. Anatomy
+
+| Part | Optional | Notes |
+|---|---|---|
+| `DropdownMenuTrigger` | no | usually a ghost `icon-sm` button with `aria-label` naming the object (*Actions for the slot Tue 3 Nov, 18:00*) |
+| `DropdownMenuContent` | no | `popover` surface, 1 px border, `rounded-lg`, no shadow; min 160 px |
+| `DropdownMenuLabel` | yes | the object the actions apply to, `type-meta` |
+| `DropdownMenuItem` | no | min 28 px (40 px on touch, B52), icon 16 px + text, `variant="destructive"` for deletions |
+| `DropdownMenuSeparator` | yes | before destructive items |
+| `DropdownMenuShortcut` | yes | key hint, `type-meta` |
+
+## 5. Variants
+
+Item `variant`: `default` or `destructive` (red text, red tint when highlighted). Submenus, checkbox and radio items were removed (B53).
+
+## 6. States
+
+<Canvas of={MenuStories.States} />
+
+| State | Looks | Source |
+|---|---|---|
+| Closed / open | trigger `aria-expanded` → `muted` background (Button) | – |
+| Highlighted (keyboard or pointer) | `accent` background (neutral stone) | P4 |
+| Destructive highlighted | `destructive/10` (`/20` dark) | T6, F1 |
+| Disabled | 50% opacity, skipped by arrow keys; say why elsewhere or remove the item | B17 |
+
+Opens with a 100 ms fade/zoom, no slide; instant with reduced motion (F3 **proposal**, B48).
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Trigger: Enter, Space or ↓ opens and focuses the first item; ↑/↓ move, Home/End jump, type-ahead finds an item. | WAI-ARIA menu button pattern |
+| Enter runs the item and closes the menu; Escape closes; focus returns to the trigger. | WAI-ARIA, WCAG 2.4.3 |
+| `role="menu"` / `menuitem`; the trigger names the object, so repeated row menus are distinguishable. | WCAG 2.4.6, `AGENTS.md` (integration tests) |
+| A destructive item opens an `AlertDialog`, it does not delete directly. | prompt stage 3 (delete confirmation) |
+| Portalled to `<body>`, themed from `<html>`. | prompt rule 9 |
+| Base UI adds hidden focus guards while the menu is open; axe would flag them only during keyboard use, so the test closes the menu before the check. | known Base UI behaviour (**exception**, described) |
+
+## 8. Content
+
+- Items: verb + object, sentence case (*Copy share link*, *Delete slot*). (prompt stage 3)
+- Destructive items last, after a separator.
+- At most about 6 items; no nesting.
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | The menu flips and shifts to stay inside the viewport; items 40 px on touch. |
+| 768 px and 1440 px | Aligned to the trigger's start edge. |
+
+<Canvas of={MenuStories.Narrow} />
+
+## 10. API
+
+| Part | Props | Notes |
+|---|---|---|
+| `DropdownMenu` | Base UI `Menu.Root`: `open`, `defaultOpen`, `onOpenChange`, `modal` | |
+| `DropdownMenuTrigger` | Base UI props + `render` | |
+| `DropdownMenuContent` | Base UI `Menu.Popup` + `align` (`"start"`), `side` (`"bottom"`), `sideOffset` (4), `alignOffset` (0) | |
+| `DropdownMenuItem` | Base UI `Menu.Item` (`onClick`, `disabled`, `closeOnClick`) + `variant?: "default" \| "destructive"` | |
+| `DropdownMenuGroup`, `DropdownMenuLabel`, `DropdownMenuSeparator`, `DropdownMenuShortcut` | – | |
+
+## 11. Code
+
+<Source
+  dark
+  code={`<DropdownMenu>
+  <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label={\`Actions for the slot \${label}\`} />}>
+    <MoreHorizontal />
+  </DropdownMenuTrigger>
+  <DropdownMenuContent>
+    <DropdownMenuItem onClick={edit}><Pencil aria-hidden="true" />Change time</DropdownMenuItem>
+    <DropdownMenuSeparator />
+    <DropdownMenuItem variant="destructive" onClick={() => setConfirmOpen(true)}><Trash2 aria-hidden="true" />Delete slot</DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>`}
+/>
+
+## 12. Do and don't
+
+| Do | Don't | Why |
+|---|---|---|
+| Trigger *Actions for the slot Tue 3 Nov, 18:00* | trigger *More* in every row | repeated names are indistinguishable (WCAG 2.4.6) |
+| *Delete slot* opens a confirmation | *Delete slot* deletes at once | irreversible actions are confirmed (prompt stage 3) |
+| *Accept* visible in the row | *Accept* hidden in the menu | the next action is the one emphasised element (P5) |
+
+## 13. Related
+
+- **Confused with:** `NativeSelect` (value), `Popover` (content), `Tabs` (views).
+- **Used in:** `SlotRow`, invitation rows, `AccountMenu` (stage 3).
+
+### Interaction test
+
+<Canvas of={MenuStories.KeyboardAndFocusReturn} />

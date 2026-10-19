@@ -1,0 +1,119 @@
+import { Canvas, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as TabsStories from "./Tabs.stories";
+
+<Meta of={TabsStories} />
+
+# Tabs
+
+`import { Tabs, TabsList, TabsTrigger, TabsContent } from "@devmentor/ui/components/ui/tabs"`
+
+## 1. Purpose
+
+Switches between a few views of the same thing on one page, so a person can compare them without losing their place.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| A few views of one list on one page, e.g. *Upcoming* / *Past* bookings | illustration – the specs show bookings in one list (**proposal** if adopted) |
+| 2–5 short, parallel views | WAI-ARIA tabs |
+
+## 3. When not to use
+
+| Instead of tabs… | Use | Why |
+|---|---|---|
+| Different tasks (profile vs slots) | separate pages | the specs give them their own URLs (`/mentor/profile`, `/mentor/slots`) |
+| Filtering a list | filters with a result count (pattern *List with filters*, stage 3) | prompt stage 3 |
+| Steps of a flow | a page per step | tabs suggest free order |
+| Choosing a value in a form | `RadioGroup` | a form value |
+
+## 4. Anatomy
+
+| Part | Optional | Notes |
+|---|---|---|
+| `Tabs` | no | column, `gap-between-groups` (16 px) to the panel |
+| `TabsList` | no | a row on a 1 px `border` line; scrolls sideways when it does not fit |
+| `TabsTrigger` | no | `h-control`, `px-3`, `type-label`; active = `foreground` text + 2 px `foreground` underline (B57) |
+| `TabsContent` | no | the panel, `type-body` |
+
+<Canvas of={TabsStories.Playground} />
+
+## 5. Variants
+
+One look, the line style (B57, R01). The base-nova segmented `default` variant and vertical orientation were removed (rule 6).
+
+## 6. States
+
+<Canvas of={TabsStories.States} />
+
+| State | Looks | Source |
+|---|---|---|
+| Inactive | `muted-foreground` text (7.64 : 1 on card) | T2 |
+| Hover | `foreground` text | – |
+| Focus | inset neutral ring | T4 |
+| Active (selected) | `foreground` text + underline – not colour alone | WCAG 1.4.1 |
+| Disabled | 50% opacity; explain elsewhere why a view is unavailable | B17 |
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| `role="tablist"`/`tab`/`tabpanel`; the list has an `aria-label`. | WAI-ARIA tabs pattern |
+| Tab enters the list on the selected tab; ←/→ move focus; Enter or Space selects (manual activation, Base UI default – B59); Tab moves into the panel. | WAI-ARIA |
+| Each panel is labelled by its tab. | WAI-ARIA |
+
+## 8. Content
+
+- 1–3 words, nouns or adjectives, parallel (*Upcoming*, *Past*). No counts in the labels (P10).
+- At most about five tabs.
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | The list scrolls sideways; tabs never wrap or shrink. |
+| 768 px and 1440 px | All tabs visible, left-aligned. |
+
+<Canvas of={TabsStories.Narrow} />
+
+## 10. API
+
+| Part | Props | Notes |
+|---|---|---|
+| `Tabs` | Base UI `Tabs.Root`: `value`, `defaultValue`, `onValueChange` | `orientation` vertical not supported (B57) |
+| `TabsList` | Base UI `Tabs.List` (`activateOnFocus`, default `false`) | give it `aria-label` |
+| `TabsTrigger` | Base UI `Tabs.Tab`: `value`, `disabled` | |
+| `TabsContent` | Base UI `Tabs.Panel`: `value` | |
+
+`tabsListVariants` is no longer exported.
+
+## 11. Code
+
+<Source
+  dark
+  code={`<Tabs defaultValue="upcoming">
+  <TabsList aria-label="Your bookings">
+    <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+    <TabsTrigger value="past">Past</TabsTrigger>
+  </TabsList>
+  <TabsContent value="upcoming"><BookingList when="upcoming" /></TabsContent>
+  <TabsContent value="past"><BookingList when="past" /></TabsContent>
+</Tabs>`}
+/>
+
+## 12. Do and don't
+
+| Do | Don't | Why |
+|---|---|---|
+| *Upcoming* / *Past* | *Profile* / *Prices* / *Slots* as tabs | different tasks deserve their own pages and URLs |
+| Active tab underlined | active tab only in a different colour | WCAG 1.4.1 |
+| *Upcoming* | *Upcoming (3)* | no counters (P10) |
+
+## 13. Related
+
+- **Confused with:** separate pages, filters, `RadioGroup`.
+- **Used in:** none of the specified screens yet (illustration); available for stage 3 if a screen needs views.
+
+### Interaction test
+
+<Canvas of={TabsStories.ArrowKeys} />

@@ -1,0 +1,126 @@
+import { Canvas, Meta, Source, Unstyled } from "@storybook/addon-docs/blocks";
+import * as CardStories from "./Card.stories";
+import { Card, CardContent, CardHeader, CardTitle } from "../../src/components/ui/card";
+import { DoDont } from "../../.storybook/blocks/Docs";
+
+<Meta of={CardStories} />
+
+# Card
+
+`import { Card, CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter } from "@devmentor/ui/components/ui/card"`
+
+## 1. Purpose
+
+Groups one topic of a page – prices, slots, a booking summary – on its own surface, so the page reads as a few clear panels instead of loose text.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Panels of the mentor checklist on `/mentor` (profile, prices, slots, share link) | mentor-accounts spec |
+| The booking summary on `/book/[slotId]` (mentor, time with zone, length, price) | booking spec, R01.5/P5 |
+| A frame around a form or a dense list that needs a title | R01.3 (one frame per list) |
+
+## 3. When not to use
+
+| Instead of a card… | Use | Why |
+|---|---|---|
+| Each row of a list (bookings, slots) | `Item` rows in one `ItemGroup` | no card per row, no box in a box (R01.1, R01.3/P3) |
+| A grid of identical cards with an icon (hero + 3 cards) | nothing – write the content | A01 |
+| A message about a state or error | `Alert` | role and colour of a message |
+| Mentors in the public list | `MentorCard` (product component, stage 3) – built from this panel, but without avatar walls or years of experience | A05 |
+
+## 4. Anatomy
+
+| Part | Optional | Notes |
+|---|---|---|
+| `Card` | no | `card` surface, 1 px `border`, `rounded-lg`, no shadow; `py-panel`, `gap-between-groups` (16 px, T8) |
+| `CardHeader` | yes | `px-panel`; grid `content-action` when there is an action (B20) |
+| `CardTitle` | yes | `type-section-title` (18 px / 600, P2, B37) |
+| `CardDescription` | yes | `type-body`, `muted-foreground` |
+| `CardAction` | yes | top right of the header: a `sm` button or a status badge |
+| `CardContent` | yes | `px-panel` |
+| `CardFooter` | yes | top border, `p-panel`, no tint (B38) |
+
+<Canvas of={CardStories.Anatomy} />
+
+## 5. Variants
+
+None. The base-nova `size="sm"` was removed (B21): there is one panel padding token (T8).
+
+<Canvas of={CardStories.ContentOnly} />
+
+## 6. States
+
+<Canvas of={CardStories.States} />
+
+A card is not interactive: no hover, focus, pressed, selected or disabled state, and it is never a link as a whole. Loading uses a skeleton of the same shape (batch 5); errors inside it use `Alert`. A missing step shows a status in `CardAction` (outline badge), never only a colour (WCAG 1.4.1).
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| `CardTitle` is a `div`: put a heading of the right level inside it (`<CardTitle><h2>Prices</h2></CardTitle>`), so the page outline stays correct. | WCAG 1.3.1, 2.4.6 |
+| Focus order follows the source: header action before content. | WCAG 2.4.3 |
+| No shadow, no glow, no blur. | A01, R01.3 |
+
+## 8. Content
+
+- Title: the topic as a noun (*Prices*, *Bookable slots*), sentence case, no colon. (**proposal**)
+- Description: one sentence about why it matters (*Shown on your card before mentees write a question.*).
+- Numbers and prices with `tabular-nums`; PLN format F6 (temporary).
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | Full width; the header action stays top right, the title wraps. |
+| 768 px | Two panels side by side where they are peers (checklist). |
+| 1440 px | Content column at most `max-w-5xl` (F2). |
+
+<Canvas of={CardStories.LongContentNarrow} />
+
+## 10. API
+
+All parts take `<div>` props (`className` for layout only).
+
+| Part | Props | Notes |
+|---|---|---|
+| `Card` | `<div>` | `size` removed (B21) |
+| `CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, `CardFooter` | `<div>` | |
+
+## 11. Code
+
+<Source dark code={`<Card><CardContent>No times available right now.</CardContent></Card>`} />
+
+<Source
+  dark
+  code={`<Card>
+  <CardHeader>
+    <CardTitle><h2>Prices</h2></CardTitle>
+    <CardDescription>Shown on your card before mentees write a question.</CardDescription>
+    <CardAction><Button variant="outline" size="sm">Edit prices</Button></CardAction>
+  </CardHeader>
+  <CardContent className="tabular-nums">25 min · PLN 120.00 · 50 min · PLN 220.00</CardContent>
+</Card>`}
+/>
+
+## 12. Do and don't
+
+<Unstyled>
+  <DoDont
+    doExample={<Card className="w-full"><CardHeader><CardTitle>Bookings</CardTitle></CardHeader><CardContent>One list inside one panel.</CardContent></Card>}
+    doText="One panel, rows inside separated by lines (R01.3)."
+    dontExample={<Card className="w-full"><CardContent><Card><CardContent>Booking 1</CardContent></Card></CardContent></Card>}
+    dontText="A card inside a card is a box in a box (R01.3/P3)."
+  />
+</Unstyled>
+
+## 13. Related
+
+- **Confused with:** `Item` (a row), `Alert` (a message).
+- **Used in:** admin users page, mentor checklist, booking summary; product `MentorCard`, `BookingSummary` (stage 3).
+
+### Interaction test
+
+<Canvas of={CardStories.ActionWorks} />

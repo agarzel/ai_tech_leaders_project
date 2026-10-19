@@ -7,6 +7,8 @@ import remarkGfm from "remark-gfm";
 // shows only the product name (prompt rule 10, S18).
 const config: StorybookConfig = {
   stories: ["../stories/**/*.mdx", "../stories/**/*.stories.@(ts|tsx)"],
+  // Serves .storybook/public/favicon.svg at the root (manager-head.html links it) – S18 (branding).
+  staticDirs: ["./public"],
   addons: [
     {
       name: "@storybook/addon-docs",

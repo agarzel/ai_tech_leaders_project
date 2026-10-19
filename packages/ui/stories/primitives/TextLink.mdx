@@ -1,0 +1,115 @@
+import { Canvas, Meta, Source, Unstyled } from "@storybook/addon-docs/blocks";
+import * as LinkStories from "./TextLink.stories";
+import { DoDont } from "../../.storybook/blocks/Docs";
+
+<Meta of={LinkStories} />
+
+# Text link
+
+`className="link-text"` on a plain `<a>` – a utility from `@devmentor/ui/styles/theme.css` (B34), not a component.
+
+## 1. Purpose
+
+Lets a person follow a reference inside a sentence – public work, a spec, help – and recognise it as a link without colour.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Public-work links in a mentor profile and in the session context panel | N02, P12 |
+| Links inside hints, alerts and descriptions (*How refunds work*) | T11 |
+| Any link in running text | T11 |
+
+`AlertDescription`, `AlertTitle` and `FieldDescription` already style links inside them.
+
+## 3. When not to use
+
+| Instead of a text link… | Use | Why |
+|---|---|---|
+| An action (save, accept, copy) | `Button` (or `variant="link"` for a text action) | a link navigates, a button acts (WAI-ARIA) |
+| A whole list row | `ItemLink` | one link per row (B36) |
+| Navigation of the app | the role navigation (stage 3) | P12 |
+| A link in the accent colour | never | T11, P5 |
+
+## 4. Anatomy
+
+One `<a href>` with `link-text`: `foreground` colour, underline always (offset 4 px), radius for the focus outline.
+
+## 5. Variants
+
+None. The same look in body text and in muted text (it stays `foreground`).
+
+<Canvas of={LinkStories.InMutedText} />
+
+## 6. States
+
+<Canvas of={LinkStories.States} />
+
+| State | Looks | Source |
+|---|---|---|
+| Default | `foreground`, underlined | T11, WCAG 1.4.1 |
+| Hover | 2 px underline | **proposal** (same as the Button text action, B19) |
+| Focus | 3 px outline in `ring/50`, offset 2 px (3.35 : 1 light, 4.98 : 1 dark) | T4, WCAG 2.4.7 |
+| Visited | no change (**proposal**: links point to work, not to read/unread content) | – |
+| Disabled, loading, selected, pressed | do not apply – a link that cannot be followed is plain text | – |
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Real `<a href>`: Tab focuses it, Enter follows it. | HTML |
+| The link text says where it goes (*her ingress-nginx migration notes*), never *here* or *click here*. | WCAG 2.4.4 |
+| Links to other sites open in the same tab unless the user would lose input; if a new tab is needed, say so in the text or with a labelled icon. | WCAG 3.2.5 (**proposal**) |
+| The underline, not colour, marks the link. | WCAG 1.4.1 |
+
+## 8. Content
+
+- Describe the destination in 2–6 words; put the link at the end of the sentence when possible.
+- For public work, name the work, not the platform (*ingress migration notes*, not *GitHub*). (A05: work, not titles)
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | Wraps with the sentence; the underline follows each line; long URLs as text are avoided. |
+| 768 px and 1440 px | Same; text at most `max-w-prose`. |
+
+<Canvas of={LinkStories.LongNarrow} />
+
+## 10. API
+
+| Name | Where | Description |
+|---|---|---|
+| `link-text` | Tailwind utility in `theme.css` | colour, underline, hover thickness, focus outline |
+| `[&_a]:link-text` | on a container | styles links inside rendered text |
+
+## 11. Code
+
+<Source dark code={`<a className="link-text" href={url}>migration notes</a>`} />
+
+<Source
+  dark
+  code={`<p className="max-w-prose">
+  Marta wrote up the upgrade in <a className="link-text" href={work.url}>{work.title}</a>.
+</p>`}
+/>
+
+## 12. Do and don't
+
+<Unstyled>
+  <DoDont
+    doExample={<p>See <a className="link-text" href="#notes">the migration notes</a>.</p>}
+    doText="The text names the destination and the underline marks it (WCAG 2.4.4, 1.4.1)."
+    dontExample={<p>For the migration notes <a className="text-primary" href="#here">click here</a>.</p>}
+    dontText="'Click here' says nothing out of context, and the accent colour is not a link style (T11)."
+  />
+</Unstyled>
+
+## 13. Related
+
+- **Confused with:** `Button variant="link"` (an action that looks like text), `ItemLink` (a row).
+- **Used in:** `FieldDescription`, `Alert`, mentor profile (`PublicWorkLinks`, stage 3), session context panel.
+
+### Interaction test
+
+<Canvas of={LinkStories.KeyboardFocus} />

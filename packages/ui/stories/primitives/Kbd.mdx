@@ -1,0 +1,111 @@
+import { Canvas, Meta, Source, Unstyled } from "@storybook/addon-docs/blocks";
+import * as KbdStories from "./Kbd.stories";
+import { Kbd, KbdGroup } from "../../src/components/ui/kbd";
+import { DoDont } from "../../.storybook/blocks/Docs";
+
+<Meta of={KbdStories} />
+
+# Kbd
+
+`import { Kbd, KbdGroup } from "@devmentor/ui/components/ui/kbd"`
+
+## 1. Purpose
+
+Shows which key to press, so a person learns a shortcut – like sending a message with Enter – without reading a manual.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| The hint under the session composer: *Enter to send · Shift + Enter for a new line* | R02.2 |
+| Shortcut hints in tooltips and menus (batch 4) | **proposal** |
+
+## 3. When not to use
+
+| Instead of Kbd… | Use | Why |
+|---|---|---|
+| Code, file names, versions (`values.yaml`, `1.28`) | `type-code` (Geist Mono) | R01.2/P2: monospace only for code |
+| A button that looks like a key | `Button` | Kbd is text, not a control |
+| Decoration, badges, tags | badge (batch 3) | – |
+
+## 4. Anatomy
+
+| Part | Optional | Notes |
+|---|---|---|
+| `Kbd` | no | `<kbd>`, `type-meta` in Geist (sans – keys are not code, R01.2), `muted` fill, `rounded-md` (B3), 20 px high |
+| `KbdGroup` | yes | keys of one combination with `+` between them |
+
+## 5. Variants
+
+None (rule 6).
+
+<Canvas of={KbdStories.ComposerHint} />
+
+## 6. States
+
+<Canvas of={KbdStories.States} />
+
+Kbd is static text: default only. Hover, focus, pressed, disabled, loading, selected and error do not apply. Inside a tooltip (batch 4) it switches to the tooltip's colours (`in-data-[slot=tooltip-content]`, base-nova).
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Native `<kbd>`: read as text in the sentence; never focusable, never clickable. | HTML |
+| Use the key's name (*Enter*, *Shift*), not a symbol only (⏎, ⇧). | WCAG 1.1.1 (**proposal**) |
+| `muted-foreground` on `muted`: 7.01 : 1 (light). | tokeny.md, WCAG 1.4.3 |
+
+## 8. Content
+
+- Key names in English with a capital letter: *Enter*, *Shift*, *Esc*, *Tab*. (**proposal**)
+- Combination: `Shift` + `Enter` with a visible plus.
+- Inside a sentence, keep the sentence short: *Enter to send*.
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | The sentence wraps between words; a key never breaks inside. |
+| 768 px and 1440 px | One line. Touch-only devices may hide keyboard hints (**proposal**). |
+
+<Canvas of={KbdStories.LongTextNarrow} />
+
+## 10. API
+
+| Component | Props |
+|---|---|
+| `Kbd` | all `<kbd>` props |
+| `KbdGroup` | all `<kbd>` props (renders a `<kbd>` wrapper) |
+
+## 11. Code
+
+<Source dark code={`<Kbd>Esc</Kbd>`} />
+
+<Source
+  dark
+  code={`<p className="type-meta text-muted-foreground">
+  <Kbd>Enter</Kbd> to send · <KbdGroup><Kbd>Shift</Kbd>+<Kbd>Enter</Kbd></KbdGroup> for a new line
+</p>`}
+/>
+
+## 12. Do and don't
+
+<Unstyled>
+  <DoDont
+    doExample={<p className="type-meta text-muted-foreground">Edit <code className="type-code">values.yaml</code>, then press <Kbd>Enter</Kbd>.</p>}
+    doText="Files in monospace, keys in Kbd – each means one thing (R01.2)."
+    dontExample={<p className="type-meta text-muted-foreground">Edit <Kbd>values.yaml</Kbd>, then press Enter.</p>}
+    dontText="A file name in a key cap reads like a shortcut."
+  />
+</Unstyled>
+
+## 13. Related
+
+- **Confused with:** `type-code` (code and paths), badge (status).
+- **Used in:** session composer hint (R02.2), tooltips (batch 4).
+
+### Interaction test
+
+Kbd has no behaviour; the test checks that it stays plain, non-focusable text.
+
+<Canvas of={KbdStories.ReadAsText} />

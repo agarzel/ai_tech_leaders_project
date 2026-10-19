@@ -1,0 +1,130 @@
+import { Canvas, Meta, Source, Unstyled } from "@storybook/addon-docs/blocks";
+import * as TableStories from "./Table.stories";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../src/components/ui/table";
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "../../src/components/ui/item";
+import { DoDont } from "../../.storybook/blocks/Docs";
+
+<Meta of={TableStories} />
+
+# Table
+
+`import { Table, TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, TableCaption } from "@devmentor/ui/components/ui/table"`
+
+## 1. Purpose
+
+Lines up many comparable values in columns, so an admin can scan and compare rows at a glance – used through `DataTable`, not written by hand in a page.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Admin lists with real columns to compare (users, invitations) – via `DataTable` | S21, `packages/ui/AGENTS.md` |
+| Any data that is genuinely tabular (several independent attributes per row) | S21 |
+
+## 3. When not to use
+
+| Instead of a table… | Use | Why |
+|---|---|---|
+| Product lists (bookings, slots) | `ItemGroup` (dense list row) | one title + one metadata line reads faster than many columns (R01.1, S21) |
+| A single list of names or links | `ItemGroup` | a table of one column is a list |
+
+<Unstyled>
+  <DoDont
+    doExample={<ItemGroup className="max-w-sm"><Item><ItemContent><ItemTitle>Ingress-nginx restarts</ItemTitle><ItemDescription>Jan Nowak · Tue 3 Nov, 18:00 CET</ItemDescription></ItemContent></Item></ItemGroup>}
+    doText="A booking has one thing to scan (the question) and one line of context: a dense row (S21)."
+    dontExample={<div className="max-w-sm rounded-lg border border-border"><Table><TableHeader><TableRow><TableHead>Question</TableHead><TableHead>Mentee</TableHead><TableHead>Time</TableHead></TableRow></TableHeader><TableBody><TableRow><TableCell>Ingress-nginx restarts</TableCell><TableCell>Jan Nowak</TableCell><TableCell>18:00</TableCell></TableRow></TableBody></Table></div>}
+    dontText="Splitting one sentence across columns does not help comparison and wastes width (S21)."
+  />
+</Unstyled>
+
+## 4. Anatomy
+
+| Part | Optional | Notes |
+|---|---|---|
+| Wrapper | no | `overflow-x-auto`, usually with a 1 px `border` + `rounded-lg` from the caller (`DataTable`) |
+| `TableHeader` → `TableHead` | no | `h-control`, list-row padding (T9), `type-label` |
+| `TableBody` → `TableRow` → `TableCell` | no | list-row padding; hover and selected use `bg-muted` |
+| `TableFooter` | yes | a summary row, `bg-muted` |
+| `TableCaption` | yes | `type-body`, `muted-foreground`, below the table |
+
+<Canvas of={TableStories.Anatomy} />
+
+## 5. Variants
+
+None (rule 6). One look for every admin table, same as the rest of the system has one dense-row look for product lists.
+
+## 6. States
+
+<Canvas of={TableStories.States} />
+
+| State | Looks | Source |
+|---|---|---|
+| Default | 1 px `border-b` between rows | R01.3 |
+| Hover | `bg-muted` (full tint, not `/50` – B62, consistent with `Item` and `Button`) | P4 |
+| Selected | `bg-muted` via `data-state="selected"` | – |
+| Loading | `Skeleton` cells, row `aria-busy` | prompt stage 4 |
+| Empty, error | handled one level up by `DataTable` (`EmptyState`, `ErrorMessage`), not by `Table` itself | `packages/ui/AGENTS.md` |
+
+Row colour transitions respect `prefers-reduced-motion` (B16).
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Native `<table>`/`<thead>`/`<tbody>`/`<th>`/`<td>`: screen readers announce row and column counts and headers. | WCAG 1.3.1 |
+| Repeated row actions (*Edit*) need a unique accessible name per row (*Edit Jan Nowak*), via `aria-label`. | WCAG 2.4.6, `AGENTS.md` (integration tests) |
+| Wide tables scroll horizontally in their own container; the page itself never scrolls sideways. | WCAG 1.4.10 |
+
+## 8. Content
+
+- Column headers: short nouns (*Name*, *Role*), sentence case.
+- Numbers right-aligned, `tabular-nums`; status cells use `Badge`, not colour alone.
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | The table scrolls sideways inside its frame; headers stay visible while scrolling horizontally. |
+| 768 px and 1440 px | Full width of the content column (`DataTable`'s panel). |
+
+<Canvas of={TableStories.LongContentNarrow} />
+
+## 10. API
+
+All parts take their native element's props (`<table>`, `<thead>`, `<tr>`, `<th>`, `<td>`, `<caption>`). `className` on `TableHead`/`TableCell` sets column width and alignment (`text-right`), as `DataTable`'s `column.className` already does.
+
+## 11. Code
+
+<Source
+  dark
+  code={`<div className="rounded-lg border border-border">
+  <Table>
+    <TableHeader>
+      <TableRow><TableHead>Name</TableHead><TableHead>Role</TableHead></TableRow>
+    </TableHeader>
+    <TableBody>
+      {users.map((u) => (
+        <TableRow key={u.id}>
+          <TableCell>{u.name}</TableCell>
+          <TableCell><Badge variant="secondary">{u.role}</Badge></TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  </Table>
+</div>`}
+/>
+
+In practice, build admin lists with `DataTable` (column config, loading/error/empty states, pagination) rather than this primitive directly.
+
+## 12. Do and don't
+
+See section 3 above (table vs dense list is the main decision for this component).
+
+## 13. Related
+
+- **Confused with:** `ItemGroup` (dense product list, S21).
+- **Used in:** `DataTable` (`backend/tables/DataTable.tsx`), `/admin/users`.
+
+### Interaction test
+
+<Canvas of={TableStories.RowActionsAreDistinct} />

@@ -1,0 +1,140 @@
+import { Canvas, Meta, Source, Unstyled } from "@storybook/addon-docs/blocks";
+import * as CheckboxStories from "./Checkbox.stories";
+import { Checkbox } from "../../src/components/ui/checkbox";
+import { Switch } from "../../src/components/ui/switch";
+import { Field, FieldLabel } from "../../src/components/ui/field";
+import { DoDont } from "../../.storybook/blocks/Docs";
+
+<Meta of={CheckboxStories} />
+
+# Checkbox
+
+`import { Checkbox } from "@devmentor/ui/components/ui/checkbox"`
+
+## 1. Purpose
+
+Lets a person turn one option on or off, or pick several options from a short list, and confirm the choice when the form is saved.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| The mentor's stack tags (TypeScript, React, Python, AI agents) – several at once | mentor-accounts spec (`MENTOR_TAGS`) |
+| One yes/no option that is saved together with a form | WAI-ARIA checkbox pattern |
+
+## 3. When not to use
+
+| Instead of a checkbox… | Use | Why |
+|---|---|---|
+| A setting that takes effect immediately (*Show me on the public list*) | `Switch` | a switch acts at once, a checkbox waits for *Save* (WAI-ARIA switch) |
+| Exactly one of several options (25 or 50 min) | `RadioGroup` | one answer only |
+| An action (*Copy share link*) | `Button` | a checkbox holds state |
+| Accepting rules with a fake "I agree" | nothing, unless the spec asks for it | no invented consent steps (rule 7) |
+
+## 4. Anatomy
+
+| Part | Optional | Notes |
+|---|---|---|
+| Box | no | 16 px, `rounded-md` (B3), `border-input` (4.81 : 1, T3) |
+| Check mark | shown when checked | `CheckIcon`, `aria-hidden` |
+| Label (`FieldLabel`) | no | beside the box, `Field orientation="horizontal"` |
+| Hint (`FieldDescription` in `FieldContent`) | yes | under the label |
+| Group question (`FieldSet` + `FieldLegend`) | when there are several | names the group |
+| Hit area | – | invisible `::after`, 40 × 32 px, 40 × 40 px on touch (B27, P4, WCAG 2.5.8) |
+
+## 5. Variants
+
+None (rule 6). Checked is a state, not a variant.
+
+<Canvas of={CheckboxStories.StackTags} />
+
+## 6. States
+
+<Canvas of={CheckboxStories.States} />
+
+| State | Looks | Source |
+|---|---|---|
+| Unchecked | outline `border-input` | T3 |
+| Checked | filled with `foreground`, mark in `background` – neutral, not the accent | B26, P5/K3 |
+| Hover | no change | **proposal** (base-nova default kept) |
+| Focus | neutral 3 px ring | T4, WCAG 2.4.7 |
+| Disabled | 50% opacity; label dimmed via `Field data-disabled`; the reason is in the hint | B17 |
+| Invalid | `border-destructive` + error under the group; focus keeps the neutral ring | tokeny.md, B13 |
+| Indeterminate | Base UI supports it (`indeterminate`); not used in 1.0 | rule 6 |
+| Pressed, loading | do not apply | – |
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Space toggles; Tab moves between checkboxes (each one is a tab stop). | WAI-ARIA checkbox pattern |
+| Base UI renders `<span role="checkbox">` with a hidden `<input>` for forms; `id` + `FieldLabel htmlFor` name it. Ids must not contain spaces. | WAI-ARIA, Base UI |
+| Several checkboxes with one question go in `FieldSet` + `FieldLegend`; the screen reader reads the legend first. | WCAG 1.3.1 |
+| Clicking the label toggles it; the invisible hit area makes the box itself at least 32 px tall. | WCAG 2.5.8 |
+| Announced as "\{label\}, checkbox, checked / not checked". | WAI-ARIA |
+
+## 8. Content
+
+- Label: what is turned on, as a noun or short statement (*React*, *Show the price*). Not a question. (**proposal**)
+- The label stays positive: *Send me booking reminders*, not *Don't send…*. (**proposal**)
+- Long labels wrap beside the box; the box stays on the first line.
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | One option per line; labels wrap; touch hit area 40 px. |
+| 768 px and 1440 px | One option per line; short tag lists may sit in two columns (**proposal**). |
+
+<Canvas of={CheckboxStories.LongLabelNarrow} />
+
+## 10. API
+
+All props of Base UI `Checkbox.Root`:
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `checked` / `defaultChecked` | `boolean` | – / `false` | Controlled / uncontrolled state. |
+| `onCheckedChange` | `(checked: boolean, details) => void` | – | Called on every toggle. |
+| `name`, `value` | `string` | – | Sent with the form through the hidden input. |
+| `disabled` | `boolean` | `false` | Not focusable, dimmed. |
+| `indeterminate` | `boolean` | `false` | Mixed state (not used in 1.0). |
+| `aria-invalid` | `boolean` | – | Error look. |
+
+## 11. Code
+
+<Source dark code={`<Checkbox aria-label="React" />`} />
+
+<Source
+  dark
+  code={`<FieldSet>
+  <FieldLegend>Stack tags</FieldLegend>
+  <FieldDescription>Mentees filter the public list by these.</FieldDescription>
+  {MENTOR_TAGS.map((tag) => (
+    <Field key={tag} orientation="horizontal">
+      <Checkbox id={\`tag-\${slug(tag)}\`} name="tags" value={tag} />
+      <FieldLabel htmlFor={\`tag-\${slug(tag)}\`}>{tag}</FieldLabel>
+    </Field>
+  ))}
+</FieldSet>`}
+/>
+
+## 12. Do and don't
+
+<Unstyled>
+  <DoDont
+    doExample={<Field orientation="horizontal"><Switch id="dd-cb-do" /><FieldLabel htmlFor="dd-cb-do">Show me on the public list</FieldLabel></Field>}
+    doText="An immediate setting is a switch (WAI-ARIA switch)."
+    dontExample={<Field orientation="horizontal"><Checkbox id="dd-cb-dont" /><FieldLabel htmlFor="dd-cb-dont">Show me on the public list</FieldLabel></Field>}
+    dontText="A checkbox suggests the change waits for Save; people leave without saving."
+  />
+</Unstyled>
+
+## 13. Related
+
+- **Confused with:** `Switch` (immediate), `RadioGroup` (one of many).
+- **Used in:** mentor profile (stack tags), `FieldSet`; pattern *Form* (stage 3).
+
+### Interaction test
+
+<Canvas of={CheckboxStories.TogglesByPointerAndKeyboard} />

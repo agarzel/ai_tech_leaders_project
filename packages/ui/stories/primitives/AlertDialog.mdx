@@ -1,0 +1,122 @@
+import { Canvas, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as AlertDialogStories from "./AlertDialog.stories";
+
+<Meta of={AlertDialogStories} />
+
+# AlertDialog
+
+`import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@devmentor/ui/components/ui/alert-dialog"`
+
+## 1. Purpose
+
+Stops a person before an action they cannot undo, names exactly what will happen, and makes keeping things as they are the easy choice.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Deleting a slot | mentor-accounts spec, prompt stage 3 (delete confirmation) |
+| Any irreversible action without extra input | WAI-ARIA alertdialog |
+
+## 3. When not to use
+
+| Instead of an alert dialog… | Use | Why |
+|---|---|---|
+| The action needs input (decline reason) | `Dialog` | a form, not a yes/no |
+| The action is reversible or cheap | do it, show the result in place | fewer interruptions (**proposal**) |
+| Reporting an error | `Alert` | nothing to confirm |
+
+## 4. Anatomy
+
+| Part | Optional | Notes |
+|---|---|---|
+| Trigger | yes | usually a `ghost`/`destructive` button or a menu item |
+| Backdrop, content | no | as `Dialog` (B47, B3, T8); no close × – the person chooses |
+| Header: title, description | title no | left-aligned (B50) |
+| Footer: `AlertDialogCancel`, `AlertDialogAction` | no | Cancel first in the source (focused first); Action usually `destructive` |
+
+<Canvas of={AlertDialogStories.Open} />
+
+## 5. Variants
+
+None. The base-nova `size="sm"` and the media box were removed (B50, rule 6).
+
+## 6. States
+
+| State | Story | Notes |
+|---|---|---|
+| Closed | Playground | – |
+| Open | Open | Cancel focused |
+| Pending | Action disabled + `aria-busy` + *Deleting…* (same rule as `Button`, B18) | – |
+| Failed | the dialog closes and an `Alert` explains on the page | **proposal** |
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| `role="alertdialog"`, named by the title, described by the description. | WAI-ARIA alertdialog |
+| Opening focuses the first button, *Keep …* (the safe choice). | WAI-ARIA, prompt stage 3 |
+| Escape cancels; focus returns to the trigger. | WAI-ARIA, WCAG 2.4.3 |
+| Clicking the backdrop does not close it (Base UI default) – the person must choose. | WAI-ARIA |
+| Themed from `<html>` in both themes. | prompt rule 9 |
+
+## 8. Content
+
+- Title: a question with the object's name (*Delete the slot Tue 3 Nov, 18:00 CET?*). (prompt stage 3)
+- Description: the consequence and whether it can be undone.
+- Action: verb + object (*Delete slot*), never *OK*/*Yes*; Cancel: *Keep slot*. (prompt stage 3)
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | 16 px gutter; buttons stacked with the action on top, Cancel directly below. |
+| 768 px and 1440 px | 384 px wide; Cancel left of the action. |
+
+<Canvas of={AlertDialogStories.LongNameNarrow} />
+
+## 10. API
+
+| Part | Props | Notes |
+|---|---|---|
+| `AlertDialog` | Base UI `AlertDialog.Root`: `open`, `defaultOpen`, `onOpenChange` | |
+| `AlertDialogContent` | Base UI `AlertDialog.Popup` | `size` removed (B50) |
+| `AlertDialogCancel` | Base UI `Close` props + `variant` (default `outline`), `size` | |
+| `AlertDialogAction` | `Button` props | set `variant="destructive"` for deletions |
+| `AlertDialogHeader`, `AlertDialogFooter`, `AlertDialogTitle`, `AlertDialogDescription` | – | `AlertDialogMedia` removed (B50) |
+
+## 11. Code
+
+<Source
+  dark
+  code={`<AlertDialog>
+  <AlertDialogTrigger render={<Button variant="ghost" size="sm" />}>Delete slot</AlertDialogTrigger>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Delete the slot {formatLocal(slot.startsAt)}?</AlertDialogTitle>
+      <AlertDialogDescription>Mentees can no longer book this time. You can add it again later.</AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel>Keep slot</AlertDialogCancel>
+      <AlertDialogAction variant="destructive" onClick={deleteSlot}>Delete slot</AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>`}
+/>
+
+## 12. Do and don't
+
+| Do | Don't | Why |
+|---|---|---|
+| *Delete the slot Tue 3 Nov, 18:00 CET?* | *Are you sure?* | the name says what is affected |
+| *Keep slot* / *Delete slot* | *Cancel* / *OK* | verbs say what each button does |
+| Cancel focused first | the destructive button focused first | Enter must not delete by accident |
+
+## 13. Related
+
+- **Confused with:** `Dialog` (input), `Alert` (message).
+- **Used in:** pattern *Delete confirmation* (stage 3), slot and invitation lists.
+
+### Interaction test
+
+<Canvas of={AlertDialogStories.KeyboardAndFocusReturn} />

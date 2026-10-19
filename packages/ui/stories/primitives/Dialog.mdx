@@ -1,0 +1,151 @@
+import { Canvas, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as DialogStories from "./Dialog.stories";
+
+<Meta of={DialogStories} />
+
+# Dialog
+
+`import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@devmentor/ui/components/ui/dialog"`
+
+## 1. Purpose
+
+Asks a person for a short, focused input or decision without leaving the page – and makes sure they finish or cancel it before continuing.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Declining a booking with an optional reason (≤ 280 characters) and the refund stated (`DeclineBookingDialog`) | booking spec |
+| A short form that belongs to the current page and has at most about three fields | **proposal** |
+
+## 3. When not to use
+
+| Instead of a dialog… | Use | Why |
+|---|---|---|
+| Confirming a destructive action with no input (*Delete slot?*) | `AlertDialog` | role `alertdialog`, Cancel focused first |
+| A long form (profile, prices) | a separate page | room, URL, back button (prompt stage 4: dialog vs page) |
+| Extra information next to a control | `Popover` | non-blocking |
+| A label for an icon button | `Tooltip` | – |
+| A message after an action | `Alert` on the page | no toasts or modal notices (S10) |
+
+## 4. Anatomy
+
+| Part | Optional | Notes |
+|---|---|---|
+| `DialogTrigger` | yes (controlled dialogs have none) | a `Button`, via `render` |
+| Backdrop | no | `overlay` token: stone-950 at 30% (light) / 70% (dark), no blur (B47, A01) |
+| `DialogContent` | no | `popover` surface, 1 px `border`, `rounded-lg`, no shadow; `p-panel`, `gap-between-groups`; max 384 px, 16 px gutter on narrow screens |
+| Close button (×) | yes (`showCloseButton`, default on) | ghost `icon-sm`, `aria-label="Close"` |
+| `DialogHeader` → `DialogTitle`, `DialogDescription` | title no, description yes | title `type-section-title` (B37); description `type-body`, `muted-foreground` |
+| Body | yes | fields (`Field`) |
+| `DialogFooter` | yes | top line, buttons right on wide screens, stacked with the main action on top on narrow ones (B38) |
+
+<Canvas of={DialogStories.Open} />
+
+## 5. Variants
+
+None (rule 6). Width is one value (`max-w-sm`); a wider need is a sign for a page.
+
+## 6. States
+
+| State | Story | Source |
+|---|---|---|
+| Closed | Playground | – |
+| Open | Open | – |
+| Submitting | Submitting: the action is disabled + `aria-busy`, label *Declining…* | B18 |
+| Validation error | WithError: `FieldError` in the dialog, the dialog stays open, typed text stays | prompt stage 3 |
+| Server error | an `Alert` at the top of the body (pattern *Form*, stage 3) | – |
+
+<Canvas of={DialogStories.Submitting} />
+<Canvas of={DialogStories.WithError} />
+
+Opening and closing fade and zoom in 100 ms; with `prefers-reduced-motion` they are instant (F3 **proposal**, WCAG 2.3.3). Nothing slides (B48).
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| `role="dialog"`, `aria-modal`, named by `DialogTitle`, described by `DialogDescription`. | WAI-ARIA dialog pattern |
+| Opening moves focus into the dialog (first focusable element); Tab and Shift+Tab stay inside. | WAI-ARIA, WCAG 2.4.3 |
+| Escape, the × button and the cancel button close it; focus returns to the trigger. | WAI-ARIA, WCAG 2.4.3 |
+| The page behind is inert. | WAI-ARIA |
+| Rendered in a portal on `<body>`; the theme comes from the class on `<html>`, so it is correct in both themes. | prompt rule 9 |
+| Buttons and the close button keep 32 px / 40 px on touch. | P4, WCAG 2.5.8 |
+
+## 8. Content
+
+- Title: the decision as a question with the object (*Decline the booking from Jan Nowak?*). (prompt stage 3)
+- Description: the consequence for money or time (*The mentee gets a full refund and the slot is released.*).
+- Buttons: verb + object for the action (*Decline booking*), the safe way out named too (*Keep booking*), never *OK* / *Cancel* alone. (prompt stage 3)
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | 16 px gutter; footer buttons stacked, main action on top. |
+| 768 px and 1440 px | Centred, 384 px wide; buttons in a row on the right. |
+
+<Canvas of={DialogStories.Narrow} />
+
+## 10. API
+
+| Part | Props | Notes |
+|---|---|---|
+| `Dialog` | Base UI `Dialog.Root`: `open`, `defaultOpen`, `onOpenChange`, `modal` | |
+| `DialogTrigger`, `DialogClose` | Base UI props + `render` | `render={<Button … />}` |
+| `DialogContent` | Base UI `Dialog.Popup` props + `showCloseButton?: boolean` (default `true`) | |
+| `DialogFooter` | `<div>` props + `showCloseButton?: boolean` (default `false`) | adds an outline *Close* button |
+| `DialogTitle`, `DialogDescription` | Base UI props | |
+
+## 11. Code
+
+<Source
+  dark
+  code={`<Dialog>
+  <DialogTrigger render={<Button variant="outline" />}>How refunds work</DialogTrigger>
+  <DialogContent>
+    <DialogHeader><DialogTitle>How refunds work</DialogTitle></DialogHeader>
+    <DialogFooter showCloseButton />
+  </DialogContent>
+</Dialog>`}
+/>
+
+<Source
+  dark
+  code={`<Dialog open={open} onOpenChange={setOpen}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Decline the booking from {menteeName}?</DialogTitle>
+      <DialogDescription>The mentee gets a full refund and the slot is released.</DialogDescription>
+    </DialogHeader>
+    <Field>
+      <FieldLabel htmlFor="reason" optional>Reason for the mentee</FieldLabel>
+      <Textarea id="reason" value={reason} onChange={(e) => setReason(e.target.value)} />
+    </Field>
+    <DialogFooter>
+      <DialogClose render={<Button variant="outline" />}>Keep booking</DialogClose>
+      <Button variant="destructive" disabled={pending} aria-busy={pending} onClick={decline}>Decline booking</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>`}
+/>
+
+## 12. Do and don't
+
+| Do | Don't | Why |
+|---|---|---|
+| *Decline the booking from Jan Nowak?* + *Keep booking* / *Decline booking* | *Are you sure?* + *Cancel* / *OK* | the question and buttons say what happens (prompt stage 3) |
+| Validation error shown inside the open dialog | closing the dialog and showing an error elsewhere | the person keeps their text and context |
+| A separate page for the mentor profile | a dialog with ten fields | dialogs are for short, focused steps |
+
+Examples are shown as text because an open dialog would cover this page; the open states are rendered in frames above.
+
+## 13. Related
+
+- **Confused with:** `AlertDialog` (confirmation without input), `Popover` (non-modal), a separate page.
+- **Used in:** `DeclineBookingDialog` (stage 3); pattern *Delete confirmation* uses `AlertDialog`.
+
+### Interaction tests
+
+<Canvas of={DialogStories.KeyboardAndFocusReturn} />
+<Canvas of={DialogStories.ActionAndCancel} />

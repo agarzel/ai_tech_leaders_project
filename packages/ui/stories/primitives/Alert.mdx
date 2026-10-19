@@ -1,0 +1,124 @@
+import { Canvas, Meta, Source, Unstyled } from "@storybook/addon-docs/blocks";
+import { CircleAlert } from "lucide-react";
+import * as AlertStories from "./Alert.stories";
+import { Alert, AlertDescription, AlertTitle } from "../../src/components/ui/alert";
+import { DoDont } from "../../.storybook/blocks/Docs";
+
+<Meta of={AlertStories} />
+
+# Alert
+
+`import { Alert, AlertTitle, AlertDescription, AlertAction } from "@devmentor/ui/components/ui/alert"`
+
+## 1. Purpose
+
+Tells a person something about the page or the last action – what happened and what to do – in the place where it matters, and stays until it is no longer true.
+
+## 2. When to use
+
+| Situation in DevMentor | Variant | Source |
+|---|---|---|
+| Payment could not start (`payment_unavailable`), the server failed, the network is down | `destructive` + *Try again* | booking spec; prompt stage 3 (form API states) |
+| A booking or page that does not exist or is not yours | `destructive`, no action, or a link back | prompt stage 3 (detail view) |
+| Information that changes a decision: *The mentor may decline your question – full refund* | `default` | booking spec, R05 |
+| A list or table that failed to load (`ErrorMessage` uses it) | `destructive` + *Retry* | `packages/ui/AGENTS.md` |
+
+## 3. When not to use
+
+| Instead of an alert… | Use | Why |
+|---|---|---|
+| An error of one field | `FieldError` under the field | the fix is at the field (WCAG 3.3.1) |
+| A short confirmation (*Saved*) | inline text near the action | no toasts in 1.0 (S10); an error that needs action is never a toast (prompt) |
+| An empty list | `EmptyState` | empty is not an error |
+| Marketing or tips | nothing | A01, A02 |
+
+## 4. Anatomy
+
+| Part | Optional | Notes |
+|---|---|---|
+| Container | no | `rounded-lg`, 1 px `border`, `card` surface, 12 × 8 px padding (B40) |
+| Icon | yes (recommended) | 16 px, `aria-hidden`: `Info` or `CircleAlert`; grid `icon-content` (B20) |
+| `AlertTitle` | no | what happened, `type-label` |
+| `AlertDescription` | yes | what to do, `type-body`, `muted-foreground` (`destructive` in the destructive variant); links via `link-text` (T11) |
+| `AlertAction` | yes | one `sm` button top right (*Try again*); 48 px tall alert on touch so the 40 px button fits |
+
+## 5. Variants
+
+<Canvas of={AlertStories.Variants} />
+
+| Variant | Choose it when | Source |
+|---|---|---|
+| `default` | information that affects a decision | – |
+| `destructive` | something failed and the person must act or wait | T6, F1 |
+
+## 6. States
+
+<Canvas of={AlertStories.States} />
+
+An alert has no interactive states; its action and links have their own. It appears when the condition starts and disappears when it ends (after a successful retry), not on a timer. Without an icon the text takes the full width.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| `role="alert"` by default: announced immediately. Use it for messages that appear after an action. | WAI-ARIA alert |
+| For a message that is already on the page when it loads, pass `role="status"` (or `role={undefined}`) so it is not announced as urgent. | WAI-ARIA, B42 |
+| The icon repeats the meaning; the title says it in words. | WCAG 1.4.1 |
+| After a failed submit the focus goes to the first invalid field, not to the alert; for a server error with no field, focus the alert's action. | prompt stage 3 (**proposal** for the server-error case) |
+| Destructive text 8.37 : 1 on card (light), 9.11 : 1 (dark). | tokeny.md |
+
+## 8. Content
+
+- Title: what happened, plainly (*Payment could not start*). Description: what to do and what it means for money or time (*Your slot is not held – try again in a few minutes.*). (prompt stage 4 Content: "what happened and what to do")
+- No blame, no exclamation marks, no emoji, no "Oops". (R02.5/P11, tone **proposal**)
+- One action at most, a verb (*Try again*).
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | Full width; text wraps; the action stays top right (text reserves 72 px). |
+| 768 px and 1440 px | Width of the content it belongs to (form column or page). |
+
+<Canvas of={AlertStories.LongTextNarrow} />
+
+## 10. API
+
+| Part | Props | Notes |
+|---|---|---|
+| `Alert` | `<div>` props + `variant?: "default" \| "destructive"` (default `"default"`) | `role="alert"` unless you pass `role` |
+| `AlertTitle`, `AlertDescription`, `AlertAction` | `<div>` props | |
+
+## 11. Code
+
+<Source dark code={`<Alert role="status"><AlertTitle>No times available right now</AlertTitle></Alert>`} />
+
+<Source
+  dark
+  code={`<Alert variant="destructive">
+  <CircleAlert aria-hidden="true" />
+  <AlertTitle>Payment could not start</AlertTitle>
+  <AlertDescription>Card payments are unavailable right now. Your slot is not held – try again in a few minutes.</AlertDescription>
+  <AlertAction><Button size="sm" variant="outline" onClick={retry}>Try again</Button></AlertAction>
+</Alert>`}
+/>
+
+## 12. Do and don't
+
+<Unstyled>
+  <DoDont
+    doExample={<Alert variant="destructive"><CircleAlert aria-hidden="true" /><AlertTitle>Payment could not start</AlertTitle><AlertDescription>Your slot is not held – try again in a few minutes.</AlertDescription></Alert>}
+    doText="Says what happened and what to do, and what it means for the slot."
+    dontExample={<Alert variant="destructive"><AlertTitle>Error 502</AlertTitle></Alert>}
+    dontText="A code tells the person nothing they can act on."
+  />
+</Unstyled>
+
+## 13. Related
+
+- **Confused with:** `FieldError` (one field), `EmptyState` (nothing yet), toast (not in 1.0).
+- **Used in:** `ErrorMessage`; patterns *Form* (server error, no network), *Detail view* (not found or no access), *Payment and waiting for confirmation* (stage 3).
+
+### Interaction test
+
+<Canvas of={AlertStories.AnnouncedAndActionable} />

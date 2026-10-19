@@ -1,0 +1,130 @@
+import { Canvas, Meta, Source, Unstyled } from "@storybook/addon-docs/blocks";
+import * as TextareaStories from "./Textarea.stories";
+import { Textarea } from "../../src/components/ui/textarea";
+import { Field, FieldDescription, FieldLabel } from "../../src/components/ui/field";
+import { DoDont } from "../../.storybook/blocks/Docs";
+
+<Meta of={TextareaStories} />
+
+# Textarea
+
+`import { Textarea } from "@devmentor/ui/components/ui/textarea"`
+
+## 1. Purpose
+
+Lets a person write several lines – a question for the mentor, a bio, a reason for declining – and read all of it back before sending.
+
+## 2. When to use
+
+| Situation in DevMentor | Limit | Source |
+|---|---|---|
+| The booking question, written before payment; the price is shown above it | 2,000 characters, with a counter (product component `QuestionField`, stage 3) | booking spec, R01.5/P5 |
+| Mentor bio, plain text | 2,000 characters | mentor-accounts spec |
+| Optional reason when a mentor declines a booking; the mentee sees it | 280 characters | booking spec |
+
+## 3. When not to use
+
+| Instead of a textarea… | Use | Why |
+|---|---|---|
+| One short value (headline, link) | `Input` | one line, better keyboard on phones |
+| Writing messages in a session (Enter sends, Shift+Enter new line) | the session composer (product component, later) | R02.1, R02.2 – the chat pattern only in the session view (K4) |
+| Code to share | still a textarea; the rendered result uses `type-code` | R01.2/P2 |
+
+## 4. Anatomy
+
+| Part | Optional | Notes |
+|---|---|---|
+| Field, label | no | always visible label (`FieldLabel`) |
+| Textarea | no | `min-h-16` (64 px), grows with content; 12 px padding (B8) |
+| Hint | yes | limit and consequence (*the mentor may decline it*) |
+| Counter | yes | product components only (`QuestionField`), not part of the primitive (rule 6) |
+| Error | only when invalid | icon + instruction |
+
+## 5. Variants
+
+None (rule 6).
+
+<Canvas of={TextareaStories.Default} />
+
+## 6. States
+
+<Canvas of={TextareaStories.States} />
+
+| State | Looks | Source |
+|---|---|---|
+| Default | transparent fill, `border-input` | B6, T3 |
+| Hover | no change | **proposal** (base-nova default kept) |
+| Focus | ring border + neutral 3 px ring | T4, WCAG 2.4.7 |
+| Disabled | `muted` fill, 50% opacity; the reason is in the hint (e.g. *The question cannot be changed after booking*) | B6, B17, booking spec (question frozen) |
+| Invalid | `border-destructive` + error with icon; focus keeps the neutral ring | tokeny.md, B13 |
+| Loading, pressed, selected | do not apply | – |
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Enter adds a new line; the form is submitted with its button, never with Enter in a textarea. | HTML; K4 (Enter-to-send only in the session) |
+| Label with `htmlFor`; hint and error with `aria-describedby`; `aria-invalid` when invalid. | WCAG 1.3.1, 3.3.1 |
+| Do not rely on `maxLength` alone: it silently cuts pasted text. Say the limit in the hint and validate. | **proposal** |
+| Text 14 px, 16 px on touch. | P2, B9 |
+
+## 8. Content
+
+- Label as a noun phrase (*Your question*, *Reason for declining*); *(optional)* when optional (answer 2.5).
+- The hint states who reads it and what happens (*The mentor reads it before accepting*). (booking spec)
+- The placeholder is a short example of a good question, not instructions. (prompt stage 3)
+- Long text grows the field; very long text scrolls the page, not the field.
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | Full width; no horizontal scroll (WCAG 1.4.10). |
+| 768 px | Full width of the form column. |
+| 1440 px | At most `max-w-prose` so lines stay under about 65 characters (Foundations/Typography). |
+
+<Canvas of={TextareaStories.LongTextNarrow} />
+
+## 10. API
+
+All props of `<textarea>`: `value`, `defaultValue`, `onChange`, `maxLength`, `rows`, `disabled`, `aria-invalid`, `aria-describedby`.
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `aria-invalid` | `boolean` | – | Shows the error state. |
+| `className` | `string` | – | Width and minimum height only. |
+
+## 11. Code
+
+<Source dark code={`<Textarea aria-label="Bio" />`} />
+
+<Source
+  dark
+  code={`<Field>
+  <FieldLabel htmlFor="question">Your question</FieldLabel>
+  <Textarea id="question" name="question" aria-describedby="question-hint" />
+  <FieldDescription id="question-hint">
+    The mentor reads it before accepting and may decline it – you then get a full refund.
+  </FieldDescription>
+</Field>`}
+/>
+
+## 12. Do and don't
+
+<Unstyled>
+  <DoDont
+    doExample={<Field><FieldLabel htmlFor="dd-q-do">Your question</FieldLabel><Textarea id="dd-q-do" aria-describedby="dd-q-do-hint" /><FieldDescription id="dd-q-do-hint">The mentor reads it before accepting.</FieldDescription></Field>}
+    doText="The hint says who reads it, so people write a complete question (booking spec)."
+    dontExample={<Textarea aria-label="Question (don't example)" placeholder="Type your question here. The mentor reads it before accepting. Max 2000 characters." />}
+    dontText="Instructions in the placeholder vanish as soon as the person starts typing."
+  />
+</Unstyled>
+
+## 13. Related
+
+- **Confused with:** `Input` (one line), the session composer (Enter sends).
+- **Used in:** booking form (`QuestionField`), decline dialog (`DeclineBookingDialog`), mentor profile; pattern *Form* (stage 3).
+
+### Interaction test
+
+<Canvas of={TextareaStories.TypingAndLimitError} />

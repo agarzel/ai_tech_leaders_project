@@ -1,0 +1,168 @@
+import { Canvas, Meta, Source, Unstyled } from "@storybook/addon-docs/blocks";
+import * as ButtonStories from "./Button.stories";
+import { Button } from "../../src/components/ui/button";
+import { DoDont } from "../../.storybook/blocks/Docs";
+
+<Meta of={ButtonStories} />
+
+# Button
+
+`import { Button } from "@devmentor/ui/components/ui/button"`
+
+## 1. Purpose
+
+Lets a person start one action now – pay, accept, decline, save – and see at a glance which action on the screen matters most.
+
+## 2. When to use
+
+| Situation in DevMentor | Variant | Source |
+|---|---|---|
+| The one next step of the screen: *Pay*, *Accept booking*, *Enter session* | `default` (the only element with the accent) | R01.5/P5, K3 |
+| Other actions on the same screen: *Add slot*, *Edit profile* | `secondary` or `outline` | P5 |
+| Low-weight actions next to a main one: *Cancel*, *Keep* | `ghost` | P5 |
+| Declining or deleting: *Decline booking*, *Delete slot* | `destructive` | T6 |
+| An action that reads like text inside a row or sentence: *View public work* | `link` (text action) | T11, B19 |
+| Row actions in a dense list or table | `size="sm"` | R01.1, B2, answer 2.1 |
+
+## 3. When not to use
+
+| Instead of a button… | Use | Why |
+|---|---|---|
+| Going to another page or URL | a link (`<a>`), in running text `foreground` + underline | WAI-ARIA: a button acts, a link navigates; T11 |
+| A second `default` button on the same screen | `secondary` / `outline` | One accent per screen (P5, K3) |
+| Choosing between options (25 or 50 min) | `RadioGroup` or `NativeSelect` | The choice is state, not an action |
+| A toggle that stays on or off | `Switch` | WAI-ARIA switch pattern |
+
+## 4. Anatomy
+
+| Part | Optional | Notes |
+|---|---|---|
+| Container (`<button>`) | no | Base UI `Button`; height `h-control` (32 px, 40 px on touch – P4) |
+| Label | no, except icon-only sizes | Verb + object, `type-label` (P2) |
+| Leading or trailing icon | yes | 16 px, `data-icon="inline-start"` or `"inline-end"`, `aria-hidden` |
+| Spinner | yes, only while loading | replaces the leading icon (B18) |
+
+## 5. Variants
+
+<Canvas of={ButtonStories.Variants} />
+
+| Variant | Choose it when | Source |
+|---|---|---|
+| `default` | the single most important action of the screen; never twice on one screen | P5, K3 |
+| `secondary` | a supporting action that should still look like a button | P4 |
+| `outline` | a supporting action on a plain surface, or a row action | B5 |
+| `ghost` | the quiet alternative next to another button (*Cancel*) | P5 |
+| `destructive` | the action declines, deletes or cannot be undone | T6, F1 |
+| `link` | a text action; looks like a link in text: foreground and always underlined | T11, B19, WCAG 1.4.1 |
+
+Sizes: `default` everywhere; `sm` (28 px, 40 px on touch) only for row actions in dense lists; `icon` and `icon-sm` for icon-only buttons, which always need `aria-label`.
+
+<Canvas of={ButtonStories.Sizes} />
+
+## 6. States
+
+<Canvas of={ButtonStories.States} />
+
+| State | Looks | Source |
+|---|---|---|
+| Default | as the variant | – |
+| Hover | `default` 80% accent (4.70 : 1 light, 6.96 : 1 dark); `secondary` → `secondary-hover`; `outline`/`ghost` → `muted`; `destructive` stronger tint | tokeny.md, B14 |
+| Focus | neutral 3 px ring `ring/50` + ring border, the same for every variant (3.35 : 1 light, 4.98 : 1 dark) | T4, B12, WCAG 2.4.7, 1.4.11 |
+| Pressed | same as hover; the button does not move | B15 |
+| Disabled | 50% opacity, not focusable, no pointer events | B17, WCAG 1.4.3 (inactive controls are exempt) |
+| Loading | disabled + `aria-busy` + spinner + a label in the *-ing* form (*Saving…*); prevents double submit | B18 |
+| Invalid | red border; focus still shows the neutral ring | tokeny.md, B13 |
+| Selected | not a button state – use a radio group or switch | WAI-ARIA |
+
+**How the person learns why a button is disabled:** the reason is always visible as text next to it (or in the field hint), never only in a tooltip. In forms, prefer an enabled submit button and validation on submit. (B17; prompt: "disabled button without explanation", "tooltip with information needed to act")
+
+<Canvas of={ButtonStories.DisabledWithReason} />
+
+Transitions are colour-only, 150 ms, and switched off with `prefers-reduced-motion` – **proposal**, follows F3 (Foundations/Motion).
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Native `<button>`: Tab focuses it, Enter and Space activate it. Never a `div` with `onClick`. | WAI-ARIA button pattern |
+| `type="submit"` only for the form's submit; other buttons inside a form get `type="button"`. | HTML |
+| Icon-only button: `aria-label` with verb + object (*Copy share link*); a tooltip with the same text arrives with Tooltip (batch 4). | WCAG 4.1.2, 2.5.3 |
+| Loading: `aria-busy="true"`; the spinner is `aria-hidden` because the label already says *Saving…*. | WAI-ARIA |
+| Disabled with a reason: link the reason with `aria-describedby`. | WCAG 1.3.1 |
+| Target size: 32 × 32 px (28 × 28 for `sm`) with a pointer, 40 × 40 px on touch. | WCAG 2.5.8, P4, B2 |
+| A screen reader announces "\{label\}, button" (and "dimmed"/"unavailable" when disabled). | WAI-ARIA |
+
+## 8. Content
+
+- Verb + object, sentence case: *Accept booking*, *Copy share link*, *Decline booking* – not *OK*, *Submit*, *Yes*. (prompt stage 3, delete confirmation; tone **proposal** until the Content page)
+- When the price is part of the decision, put it on the button: *Pay PLN 180.00*, *Book 25 min · PLN 120.00*. (R01.5/P5, booking spec)
+- At most about 3 words + the price; no emoji, no exclamation marks. (R02.5/P11)
+- Labels do not wrap. A translation into a longer language (German, Polish) can grow by about 30% – leave room or make the button full width on narrow screens. (**proposal**)
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | Primary actions full width (`className="w-full"`), stacked; touch height 40 px (P4). |
+| 768 px | Buttons inline, main action last in reading order of the button row. (**proposal**) |
+| 1440 px | Same as 768 px; buttons never stretch across the content column. |
+
+<Canvas of={ButtonStories.LongLabelNarrow} />
+
+## 10. API
+
+All props of Base UI `Button` (`disabled`, `focusableWhenDisabled`, `render`, `nativeButton`, `type`, `onClick`…) plus:
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `variant` | `"default" \| "secondary" \| "outline" \| "ghost" \| "destructive" \| "link"` | `"default"` | Visual weight; see Variants. |
+| `size` | `"default" \| "sm" \| "icon" \| "icon-sm"` | `"default"` | `sm` only in dense rows. |
+| `className` | `string` | – | Layout only (`w-full`); never colours or sizes. |
+
+`buttonVariants({ variant, size })` returns the classes, for a link that must look like a button: `<a className={buttonVariants({ variant: "outline" })}>`.
+
+## 11. Code
+
+<Source dark code={`<Button>Accept booking</Button>`} />
+
+<Source
+  dark
+  code={`// Booking awaiting the mentor: one main action, a quiet alternative.
+<div className="flex gap-in-group">
+  <Button onClick={accept}>Accept booking</Button>
+  <Button variant="ghost" onClick={openDecline}>Decline</Button>
+</div>
+
+// Submitting
+<Button type="submit" disabled={isSubmitting} aria-busy={isSubmitting}>
+  {isSubmitting ? <><Spinner aria-hidden="true" data-icon="inline-start" />Saving…</> : "Save profile"}
+</Button>`}
+/>
+
+## 12. Do and don't
+
+<Unstyled>
+  <DoDont
+    doExample={<><Button>Pay PLN 180.00</Button><Button variant="ghost">Back</Button></>}
+    doText="One accent per screen: the payment is the next step, everything else is quiet (P5)."
+    dontExample={<><Button>Pay PLN 180.00</Button><Button>Back</Button></>}
+    dontText="Two accented buttons compete; nobody knows what matters most (R01.5)."
+  />
+  <br />
+  <DoDont
+    doExample={<Button variant="destructive">Decline booking</Button>}
+    doText="The label says what happens (prompt stage 3)."
+    dontExample={<Button variant="destructive">OK</Button>}
+    dontText="'OK' does not say what will be declined or deleted."
+  />
+</Unstyled>
+
+## 13. Related
+
+- **Confused with:** a link (navigation), a switch (on/off state), a radio group (choice).
+- **Used in:** `CrudForm` (submit, cancel), `DataTable` (pagination, row actions), `ErrorMessage` (retry); patterns *Form*, *Delete confirmation*, *Status and next action* (stage 3).
+
+### Interaction tests
+
+<Canvas of={ButtonStories.ActivatesByPointerAndKeyboard} />
+<Canvas of={ButtonStories.DisabledDoesNotActivate} />

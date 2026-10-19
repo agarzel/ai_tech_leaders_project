@@ -1,0 +1,109 @@
+import { Canvas, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as TooltipStories from "./Tooltip.stories";
+
+<Meta of={TooltipStories} />
+
+# Tooltip
+
+`import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@devmentor/ui/components/ui/tooltip"`
+
+## 1. Purpose
+
+Shows the name of an icon-only control – or its keyboard shortcut – to people who point at or focus it.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Icon-only buttons: *Copy share link*, *Open public work in a new tab*, row action triggers | Foundations/Icons (tooltip with the same text as `aria-label`), WCAG 2.5.3 |
+| A shortcut next to a visible label (*Send message · Enter*) | R02.2 |
+
+## 3. When not to use
+
+| Instead of a tooltip… | Use | Why |
+|---|---|---|
+| Information needed to act (why a button is disabled, a limit, a price) | visible text | prompt stage 4 ("tooltip with information needed to act"), B17 |
+| Longer explanations or links | `Popover` | tooltips are not interactive |
+| Buttons with a visible label | nothing | the label is already there |
+
+## 4. Anatomy
+
+| Part | Optional | Notes |
+|---|---|---|
+| `TooltipTrigger` | no | the control, via `render` |
+| `TooltipContent` | no | inverted: `foreground` surface, `background` text (18.92 : 1), `type-meta`, `rounded-md`, max 320 px; no arrow (B55) |
+| `Kbd` inside | yes | shortcut hint |
+| `TooltipProvider` | optional | shares the open delay between tooltips; not required |
+
+<Canvas of={TooltipStories.Open} />
+
+## 5. Variants
+
+None (rule 6).
+
+<Canvas of={TooltipStories.WithShortcut} />
+
+## 6. States
+
+Hidden, open after a 600 ms hover delay (Base UI default, B56) or immediately on keyboard focus; hidden on Escape, blur or pointer leave. Fade/zoom 100 ms, instant with reduced motion (F3 **proposal**). Hover, disabled and error do not apply to the tooltip itself.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| The trigger's accessible name comes from `aria-label`; the tooltip repeats it visually with the same words. | WCAG 2.5.3, 4.1.2 |
+| Shows on focus as well as hover; Escape hides it without moving focus. | WCAG 1.4.13 |
+| The tooltip stays while the pointer moves onto it. | WCAG 1.4.13 |
+| A disabled button cannot show a tooltip (no pointer events) – write the reason next to it instead. | B17 |
+| Portalled to `<body>`, themed from `<html>`. | prompt rule 9 |
+
+## 8. Content
+
+- The same verb + object as the button's `aria-label` (*Copy share link*). No full stop. One line.
+- No essential information, no links.
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | Wraps within 320 px; on touch devices tooltips rarely show – the icon must be clear and the name is in `aria-label`. |
+| 768 px and 1440 px | One line above the control. |
+
+<Canvas of={TooltipStories.LongNarrow} />
+
+## 10. API
+
+| Part | Props | Notes |
+|---|---|---|
+| `Tooltip` | Base UI `Tooltip.Root`: `open`, `defaultOpen`, `onOpenChange` | |
+| `TooltipTrigger` | Base UI props + `render`, `delay` | default delay 600 ms (B56) |
+| `TooltipContent` | Base UI `Tooltip.Popup` + `side` (`"top"`), `align` (`"center"`), `sideOffset` (6) | |
+| `TooltipProvider` | Base UI `Tooltip.Provider` (`delay`, `closeDelay`) | |
+
+## 11. Code
+
+<Source
+  dark
+  code={`<Tooltip>
+  <TooltipTrigger render={<Button variant="outline" size="icon" aria-label="Copy share link" />}>
+    <Copy />
+  </TooltipTrigger>
+  <TooltipContent>Copy share link</TooltipContent>
+</Tooltip>`}
+/>
+
+## 12. Do and don't
+
+| Do | Don't | Why |
+|---|---|---|
+| Icon button + tooltip *Copy share link* | disabled *Pay* with a tooltip *Add a question first* | the reason must be visible text (B17) |
+| Tooltip text = `aria-label` | tooltip *Copy* while `aria-label` is *Duplicate URL* | voice users say what they see (WCAG 2.5.3) |
+
+## 13. Related
+
+- **Confused with:** `Popover` (interactive content), `FieldDescription` (visible hint).
+- **Used in:** icon buttons in `InputGroup`, row action triggers, the session composer.
+
+### Interaction test
+
+<Canvas of={TooltipStories.ShowsOnFocus} />

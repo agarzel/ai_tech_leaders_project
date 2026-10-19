@@ -1,0 +1,142 @@
+import { Canvas, Meta, Source, Unstyled } from "@storybook/addon-docs/blocks";
+import { Copy } from "lucide-react";
+import * as GroupStories from "./InputGroup.stories";
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput, InputGroupText } from "../../src/components/ui/input-group";
+import { Input } from "../../src/components/ui/input";
+import { Button } from "../../src/components/ui/button";
+import { DoDont } from "../../.storybook/blocks/Docs";
+
+<Meta of={GroupStories} />
+
+# InputGroup
+
+`import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput, InputGroupText, InputGroupTextarea } from "@devmentor/ui/components/ui/input-group"`
+
+## 1. Purpose
+
+Attaches a unit, an icon or a small action to a field, so the person sees what the value means (PLN) or can act on it (copy) without looking elsewhere.
+
+## 2. When to use
+
+| Situation in DevMentor | Addon | Source |
+|---|---|---|
+| The share link and the invitation link, shown with a copy button | `InputGroupButton` at `inline-end` | mentor-accounts spec (share link, invitations "shown once with a copy button") |
+| Prices with the currency after the number | `InputGroupText` *PLN* at `inline-end` | D12 |
+| The booking question with a character counter below | `InputGroupTextarea` + `block-end` text (`QuestionField`, stage 3) | booking spec |
+| A filter field with a search icon | icon at `inline-start` | **proposal** |
+
+## 3. When not to use
+
+| Instead of an input group… | Use | Why |
+|---|---|---|
+| A plain field | `Input` | no extra frame logic |
+| A field and its submit button (*Add slot*) | `Input` + `Button` next to each other | the button acts on the whole form, not on the field |
+| Explaining the field | `FieldDescription` | addons are for units and in-field actions, not sentences |
+
+## 4. Anatomy
+
+| Part | Optional | Notes |
+|---|---|---|
+| `InputGroup` | no | carries the field frame: `h-control` (48 px on touch when it holds a button, B31), `border-input`, `rounded-lg`, focus and error rings (P4, T3, T4) |
+| `InputGroupInput` / `InputGroupTextarea` | no | borderless field inside |
+| `InputGroupAddon` | yes | `align`: `inline-start`, `inline-end`, `block-start`, `block-end`; clicking it focuses the field |
+| `InputGroupText` | yes | unit or counter, `type-body`, `muted-foreground` |
+| `InputGroupButton` | yes | `ghost` by default; sizes `icon-sm` (default) and `sm` (B30) |
+
+## 5. Variants
+
+No visual variants; the addon `align` places parts (shown below). Button sizes: `icon-sm` for an icon with `aria-label`, `sm` for a short text action.
+
+<Canvas of={GroupStories.Addons} />
+
+## 6. States
+
+<Canvas of={GroupStories.States} />
+
+| State | Looks | Source |
+|---|---|---|
+| Default | as `Input` | B6, T3 |
+| Hover | no change | **proposal** |
+| Focus (of the field) | the whole group gets the neutral ring | T4 |
+| Disabled | `muted` fill; the input is dimmed, the unit stays readable | B6, B17 |
+| Invalid | `border-destructive` around the group + `FieldError`; focus keeps the neutral ring | tokeny.md, B13 |
+| Read-only (share link) | normal look, `readOnly`; the copy button is the action | **proposal** |
+| Button states | as `Button` | – |
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| The group is `role="group"`; the label belongs to the input (`FieldLabel htmlFor` → `InputGroupInput id`). | WCAG 1.3.1 |
+| An icon-only button needs `aria-label` (*Copy share link*). After copying, say so in visible text near the field (e.g. the hint changes to *Copied*), not only with an icon change. | WCAG 4.1.2, 4.1.3 (**proposal** for the copy feedback) |
+| A unit (*PLN*) is not part of the accessible name; put it in the label if it matters: *Price for 25 minutes (PLN)*. | WCAG 2.5.3 |
+| Touch: a group with a button grows to 48 px so the button keeps 40 px; without a button it stays 40 px. | B31, P4, WCAG 2.5.8 |
+
+## 8. Content
+
+- Units are short and uppercase codes as in the product (*PLN*); counters as *74 / 2,000* with `tabular-nums`. (P2, F6)
+- Button text in a group: one verb, at most two words (*Copy link*). (**proposal**)
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | Full width; long values scroll inside the input; the addon never wraps below. |
+| 768 px and 1440 px | Width of the form column; short values (price) may be narrower. |
+
+<Canvas of={GroupStories.LongValueNarrow} />
+
+## 10. API
+
+| Component | Props | Notes |
+|---|---|---|
+| `InputGroup` | `<div>` props | frame |
+| `InputGroupAddon` | `<div>` props + `align?: "inline-start" \| "inline-end" \| "block-start" \| "block-end"` (default `inline-start`) | click focuses the field |
+| `InputGroupButton` | `Button` props without `size`/`type` + `size?: "sm" \| "icon-sm"` (default `icon-sm`), `type` (default `"button"`), `variant` (default `"ghost"`) | |
+| `InputGroupText` | `<span>` props | unit, counter |
+| `InputGroupInput` / `InputGroupTextarea` | `Input` / `Textarea` props | |
+
+## 11. Code
+
+<Source
+  dark
+  code={`<InputGroup>
+  <InputGroupInput aria-label="Price for 25 minutes" type="number" />
+  <InputGroupAddon align="inline-end"><InputGroupText>PLN</InputGroupText></InputGroupAddon>
+</InputGroup>`}
+/>
+
+<Source
+  dark
+  code={`<Field>
+  <FieldLabel htmlFor="share-link">Your share link</FieldLabel>
+  <InputGroup>
+    <InputGroupInput id="share-link" readOnly value={shareUrl} aria-describedby="share-link-hint" />
+    <InputGroupAddon align="inline-end">
+      <InputGroupButton aria-label="Copy share link" onClick={copy}><Copy /></InputGroupButton>
+    </InputGroupAddon>
+  </InputGroup>
+  <FieldDescription id="share-link-hint">{copied ? "Copied." : "Anyone with this link can book you."}</FieldDescription>
+</Field>`}
+/>
+
+## 12. Do and don't
+
+<Unstyled>
+  <DoDont
+    doExample={<InputGroup className="max-w-xs"><InputGroupInput aria-label="Share link (do example)" readOnly value="https://devmentor.example/m/marta" /><InputGroupAddon align="inline-end"><InputGroupButton aria-label="Copy share link (do example)"><Copy /></InputGroupButton></InputGroupAddon></InputGroup>}
+    doText="The copy action sits on the value it copies."
+    dontExample={<div className="flex gap-in-group"><Input aria-label="Share link (don't example)" readOnly value="https://devmentor.example/m/marta" /><Button>Copy</Button></div>}
+    dontText="An accented button beside the field takes the screen's one accent for a minor action (P5)."
+  />
+</Unstyled>
+
+## 13. Related
+
+- **Confused with:** `Input` + `Button` (form submit), `FieldDescription` (explanations).
+- **Used in:** share link panel (`InvitationLinkPanel`), price fields, `QuestionField`; patterns *Link shown once (copy)*, *Amount in PLN* (stage 3).
+
+### Interaction tests
+
+<Canvas of={GroupStories.CopyAndAddonFocus} />
+<Canvas of={GroupStories.AddonClickFocusesInput} />

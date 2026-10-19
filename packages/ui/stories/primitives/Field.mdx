@@ -1,0 +1,161 @@
+import { Canvas, Meta, Source, Unstyled } from "@storybook/addon-docs/blocks";
+import * as FieldStories from "./Field.stories";
+import { Field, FieldDescription, FieldError, FieldLabel } from "../../src/components/ui/field";
+import { Input } from "../../src/components/ui/input";
+import { DoDont } from "../../.storybook/blocks/Docs";
+
+<Meta of={FieldStories} />
+
+# Field
+
+`import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@devmentor/ui/components/ui/field"`
+
+## 1. Purpose
+
+Keeps a control's name, hint and error together, so a person always knows what to enter, what the limits are and how to fix a mistake.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Every form field: register and sign in, mentor profile and prices, adding a slot, the booking question, the decline reason | WCAG 3.3.2; mentor-accounts and booking specs |
+| A whole form: wrap the fields in `FieldGroup` (16 px between fields) | T8 |
+| Inside product components that contain a field (`QuestionField`, `SlotTimeField`, stage 3) | – |
+
+## 3. When not to use
+
+| Instead of a Field… | Use | Why |
+|---|---|---|
+| A standalone search box in a toolbar | `Input` with `aria-label` (or `Label`) | no hint or error |
+| A form that `CrudForm` can render from a Zod schema | `CrudForm` | it already builds the fields (`packages/ui/AGENTS.md`) |
+| A message about the whole form or the server (*Payment failed*) | `Alert` (batch 3) | not tied to one field; never a toast for an error that needs action (prompt) |
+
+## 4. Anatomy
+
+<Canvas of={FieldStories.Anatomy} />
+
+| Part | Component | Optional | Notes |
+|---|---|---|---|
+| Group of fields | `FieldGroup` | yes | column, `gap-between-groups` (16 px, T8) |
+| Field | `Field` | no | `role="group"`, column, `gap-in-group` (8 px, T8); `data-invalid`, `data-disabled` |
+| Label | `FieldLabel` | no | `type-label`; `optional` adds *(optional)* in `muted-foreground` (answer 2.5) |
+| Control | `Input`, `Textarea`, `NativeSelect` | no | gets `id`, `aria-invalid`, `aria-describedby` |
+| Hint | `FieldDescription` | yes | `type-body`, `muted-foreground` (7.3 : 1 – answer 2.4) |
+| Error | `FieldError` | only when invalid | `type-body`, `destructive`, `CircleAlert` icon, `role="alert"` (answer 2.4, WCAG 1.4.1) |
+| Group with one question | `FieldSet` + `FieldLegend` | for radios, checkboxes | `<fieldset>`, `gap-in-group`; legend in the `type-label` role (B32) |
+| Label + hint beside a control | `FieldContent` | in horizontal fields | title + one line, no extra gap, like a list row (B32, R01.1) |
+
+## 5. Variants
+
+`orientation`:
+
+| Value | Choose it when | Source |
+|---|---|---|
+| `vertical` (default) | text fields, selects, textareas: label above the control | prompt stage 3 (label always visible) |
+| `horizontal` | checkbox and radio (control first, then label) and switch (label first, switch at the end); with `FieldContent` the control aligns with the first line | WAI-ARIA, base-nova |
+
+The base-nova `responsive` orientation and the "choice card" label (a bordered label that highlights when checked) were not taken (B28, B33, rule 6).
+
+<Canvas of={FieldStories.Orientations} />
+
+## 6. States
+
+<Canvas of={FieldStories.States} />
+
+| State | Looks | Source |
+|---|---|---|
+| Default | label `foreground`, hint `muted-foreground` | P2, answer 2.4 |
+| Focus | the control's neutral focus ring | T4 |
+| Invalid | `data-invalid` → label `destructive`; control `border-destructive`; error with icon and instruction replaces nothing – the hint may stay | answer 2.4, WCAG 3.3.1, 1.4.1 |
+| Disabled | `data-disabled` → label at 50% opacity; the hint says why | B17 |
+| Required / optional | required: no marker + `required` on the control; optional: *(optional)* | answer 2.5, WCAG 3.3.2 |
+| Hover, pressed, loading, selected | do not apply to a Field | – |
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| `FieldLabel htmlFor` = control `id`. | WCAG 1.3.1 |
+| The control's `aria-describedby` lists the hint id and, when invalid, the error id. Field does not wire ids for you. | WCAG 1.3.1, 3.3.1 |
+| Invalid: `aria-invalid="true"` on the control, `data-invalid` on the Field. | WCAG 3.3.1 |
+| `FieldError` is `role="alert"`: it is announced when it appears. Render it only after the person left the field or submitted, not while typing. | WCAG 4.1.3; prompt stage 3 |
+| After a failed submit, focus moves to the first invalid control; typed values stay. | prompt stage 3 (Form pattern, stage 3) |
+| The error never relies on colour: icon + text, and the red border is 8.37 : 1. | WCAG 1.4.1, 1.4.11 |
+
+## 8. Content
+
+- Label: noun phrase, sentence case, no colon; *(optional)* for optional fields only. (answer 2.5)
+- Hint: the format, limit or consequence – *Up to 120 characters. Name the work, not the years.* (A05: work, not years)
+- Error: what happened + what to do, one sentence: *Enter a price between PLN 10 and PLN 10,000.* Never *Invalid input*. (answer 2.4)
+- Long labels and hints wrap; keep hints under about two lines. (**proposal**)
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | One column, fields full width, submit button full width. |
+| 768 px | One column, form at most `max-w-prose`. |
+| 1440 px | Same; never two form columns for unrelated fields. (**proposal**) |
+
+<Canvas of={FieldStories.FormNarrow} />
+
+## 10. API
+
+| Component | Props | Notes |
+|---|---|---|
+| `FieldGroup` | `<div>` props | wraps fields |
+| `Field` | `<div>` props + `orientation?: "vertical" \| "horizontal"` (default `vertical`), `data-invalid?: boolean`, `data-disabled?: boolean` | `role="group"` |
+| `FieldSet` | `<fieldset>` props | group with one question |
+| `FieldLegend` | `<legend>` props | the question, `type-label` |
+| `FieldContent` | `<div>` props | label + hint beside a control |
+| `FieldLabel` | `Label` props + `optional?: boolean` (default `false`) | adds *(optional)* |
+| `FieldDescription` | `<p>` props | give it an `id` for `aria-describedby` |
+| `FieldError` | `<div>` props + `errors?: { message?: string }[]` | `children` win over `errors`; several distinct messages render as a list; renders nothing when empty |
+
+## 11. Code
+
+<Source
+  dark
+  code={`<Field>
+  <FieldLabel htmlFor="email">Email</FieldLabel>
+  <Input id="email" type="email" autoComplete="email" required />
+</Field>`}
+/>
+
+<Source
+  dark
+  code={`<FieldGroup>
+  <Field data-invalid={!!errors.price25}>
+    <FieldLabel htmlFor="price25">Price for 25 minutes (PLN)</FieldLabel>
+    <Input id="price25" type="number" inputMode="decimal" required
+           aria-invalid={!!errors.price25}
+           aria-describedby={errors.price25 ? "price25-error" : "price25-hint"} />
+    <FieldDescription id="price25-hint">Shown on your card before mentees write a question.</FieldDescription>
+    <FieldError id="price25-error">{errors.price25}</FieldError>
+  </Field>
+  <Field>
+    <FieldLabel htmlFor="link2" optional>Second public work link</FieldLabel>
+    <Input id="link2" type="url" />
+  </Field>
+</FieldGroup>`}
+/>
+
+## 12. Do and don't
+
+<Unstyled>
+  <DoDont
+    doExample={<Field data-invalid><FieldLabel htmlFor="dd-f-do">Price for 25 minutes (PLN)</FieldLabel><Input id="dd-f-do" aria-invalid aria-describedby="dd-f-do-e" defaultValue="5" /><FieldError id="dd-f-do-e">Enter a price between PLN 10 and PLN 10,000.</FieldError></Field>}
+    doText="The error says what to do and is linked to the field (WCAG 3.3.1)."
+    dontExample={<Field><FieldLabel htmlFor="dd-f-dont">Price for 25 minutes (PLN)</FieldLabel><Input id="dd-f-dont" className="border-destructive" defaultValue="5" /></Field>}
+    dontText="A red border alone does not say what is wrong and is invisible to screen readers (WCAG 1.4.1)."
+  />
+</Unstyled>
+
+## 13. Related
+
+- **Confused with:** `Label` (name only), `Alert` (form-level or server errors, batch 3).
+- **Used in:** `CrudForm` (to be moved onto `Field` – "What is missing"), product fields `QuestionField`, `SlotTimeField`; pattern *Form* (stage 3).
+
+### Interaction test
+
+<Canvas of={FieldStories.ValidationOnBlur} />

@@ -1,0 +1,143 @@
+import { Canvas, Meta, Source, Unstyled } from "@storybook/addon-docs/blocks";
+import * as RadioStories from "./RadioGroup.stories";
+import { RadioGroup, RadioGroupItem } from "../../src/components/ui/radio-group";
+import { NativeSelect, NativeSelectOption } from "../../src/components/ui/native-select";
+import { Field, FieldLabel, FieldLegend, FieldSet } from "../../src/components/ui/field";
+import { DoDont } from "../../.storybook/blocks/Docs";
+
+<Meta of={RadioStories} />
+
+# RadioGroup
+
+`import { RadioGroup, RadioGroupItem } from "@devmentor/ui/components/ui/radio-group"`
+
+## 1. Purpose
+
+Lets a person choose exactly one of a few options while seeing all of them – and what each one costs – at once.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Session length: *25 minutes · PLN 120.00* or *50 minutes · PLN 220.00*, before the question box | R01, R01.5/P5 (price before writing), booking spec |
+| Any 2–5 options worth comparing side by side | WAI-ARIA radio group |
+
+## 3. When not to use
+
+| Instead of radios… | Use | Why |
+|---|---|---|
+| More than about 5 options, or a long list (time zone) | `NativeSelect` | the list would push the form down (**proposal**) |
+| Several answers | `Checkbox` group | radios allow one |
+| A single on/off | `Switch` or `Checkbox` | one radio cannot be turned off |
+| Switching views (*Upcoming / Past*) | tabs (batch 4) | navigation, not a form value |
+
+## 4. Anatomy
+
+| Part | Optional | Notes |
+|---|---|---|
+| `FieldSet` + `FieldLegend` | no | the question (*Session length*) |
+| `RadioGroup` | no | `gap-in-group` (8 px) between options (T8) |
+| `RadioGroupItem` | no | 16 px circle (answer 2.2), `border-input` |
+| Dot | when selected | `background` on `foreground` (B26) |
+| Label, hint | label no, hint yes | `Field orientation="horizontal"` + `FieldContent` |
+| Hit area | – | `::after`, 40 × 32 px, 40 × 40 px on touch (B27) |
+
+## 5. Variants
+
+None (rule 6).
+
+<Canvas of={RadioStories.WithoutHints} />
+
+## 6. States
+
+<Canvas of={RadioStories.States} />
+
+| State | Looks | Source |
+|---|---|---|
+| Unselected | outline `border-input` | T3 |
+| Selected | filled `foreground` with a `background` dot – neutral, the accent stays on the main action (*Pay*) | B26, P5/K3 |
+| Hover | no change | **proposal** (base-nova default kept) |
+| Focus | neutral 3 px ring | T4 |
+| Disabled | 50% opacity; reason in the hint | B17 |
+| Invalid | `border-destructive` + error under the group | tokeny.md, B13 |
+| Pressed, loading | do not apply | – |
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| The group is one tab stop; arrow keys move and select; Space selects the focused option. | WAI-ARIA radio group pattern |
+| Give a default when one option is the usual choice (25 min); otherwise leave none selected and validate on submit. | **proposal** |
+| `FieldLegend` names the group; each option has its own label (`htmlFor` → item `id`, no spaces). | WCAG 1.3.1 |
+| Do not submit or navigate when the value changes. | WCAG 3.2.2 |
+| Hints are linked with `aria-describedby` on the item. | WCAG 1.3.1 |
+
+## 8. Content
+
+- Legend: the question as a noun phrase (*Session length*).
+- Options: parallel, short, with the deciding fact (*50 minutes · PLN 220.00*); price format F6 (temporary).
+- Hints: one line about when to pick it (*A question with code to walk through.*) (**proposal**)
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | One option per line; label and hint wrap beside the dot. |
+| 768 px and 1440 px | One option per line in the form column. |
+
+<Canvas of={RadioStories.LongOptionNarrow} />
+
+## 10. API
+
+`RadioGroup` (Base UI `RadioGroup`): `value`, `defaultValue`, `onValueChange(value, details)`, `name`, `disabled`, `required`. `RadioGroupItem` (Base UI `Radio.Root`): `value` (required), `disabled`, `id`, `aria-*`.
+
+| Prop | On | Type | Default | Description |
+|---|---|---|---|---|
+| `defaultValue` | group | `unknown` | – | Initially selected value. |
+| `onValueChange` | group | `(value, details) => void` | – | Called when the selection changes. |
+| `value` | item | `unknown` | – | The value this option sets. |
+
+## 11. Code
+
+<Source
+  dark
+  code={`<RadioGroup aria-label="Session length" defaultValue="25">
+  <RadioGroupItem value="25" aria-label="25 minutes" />
+  <RadioGroupItem value="50" aria-label="50 minutes" />
+</RadioGroup>`}
+/>
+
+<Source
+  dark
+  code={`<FieldSet>
+  <FieldLegend>Session length</FieldLegend>
+  <RadioGroup name="length" defaultValue="25">
+    {[25, 50].map((m) => (
+      <Field key={m} orientation="horizontal">
+        <RadioGroupItem id={\`length-\${m}\`} value={String(m)} />
+        <FieldLabel htmlFor={\`length-\${m}\`}>{m} minutes · {formatPrice(prices[m], "PLN")}</FieldLabel>
+      </Field>
+    ))}
+  </RadioGroup>
+</FieldSet>`}
+/>
+
+## 12. Do and don't
+
+<Unstyled>
+  <DoDont
+    doExample={<FieldSet><FieldLegend>Session length</FieldLegend><RadioGroup defaultValue="25"><Field orientation="horizontal"><RadioGroupItem id="dd-r-25" value="25" /><FieldLabel htmlFor="dd-r-25">25 minutes · PLN 120.00</FieldLabel></Field><Field orientation="horizontal"><RadioGroupItem id="dd-r-50" value="50" /><FieldLabel htmlFor="dd-r-50">50 minutes · PLN 220.00</FieldLabel></Field></RadioGroup></FieldSet>}
+    doText="Both lengths and prices are visible before the question is written (R01.5/P5)."
+    dontExample={<Field><FieldLabel htmlFor="dd-r-sel">Session length</FieldLabel><NativeSelect id="dd-r-sel"><NativeSelectOption>25 minutes</NativeSelectOption><NativeSelectOption>50 minutes</NativeSelectOption></NativeSelect></Field>}
+    dontText="Two options hidden in a select, without prices, make people open it to compare."
+  />
+</Unstyled>
+
+## 13. Related
+
+- **Confused with:** `NativeSelect` (many options), `Checkbox` (several answers), tabs (views).
+- **Used in:** booking form (`/book/[slotId]`); patterns *Form*, *Amount in PLN* (stage 3).
+
+### Interaction test
+
+<Canvas of={RadioStories.ArrowKeysChoose} />

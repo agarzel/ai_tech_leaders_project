@@ -8,15 +8,15 @@ Plik roboczy zadania z `lekcja-06/prompt-storybook.md`. Nowa sesja: przeczytaj p
 |---|---|
 | 0. Inwentaryzacja i plan | zakończony 2026-10-19 – decyzje właściciela zapisane niżej |
 | 1. Fundamenty | zakończony 2026-10-19 – F1 wdrożone, F2–F6 zapisane; czeka na „dalej” |
-| 2. Komponenty bazowe | nie rozpoczęty |
+| 2. Komponenty bazowe | **zakończony** 2026-10-19 – partie 1–5 (minimalny zestaw z etapu 0 gotowy); partia 5 niezacommitowana, czeka na „dalej” do etapu 3 |
 | 3. Komponenty produktu, wzorce, ekrany | nie rozpoczęty |
 | 4. Strony, które uczą | nie rozpoczęty |
 | 5. Sprawdzenie i raport | nie rozpoczęty |
 
 ## Następny krok
 
-Po „dalej” → etap 2 (komponenty bazowe, partie po ~6; najpierw lista różnic względem bazy: wysokość, promienie, obramowania, padding, fokus).
-Nic nie jest zacommitowane – commit robi właściciel.
+Partia 5 (ostatnia etapu 2) gotowa: Skeleton, Spinner i Table dopasowane, favicon Storybooka dodany, bloki `backend/` sprawdzone wizualnie na żywej aplikacji. Po „dalej” → **etap 3**: komponenty produktu, wzorce i ekrany dla epików E01 (mentors/availability/auth) i E02 (bookings), wyprowadzone z `.ai/specs/2026-10-19-mentor-accounts-and-offer.md` i `.ai/specs/2026-10-19-booking-and-prepayment.md` (plan komponentów produktu jest już w sekcji „Plan” etapu 0 wyżej).
+Nic z partii 5 nie jest zacommitowane – commit robi właściciel.
 
 ## Zatwierdzone decyzje (źródła: `lekcja-06/referencje.md`, `lekcja-06/tokeny.md`)
 
@@ -169,3 +169,342 @@ Pierwotne propozycje:
 ## Zasada procesu (2026-10-19)
 
 Nigdy nie uruchamiać `git stash` (ani innych komend, które chowają lub kasują lokalny stan) – reguła przeglądu R3. Incydent z etapu 1 opisany w logu przebiegu.
+
+## Etap 2 – decyzje właściciela (Arkadiusz, 2026-10-19)
+
+- 2.1 tak – `sm` 28 px tylko w gęstych wierszach (40 px przy `pointer: coarse`).
+- 2.2 tak – kółko radia i tor przełącznika okrągłe.
+- 2.3 12 px.
+- 2.4 podpowiedzi w `muted-foreground` (7,3 : 1); błędy w `destructive` z ikoną i instrukcją.
+- 2.5 „(optional)” przy polach opcjonalnych, bez gwiazdek.
+- B1–B25 przyjęte w całości (B14: kontrast policzyć przed zapisem; B16 idzie za F3).
+- „dalej” → partia 1 (Button, Input, Textarea, NativeSelect, Label, Field) + B23/B24/B25.
+
+## Etap 2 – różnice względem bazy (2026-10-19, przyjęte – patrz decyzje wyżej)
+
+Baza = shadcn base-nova w stanie z repo (`src/components/ui/*`, tokeny już nasze po etapie 1). Przy każdej różnicy: co robi baza → co robi DevMentor → skąd. „Decyzja” = wynika wprost z zatwierdzonych decyzji; **Bn** = moja propozycja do osobnej zgody. Nic z tego nie jest jeszcze w kodzie.
+
+### Wysokość i gęstość
+
+| # | Baza | DevMentor | Źródło |
+|---|---|---|---|
+| – | Przycisk `h-8`, pole i select `h-8`, przycisk-ikona `size-8` – sztywne 32 px także na dotyku | `h-control` / `size-control` (32 px; 40 px przy `pointer: coarse`) | decyzja P4 |
+| B1 | Przycisk ma 8 rozmiarów: `xs` 24, `sm` 28, `default` 32, `lg` 36, `icon`, `icon-xs`, `icon-sm`, `icon-lg` | Zostają `default`, `sm`, `icon`, `icon-sm`; usuwam `xs`, `lg`, `icon-xs`, `icon-lg` (nieużywane w repo; usunięcie z istniejącego komponentu wymaga zgody – zasada 12) | propozycja; zasada 6 (bez wariantów „na zapas”) |
+| B2 | `sm` = 28 px zawsze (używane w akcjach wierszy DataTable i adminie, w ErrorMessage) | `sm` tylko w gęstych wierszach (akcje wiersza tabeli/listy): nowy token komponentu `--control-height-sm` = 28 px, 40 px przy `pointer: coarse`; to samo dla `native-select` `sm` | propozycja; R01.1 (gęstość), P4, WCAG 2.5.8 (≥ 24 × 24) – pytanie 2.1 |
+| – | Odstępy między polami formularza: brak reguły w bazie | etykieta–pole–podpowiedź–błąd w `Field`: `gap-in-group` (8 px); między polami: `gap-between-groups` (16 px) | decyzja T8 (w grupie / między grupami) |
+
+### Promienie
+
+| # | Baza | DevMentor | Źródło |
+|---|---|---|---|
+| – | `--radius` shadcn 10 px | 6 px (już w tokenach) | decyzja T7, A01/P13 |
+| B3 | Kontrolki `rounded-lg`, karta i nakładki `rounded-xl`, odznaka `rounded-4xl` (pigułka, 15,6 px), małe przyciski `rounded-[min(var(--radius-md),10px)]`, checkbox `rounded-[4px]` | Jeden promień `rounded-lg` (6 px) dla kontrolek, kart, list i nakładek; `rounded-md` (4,8 px) dla małych elementów (odznaka, checkbox, kbd); bez wartości arbitralnych | propozycja; T7, P13 („nie więcej niż `xl`”), A01 („wszystko w pigułkach”, duże zaokrąglenia), zasada 3 |
+| B4 | Radio i przełącznik `rounded-full` | Wyjątek od „pełne koło tylko awatar”: kółko radia i tor przełącznika zostają okrągłe, bo kształt identyfikuje rodzaj kontrolki | propozycja; P13 mówi tylko o awatarach – pytanie 2.2 |
+
+### Obramowania i wypełnienia
+
+| # | Baza | DevMentor | Źródło |
+|---|---|---|---|
+| – | Pole i select `border-input` | bez zmian – stone-500, 4,81 : 1 na card | decyzja T3, WCAG 1.4.11 |
+| – | Karta `ring-1 ring-foreground/10` | `border border-border` – ta sama linia 1 px co separatory wierszy, bez cienia | decyzja R01.3, P3, T5 |
+| B5 | Warianty mają osobne wypełnienia w ciemnym motywie: `outline` `dark:border-input dark:bg-input/30`, `ghost` `dark:hover:bg-muted/50` | Jedna definicja dla obu motywów (`outline`: `border-border bg-transparent`, hover `bg-muted`; `ghost`: hover `bg-muted`). Wyjątek: `destructive` zostaje z `dark:/20` i `/30` (policzone w F1) | propozycja; spójność motywów (P1), kontrast tych wypełnień nie był liczony |
+| B6 | Pole w ciemnym motywie `dark:bg-input/30` (półprzezroczysty stone-500), zablokowane `bg-input/50` / `dark:bg-input/80` | Pole `bg-transparent` w obu motywach; zablokowane `bg-muted` | propozycja; T5/T3 (pole identyfikuje obrys, nie wypełnienie), pary tekst/placeholder na `input/30` niepoliczone |
+| B7 | `native-select` opcje `bg-[Canvas] text-[CanvasText]` (kolory systemowe jako wartości arbitralne) | `bg-popover text-popover-foreground` | propozycja; zasada 3, T13 |
+
+### Odstępy wewnętrzne i typografia kontrolek
+
+| # | Baza | DevMentor | Źródło |
+|---|---|---|---|
+| B8 | Przycisk `px-2.5` (10 px), ikona–tekst `gap-1.5` (6 px); pole `px-2.5` | Przycisk i pole `px-3` (12 px, ten sam krok co `--list-row-px`, więc tekst w polu, przycisku i wierszu listy zaczyna się na tej samej linii); `sm` `px-2`; ikona–tekst `gap-2` (8 px, krok `--space-in-group`) | propozycja; materiały milczą – pytanie 2.3 |
+| – | Przycisk `text-sm font-medium`, etykieta `text-sm leading-none font-medium`, `sm` `text-[0.8rem]` | Przycisk i etykieta `type-label` (14 px / 500, normalna interlinia – długa etykieta i dłuższy język się zawijają); `sm` też `type-label` | decyzja P2; zasada 3 |
+| B9 | Pole `text-base` poniżej `md`, `md:text-sm` (zależne od szerokości) | `type-body` (14 px), a `pointer-coarse:text-base` (16 px) – iOS nie powiększa wtedy strony przy fokusie; ten sam warunek co wysokość (P4) | propozycja; P2, P4 |
+| B10 | Opis pola `text-sm text-muted-foreground`, błąd `text-sm text-destructive` | Opis `type-body text-muted-foreground`; błąd `type-body text-destructive` zawsze z ikoną `CircleAlert` (`aria-hidden`) i tekstem „co się stało i co zrobić” | propozycja; WCAG 1.4.1, 3.3.1; tokeny.md: `muted-foreground` nie dla „tekstu, który trzeba przeczytać, by działać” – pytanie 2.4 |
+| B11 | Brak oznaczenia pól wymaganych/opcjonalnych | Oznaczamy mniejszość: domyślnie pola wymagane bez gwiazdki (`required` → `aria-required`), opcjonalne z dopiskiem „(optional)” w etykiecie | propozycja; WCAG 3.3.2 – pytanie 2.5 |
+
+### Stany
+
+| # | Stan | Baza | DevMentor | Źródło |
+|---|---|---|---|---|
+| – | Fokus | `focus-visible:border-ring ring-3 ring-ring/50` | bez zmian – pierścień neutralny, 3,35 : 1 (jasny), 4,98 : 1 (ciemny); odznaka `ring-[3px]` → `ring-3` | decyzja T4, WCAG 2.4.7, 1.4.11; zasada 3 |
+| B12 | Fokus przycisku `destructive` | `focus-visible:ring-destructive/20` (1,47 : 1 – poniżej 3 : 1) | ten sam neutralny pierścień co wszędzie | propozycja; T4, WCAG 1.4.11 |
+| B13 | Fokus pola z błędem | `aria-invalid:ring-destructive/20` i `focus-visible:ring-ring/50` konkurują – wynik zależy od kolejności klas | fokus zawsze pokazuje neutralny pierścień; czerwony obrys (`border-destructive`, 8,37 : 1) zostaje | propozycja; T4, tokeny.md (pierścień błędu tylko dodatkiem) |
+| – | Najechanie `default` | `hover:bg-primary/80` | bez zmian – 4,70 : 1 (jasny), 6,96 : 1 (ciemny) | decyzja (akcent, tokeny.md) |
+| B14 | Najechanie `secondary` | `hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]` (arbitralne); u nas `secondary` = `muted` = `accent` (stone-100), więc `hover:bg-muted` byłby niewidoczny | nowy token znaczeniowy `--secondary-hover` (jasny stone-200, ciemny stone-700) i klasa `hover:bg-secondary-hover`; kontrast policzę przed zapisem | propozycja; zasada 3, P4 |
+| B15 | Wciśnięty | `active:not-aria-[haspopup]:translate-y-px` (przycisk „wpada” o 1 px) | bez przesunięcia; wciśnięty = kolor najechania | propozycja; charakter „spokojny”, ruch czeka na F3 |
+| B16 | Przejścia | `transition-all` | `transition-colors` (domyślne 150 ms) + `motion-reduce:transition-none` | propozycja; zależy od zatwierdzenia F3 (strona Motion), WCAG 2.3.3 |
+| B17 | Zablokowany | `disabled:opacity-50 pointer-events-none` – brak informacji, dlaczego | wygląd bez zmian (WCAG 1.4.3 zwalnia nieaktywne kontrolki), ale reguła: przyczyna blokady zawsze widoczna jako tekst obok (opis pola lub zdanie przy przycisku), nigdy tylko w podpowiedzi; w formularzu zamiast blokować przycisk – walidacja przy wysłaniu | propozycja; prompt (etap 4 „zablokowany przycisk bez wyjaśnienia”, „podpowiedź z informacją niezbędną”) |
+| B18 | Ładowanie | brak | bez nowego propsa: kompozycja `disabled` + `aria-busy` + `Spinner` + etykieta w formie „Saving…”; blokuje podwójne wysłanie | propozycja; zasada 6, prompt etap 3 (blokada podwójnego wysłania) |
+| B19 | Akcja tekstowa (`variant="link"`) | `text-primary`, podkreślenie dopiero przy najechaniu | `text-foreground` z podkreśleniem zawsze (`underline-offset-4`), najechanie `decoration-2` | propozycja; T11 (linki w treści), P5/K3 (akcent tylko na jednym elemencie), WCAG 1.4.1 |
+| – | Błąd pola | `aria-invalid:border-destructive` + `ring-destructive/20` | bez zmian + tekst błędu (B10) | decyzja tokeny.md (obrys 8,37 : 1), WCAG 1.4.1 |
+| – | Rozwinięty (`aria-expanded`) | `bg-muted` | bez zmian | decyzja P4 (`muted` = wyciszone tło) |
+
+### Wartości strukturalne (lint:tokens)
+
+| # | Baza | DevMentor | Źródło |
+|---|---|---|---|
+| B20 | Układ siatki jako wartości arbitralne: alert `grid-cols-[auto_1fr]`, karta `grid-cols-[1fr_auto]`, `grid-rows-[auto_auto]`, `[--card-spacing:--spacing(4)]` | Nazwane szablony w `theme.css` (`--grid-template-columns-icon-content: auto 1fr` → `grid-cols-icon-content`, `grid-cols-content-action`), odstęp karty → `p-panel` / `gap-between-groups`; robione w partii, w której jest komponent (alert, karta – partia 3) | propozycja; zasada 3 |
+| B21 | Karta ma rozmiar `sm` (12 px) | usuwam `size="sm"` (nieużywany; brak tokenu 12 px dla panelu) | propozycja; T8, zasada 12 |
+
+### Pytania (materiały milczą)
+
+- **2.1** Czy P4 („32 px na desktopie”) dopuszcza mniejszy przycisk 28 px w gęstych wierszach (B2), czy wszystko ma mieć 32 px (wtedy `sm` = `default`, a akcje wierszy w adminie urosną o 4 px)?
+- **2.2** Czy kółko radia i tor przełącznika mogą być okrągłe (B4), mimo że P13 mówi „pełne koło tylko awatar”?
+- **2.3** Poziomy padding kontrolek: 12 px (B8) czy zostawić 10 px bazy? Materiały mówią tylko o wierszu listy (T9).
+- **2.4** Podpowiedź pod polem: `muted-foreground` (B10) czy `foreground`? tokeny.md wyklucza `muted-foreground` dla tekstu potrzebnego do działania, a podpowiedź (np. format) czasem nim jest.
+- **2.5** Oznaczanie pól: „(optional)” przy opcjonalnych (B11) czy gwiazdka przy wymaganych?
+
+### Partia 1 – skład (propozycja)
+
+| # | Komponent | Skąd | Ekrany i specyfikacje, które go potrzebują |
+|---|---|---|---|
+| 1 | Button (warianty `default`, `secondary`, `outline`, `ghost`, `destructive`, `link` = akcja tekstowa) | istniejący | wszystkie ekrany; główna akcja (P5), akcje wierszy, CrudForm, DataTable, ErrorMessage |
+| 2 | Input | istniejący | logowanie, profil mentora, sloty, CrudForm |
+| 3 | Textarea | nowy, `npx shadcn@latest add textarea` | pytanie przy rezerwacji (licznik 2000), powód odrzucenia (≤ 280), bio mentora |
+| 4 | NativeSelect | istniejący (S12) | strefa czasowa, długość sesji 25/50, CrudForm |
+| 5 | Label | istniejący | każde pole |
+| 6 | Field (+ FieldLabel, FieldDescription, FieldError, FieldGroup) | nowy, `npx shadcn@latest add field` – pociąga `separator` (jest w planie) i chce nadpisać `label` | wszystkie formularze; etykieta, podpowiedź, błąd, wymagane/opcjonalne |
+
+- **B22** Link w treści (T11) przesuwam do partii 3 (razem z Alert i Card, gdzie występuje w tekście); wtedy zdecydujemy, czy to osobny komponent, czy styl bazowy `a`. Akcja tekstowa jest w partii 1 jako wariant `link` przycisku.
+- Kolejne partie (szkic): 2 – Checkbox, RadioGroup, Switch, InputGroup, Kbd, Separator; 3 – Card, Badge, Alert, Avatar, Item, link w treści; 4 – Dialog, AlertDialog, DropdownMenu, Popover, Tooltip, Tabs; 5 – Skeleton, Spinner, Table + przegląd bloków `backend/` (EmptyState, ErrorMessage, LoadingMessage).
+- CLI: uruchamiam w `packages/ui` bez `--overwrite`; nadpisania `label` odmawiam (porównanie z `git show HEAD:…`, nie stash), potem sprawdzam `package.json` i lockfile i usuwam zależności spoza planu (zasada 6).
+
+### Zmiany zależności i importów potrzebne w partii 1 (F4, F5)
+
+- **B23 (F4)** Dopisać do `dependencies` `@devmentor/ui`: `shadcn` `^4.21.4` i `tw-animate-css` `^1.4.0` – te same wersje, które są już w lockfile przez app (lockfile bez nowych wersji). `dependencies`, nie `devDependencies`, bo prymitywy ui używają wariantów `data-open:` / `data-checked:` z `shadcn/tailwind.css` i animacji z `tw-animate-css` wszędzie, gdzie są renderowane, nie tylko w Storybooku. App zostawia swoje wpisy (jej `globals.css` importuje je bezpośrednio; bez zmian w app – zasada 11).
+- **B24 (F5)** Przepiąć `import { cn } from "cn"` → `@devmentor/ui/lib/utils` we wszystkich 9 istniejących prymitywach od razu w partii 1 (nie tylko w 4 z partii), żeby nowe klasy (`h-control`, `type-label`, `gap-in-group`) scalały się poprawnie wszędzie. Wartości arbitralne w karcie, alercie i odznace poprawiam w ich partii (lint:tokens zostaje czerwony do partii 3).
+- **B25** Reguła ESLint `no-restricted-imports` dla `"cn"` w `packages/ui/src/components/**` (dozwolone tylko w `lib/utils.ts`), bo CLI base-nova za każdym razem generuje import z `"cn"` mimo aliasu `utils` w `components.json`.
+- Wpływ na app (bez zmian w jej kodzie): zmiana wysokości, paddingu i promieni przycisków, pól i selectów zmieni wygląd stron admina (`/admin`, `/admin/users`); testy jednostkowe ui nie sprawdzają klas wyglądu (tylko `w-1/2` w DataTable), testy integracyjne szukają po roli i nazwie – zrzuty ekranu się zmienią.
+
+## Etap 2 – partia 1, wynik (2026-10-19)
+
+### Co powstało / zmieniło się
+- **B23 (F4)**: `shadcn ^4.21.4` i `tw-animate-css ^1.4.0` w `dependencies` `@devmentor/ui`. Lockfile: tylko 2 linie w wpisie workspace, żadna wersja się nie zmieniła. Uwaga: `npm install -w … shadcn@^4.21.4` podniósł shadcn do 4.22.1 (i zod w jego drzewie) – cofnięte przez przywrócenie mojej kopii lockfile sprzed instalacji i ręczny wpis w `package.json` + `npm install`; zainstalowane 4.21.4.
+- **B24 (F5)**: wszystkie prymitywy importują `cn` z `@devmentor/ui/lib/utils`. **B25**: `eslint.config.mjs` – `no-restricted-imports` dla `"cn"` w `packages/ui/src/components/**` (sprawdzone: błąd na próbce, `lib/utils.ts` dozwolony).
+- CLI `npx shadcn@latest add textarea field` (4.22.1 przez npx, bez zmian w `package.json`/lockfile): nowe `textarea.tsx`, `field.tsx`, `separator.tsx`; nadpisania `label.tsx` odmówiłem.
+- Tokeny: `--control-height-sm` (28 px; 40 px przy `pointer: coarse`) → `h-control-sm`/`size-control-sm`; `--secondary-hover` (jasny stone-200: 13,92 : 1 ze `secondary-foreground`; ciemny stone-700: 9,85 : 1 – policzone przed zapisem, B14) → `bg-secondary-hover`. `cn` zna `control-sm` (test w `utils.test.ts`).
+- Prymitywy wg B1–B19: Button (rozmiary `default`/`sm`/`icon`/`icon-sm`, `type-label`, `px-3`, neutralny fokus także w `destructive`, bez `translate-y`, `transition-colors` + `motion-reduce`, `link` = `foreground` + stałe podkreślenie, `secondary` hover tokenem), Input/Textarea/NativeSelect (`h-control`, `px-3`, `type-body` + `pointer-coarse:text-base`, przezroczyste tło w obu motywach, wyłączone `bg-muted`, fokus neutralny przy błędzie, opcje na `popover`), Label (`type-label`, `gap-in-group`), Field (przycięty do Field/FieldGroup/FieldLabel z `optional`/FieldDescription/FieldError z ikoną; `gap-in-group` / `gap-between-groups`). FieldSet, FieldLegend, FieldContent, FieldTitle, FieldSeparator i orientacje poziome usunięte do partii 2 (zasada 6).
+- Storybook: `stories/primitives/{Button,Input,Textarea,NativeSelect,Label,Field}.mdx` (13 sekcji, źródło przy regułach, propozycje oznaczone) + `.stories.tsx` (Playground, warianty/rozmiary, macierz stanów, długa treść 320 px, test play); bloki `StateMatrix`, `DoDont` w `.storybook/blocks/Docs.tsx`; zamrożone stany: `@custom-variant hover / focus-visible / active` w `.storybook/storybook.css` reagują też na `data-preview-state` (tylko build Storybooka). `optimizeDeps.include` w `vitest.storybook.config.mts` (pierwszy przebieg na zimnym cache przeładował Vite i wywrócił testy; po dopisaniu nie sprawdzone na czystym cache).
+- `packages/ui/AGENTS.md`: reguła ESLint dla `cn`, odmowa nadpisania, wzór dokumentacji komponentu.
+
+### Wyniki sprawdzeń
+| Komenda | Wynik |
+|---|---|
+| `npm run lint` | OK |
+| `npm run typecheck` | OK |
+| `npm run test:coverage` | OK – 169 testów, 100% we wszystkich metrykach |
+| `npm run build` | OK; CSS aplikacji zawiera `--secondary-hover`, `--control-height-sm` |
+| `npm run build-storybook` | OK; 6 stron dokumentacji sprawdzonych w zbudowanym Storybooku (Chromium): 13 nagłówków sekcji, tabele renderują się jako tabele, brak błędów (pierwsza wersja Button.mdx padała na `{label}` i `|` w kodzie w tabeli – poprawione) |
+| `npm run test:storybook` | OK – 84/84 (42 stories × 2 motywy; 32 nowe stories, 7 testów interakcji), a11y bez naruszeń |
+| `npm run lint:tokens` | FAIL – zostało 6 (z 17): alert `grid-cols-[auto_1fr]`, badge `ring-[3px]`, card `[--card-spacing:…]` ×2, `grid-cols-[1fr_auto]`, `grid-rows-[auto_auto]` – partia 3 (B20, B21) |
+
+### Czego nie sprawdzono
+- Ręczna obsługa klawiaturą w managerze Storybooka i `npm run storybook` (dev) – tylko build statyczny + testy play.
+- Wygląd na prawdziwym urządzeniu dotykowym (`pointer: coarse` – 40 px, 16 px tekstu) – tylko CSS.
+- Testy integracyjne aplikacji (Docker) – admin (`/admin/users`) zmienia wygląd (wysokość/padding/promień przycisków i pól); kod app bez zmian.
+- Stories z `globals.viewport` (320 px) w testach Vitest renderują się bez wymuszenia szerokości; szerokość 320 sprawdzona tylko zrzutem `FormNarrow`.
+- Ciemny „chrom” stron Docs nadal jasny (znane z etapu 1).
+
+### Do „What is missing” (etap 4)
+- `CrudForm` nie używa jeszcze `Field` (brak podpowiedzi, `aria-describedby`, „(optional)”).
+- Podpowiedź (Tooltip) dla przycisków-ikon – partia 4.
+- Licznik znaków (`QuestionField`) – komponent produktu, etap 3.
+
+## Etap 2 – partia 2, wynik (2026-10-19)
+
+Checkbox, RadioGroup, Switch, InputGroup, Kbd, Separator (dokumentacja; plik z partii 1) + przywrócone FieldSet, FieldLegend, FieldContent i `Field orientation="horizontal"`.
+
+### Propozycje B26–B33 (materiały milczą; wdrożone zachowawczo i odwracalnie – do zatwierdzenia)
+| # | Propozycja | Źródło / dlaczego |
+|---|---|---|
+| B26 | Zaznaczony checkbox, radio i włączony switch w neutralnym `foreground` (znak/kropka/kciuk w `background`), nie w akcencie `primary` jak w bazie | P5/K3 – akcent tylko na jednym elemencie ekranu (np. *Pay*); spójne z neutralnym fokusem T4 |
+| B27 | Pole 16 px, niewidoczny obszar trafienia `::after` 40 × 32 px, przy dotyku 40 × 40 (switch 56 × 36 / 56 × 44) | P4, WCAG 2.5.8 |
+| B28 | Bez wzorca „choice card” (etykieta-karta podświetlana po zaznaczeniu, `bg-primary/5`) | zasada 6; byłaby to ramka w ramce (R01.3/P3) i akcent (P5) |
+| B29 | Switch w jednym rozmiarze, tor 32 × 20 px ze skali (zamiast arbitralnych 32 × 18,4 i 24 × 14 px), bez propsa `size` | zasada 3, zasada 6 |
+| B30 | `InputGroupButton` ma rozmiary `icon-sm` (domyślny) i `sm` z Button zamiast `xs`/`icon-xs` bazy (usunięte w B1) | B1, B2 |
+| B31 | Przy dotyku przycisk w InputGroup ma 36 px (mieści się w grupie 40 px) – **poniżej P4 (40 px)**, powyżej WCAG 2.5.8 (24 px). **Do potwierdzenia**; alternatywa: grupa z przyciskiem 48 px przy dotyku | P4 vs geometria grupy |
+| B32 | `FieldLegend` bez wariantów, zawsze rola `type-label`; `FieldContent` bez dodatkowego odstępu (tytuł + linia podpowiedzi jak wiersz listy); FieldSet `gap-in-group` | P2, R01.1/T12, T8 |
+| B33 | Bez orientacji `responsive` w Field (etykieta obok pola od szerokości @md) | zasada 6; formularze jednokolumnowe |
+
+Decyzje wynikające wprost: radio i tor przełącznika okrągłe (2.2), `rounded-md` checkboxa i Kbd (B3), brak ciemnych wypełnień `input/30` (B6), neutralny fokus przy błędzie (B13), `transition-colors` + `motion-reduce` (B16), Kbd w Geist sans, nie mono (R01.2), odstęp między opcjami 8 px (T8), wyłączona grupa bez przyciemniania jednostki (*PLN*) – tylko pole jest wyciszone (axe: kontrast 2,24 : 1 przy `opacity-50` na całej grupie).
+
+### Co się zmieniło
+- CLI `npx shadcn@latest add checkbox radio-group switch input-group kbd`: 5 nowych plików; nadpisania `button`, `input`, `textarea` odmówiłem; `package.json` i lockfile bez zmian (porównane z kopią sprzed CLI).
+- `vitest.storybook.config.mts`: `optimizeDeps.include` rozszerzone o checkbox/radio/radio-group/switch Base UI (pierwszy przebieg znów przeładował Vite).
+- Strony batch 1 (Button, Input, NativeSelect, Label) odsyłają teraz do istniejących komponentów zamiast „(batch 2)”; Field.mdx: anatomia, orientacje, API.
+- Story `Field/Orientations`.
+
+### Wyniki sprawdzeń
+| Komenda | Wynik |
+|---|---|
+| `npm run lint` | OK |
+| `npm run typecheck` | OK |
+| `npm run test:coverage` | OK – 169 testów, 100% |
+| `npm run build` | OK |
+| `npm run build-storybook` | OK; 12 stron prymitywów: po 13 sekcji, tabele bez rozjechanych wierszy, bez widocznych błędów renderowania |
+| `npm run test:storybook` | OK – 148/148 (74 stories × 2 motywy; 32 nowe, 7 nowych testów interakcji) |
+| `npm run lint:tokens` | FAIL – bez zmian, 6 wartości w card/alert/badge (partia 3) |
+
+Znalezione i naprawione po drodze: `id` z spacją (`tag-AI agents`) psuł etykietę checkboxa (axe `aria-toggle-field-name`); `cn` usuwał `font-sans` przed `type-meta` w Kbd (role `type-*` kolidują z font-family w konfiguracji `cn`) – kolejność klas odwrócona.
+
+### Czego nie sprawdzono
+- Prawdziwe urządzenie dotykowe (obszary trafienia przy `pointer: coarse`, B27/B31).
+- Testy integracyjne aplikacji (Docker) – app nie używa nowych komponentów.
+- Ręczna klawiatura w managerze Storybooka.
+
+### Decyzje właściciela B26–B33 (Arkadiusz, 2026-10-19)
+
+- B26, B27, B28, B29, B30, B32, B33 – przyjęte.
+- B31 – przyjęta alternatywa: przy `pointer: coarse` InputGroup z przyciskiem (addon `inline-*`) rośnie do 48 px, przycisk ma 40 px (P4); bez przycisku grupa zostaje 40 px. Wdrożone (`pointer-coarse:has-[>[data-align^=inline]_button]:h-12`, usunięte 36 px przycisku), dokumentacja InputGroup zaktualizowana.
+- Po B31: lint, typecheck, test:coverage, build-storybook, test:storybook – wyniki w logu przebiegu.
+
+## Etap 2 – partia 3, wynik (2026-10-19)
+
+Card, Badge, Alert (istniejące – dopasowane), Avatar, Item (CLI), link w treści (utility `link-text`). B20/B21 wdrożone: `npm run lint:tokens` = 0.
+
+### Propozycje B34–B46 (materiały milczą; wdrożone zachowawczo, odwracalnie – do zatwierdzenia)
+| # | Propozycja | Źródło / dlaczego |
+|---|---|---|
+| B34 | Link w treści = utility `link-text` w `theme.css` na zwykłym `<a>` (nie komponent): `foreground`, stałe podkreślenie, hover 2 px, fokus: obrys 3 px `ring/50`. Stany zamrożone zdublowane w `storybook.css`. Używają go `AlertTitle/Description` i `FieldDescription` (`[&_a]:link-text`) | T11, WCAG 1.4.1; prymitywy shadcn tylko z CLI, a link nie jest prymitywem shadcn |
+| B35 | Item = gęsty wiersz: `ItemGroup` rysuje jedną ramkę i linie 1 px (`divide-y`), `Item` bez wariantów i rozmiarów; usunięte ItemHeader, ItemFooter, ItemSeparator, media „image” | R01.1, R01.3/P3, T9, T12, zasada 6 |
+| B36 | Klikalny wiersz = nowa część `ItemLink` w `ItemTitle`, rozciągnięta na wiersz (`after:inset-0`); hover wiersza `muted`, fokus = wewnętrzny pierścień całego wiersza; akcje wiersza nad linkiem. `Item` ma `role="listitem"` (baza dawała `role="list"` bez `listitem`) | WAI-ARIA, WCAG 1.3.1; część dopisana ręcznie do prymitywu z CLI |
+| B37 | `CardTitle` w roli `type-section-title` (18 px / 600) | P2 |
+| B38 | `CardFooter` bez tła `muted/50`, tylko linia u góry | R01.3 (linie, nie wypełnienia) |
+| B39 | Badge bez wariantów `ghost` i `link` | zasada 6; mylą się z przyciskiem i linkiem |
+| B40 | Alert: padding 12 × 8 px (jak wiersz kontrolki), przy dotyku min. 48 px wysokości, gdy ma akcję | B8, R01.1, P4 |
+| B41 | (nie wdrożone) Alert `destructive` z czerwoną ramką – zostawiona ramka `border`, bo ikona + tytuł już niosą znaczenie | zachowawczo: baza |
+| B42 | Alert zostaje `role="alert"` domyślnie; dokumentacja: komunikat obecny przy ładowaniu strony → `role="status"` | WAI-ARIA |
+| B43 | Avatar w jednym rozmiarze 32 px (bez `sm`, `lg`) | zasada 6; jedyne użycie: autor grupy wiadomości (R02.3) |
+| B44 | **Fallback awatara**: 1–2 inicjały w `muted-foreground` na `muted` (7,01 : 1), te same neutralne kolory dla wszystkich; bez imienia – neutralna ikona osoby; nigdy kolor wyliczany z imienia ani gradient. Obok widocznego imienia awatar `aria-hidden` | A01, P9, R02.3, WCAG 1.1.1 |
+| B45 | Usunięte `AvatarBadge` (kropka obecności), `AvatarGroup`, `AvatarGroupCount` („+N”) | P9, P10 |
+| B46 | Badge: domyślny wariant `secondary` zamiast `default` (akcent) | T10 – statusy nie w akcencie; app zawsze podaje wariant jawnie |
+
+Wynika wprost: Card – ramka `border` zamiast `ring`, `rounded-lg`, `p-panel`/`gap-between-groups`, bez `size` (B21, B3, T8); siatki `grid-cols-icon-content` i `grid-cols-content-action` w `theme.css` (B20) i w `cn`; Badge `rounded-md` (B3, A01), `ring-3`; linki w Alert w `foreground` (T11).
+
+### Co się zmieniło
+- CLI `add avatar item`: 2 nowe pliki, nadpisania `separator.tsx` odmówiłem; `package.json` i lockfile bez zmian.
+- `theme.css`: szablony siatki, utility `link-text`; `utils.ts` + test: `grid-cols-*` scalają się w `cn`.
+- `.storybook/storybook.css`: lustrzane stany `link-text` i pierścienia wiersza Item; `optimizeDeps` + avatar, merge-props, use-render.
+- Nowe strony i stories: Card, Badge, Alert, Avatar, Item, Text link (13 sekcji, macierze stanów, wąski ekran, testy play).
+- Skrypt `lint:tokens` liczy też komentarze – trzy komentarze z przykładowymi klasami arbitralnymi przeredagowane.
+- Wpływ na app (bez zmian w jej kodzie): Card w `/admin/users` – ramka zamiast pierścienia, tytuł 18 px; Badge w `/admin` – prostokąt zamiast pigułki; `ErrorMessage` – Alert z nowym paddingiem.
+
+### Wyniki sprawdzeń
+| Komenda | Wynik |
+|---|---|
+| `npm run lint` | OK |
+| `npm run typecheck` | OK |
+| `npm run test:coverage` | OK – 170 testów, 100% |
+| `npm run build` | OK |
+| `npm run build-storybook` | OK; 6 nowych stron: po 13 sekcji, tabele równe, bez widocznych błędów |
+| `npm run test:storybook` | OK – 214/214 (107 stories × 2 motywy; 33 nowe, 6 nowych testów interakcji) |
+| `npm run lint:tokens` | **OK – 0 wartości spoza tokenów** (87 plików) |
+
+### Czego nie sprawdzono
+- Testy integracyjne aplikacji (Docker) – wygląd `/admin`, `/admin/users` zmieniony (Card, Badge, Alert).
+- Prawdziwe urządzenie dotykowe (Alert 48 px z akcją).
+- Czytnik ekranu na żywo (role list/listitem, link rozciągnięty na wiersz) – tylko axe i testy play.
+
+### Decyzje właściciela B34–B46 (Arkadiusz, 2026-10-19)
+
+- B34–B46 przyjęte w całości. B41 w opisanej formie: Alert z błędem bez czerwonej ramki – sygnał to ikona, tytuł i tekst.
+- Partia 3 zacommitowana przez koordynatora (wszystkie sprawdzenia, w tym test:integration 11/11 i lint:tokens 0).
+- „dalej” → partia 4: Dialog, AlertDialog, DropdownMenu, Popover, Tooltip, Tabs.
+
+## Etap 2 – partia 4, wynik (2026-10-19)
+
+Dialog, AlertDialog, DropdownMenu, Popover, Tooltip, Tabs. Wszystkie nakładki portalowane na `<body>` i sprawdzone w obu motywach (zasada 9): tło bierze motyw z klasy na `<html>`, co widać w zrzutach i w teście `npx vitest` (`html.dark: true`, tło panelu = `--card`/`--popover` ciemnego motywu).
+
+### Propozycje B47–B59 (materiały milczą; wdrożone zachowawczo, odwracalnie – do zatwierdzenia)
+| # | Propozycja | Źródło / dlaczego |
+|---|---|---|
+| B47 | Nowy token `--overlay`: tło pod nakładką bez rozmycia – jasny: stone-950 przy 30%, ciemny: stone-950 przy 70% (strona już ciemna, więc mocniejsze zaciemnienie oddziela nakładkę) | R01.3/A01 (bez `backdrop-blur`), T5 |
+| B48 | Ruch nakładek: tylko fade/zoom 100 ms, bez `slide-in-from-*`; `motion-reduce:animate-none` wszędzie | F3 (propozycja strony Motion), WCAG 2.3.3 |
+| B49 | Dialog i AlertDialog: jedna szerokość `max-w-sm` (384 px), 16 px odstępu od krawędzi na wąskich ekranach, zamiast arbitralnego `calc(100%-2rem)` | zasada 3, T8 |
+| B50 | AlertDialog bez `size="sm"`, bez `AlertDialogMedia` (ikonka 40 px w kółku), nagłówek wyrównany do lewej zamiast wyśrodkowany | zasada 6; prompt etap 4 „wszystko wyśrodkowane” to generyczny wygląd AI |
+| B51 | AlertDialogCancel pierwszy w DOM i dostaje fokus przy otwarciu (zachowanie Base UI) – bezpieczny wybór jest łatwiejszy do trafienia | prompt etap 3 (potwierdzenie usunięcia: „przycisk rezygnacji łatwy do znalezienia”) |
+| B52 | Pozycja menu: min. wysokość `control-sm` (28 px, 40 px dotyk) zamiast sztywnych `py-1` | B2, P4, WCAG 2.5.8 |
+| B53 | DropdownMenu bez submenu, bez checkbox/radio items – tylko akcje | zasada 6; żadny ekran nie potrzebuje zagnieżdżonego menu ani wyboru w menu |
+| B54 | DropdownMenuItem podświetlenie = `accent` (neutralny stone), nie akcent | P4, P5/K3 |
+| B55 | Tooltip bez strzałki (`Arrow`) – wymagała arbitralnych przesunięć zależnych od strony | zasada 3 |
+| B56 | Tooltip: domyślne opóźnienie Base UI (600 ms), bez wymuszania 0 ms jak w bazie | charakter „spokojny”; natychmiastowe podpowiedzi migoczą przy przesuwaniu myszą |
+| B57 | Tabs: jeden styl „linia” (podkreślenie), bez segmentowanego `default` z bazy i bez orientacji pionowej | R01 (referencje GitHub/zakładki w stylu linii), zasada 6 |
+| B58 | Lista zakładek przewija się w bok na wąskim ekranie zamiast zawijać | WCAG 1.4.10 (dozwolone dla paska narzędziowego) |
+| B59 | Tabs: aktywacja ręczna (Enter/Space wybiera), zgodnie z domyślnym zachowaniem Base UI, nie automatyczna przy przesuwaniu fokusu strzałkami | WAI-ARIA (oba wzorce dozwolone; ręczna bezpieczniejsza, gdy zmiana karty jest kosztowna) |
+
+Wynika wprost: popover/dialog/menu bez cienia i pierścienia, tylko `border` 1 px i `rounded-lg` (R01.3, B3); `type-section-title` dla tytułów dialogów (B37, P2); linki w opisach przez `link-text` (T11).
+
+### Co się zmieniło
+- CLI `add dialog alert-dialog dropdown-menu popover tooltip tabs`: 6 nowych plików; nadpisanie `button.tsx` odmówione; `package.json` i lockfile bez zmian (porównane z kopią sprzed CLI).
+- `tokens.css`/`theme.css`: token i klasa `overlay`/`bg-overlay` (jasny i ciemny, policzony jako mieszanie koloru – nieprzezroczysty orientacyjnie, dekoracyjny jak maska, nie tekst).
+- `.storybook/storybook.css`: dodany wariant `focus` (obok `hover`/`focus-visible`/`active`) do zamrożonych podglądów podświetlenia pozycji menu.
+- `vitest.storybook.config.mts`: `optimizeDeps` rozszerzone o moduły nakładek Base UI; `provider: playwright({ contextOptions: { reducedMotion: "reduce" } })` – testy nakładek czekały na animacje wejścia/wyjścia (100 ms), co przy przeładowaniach Vite dawało sporadyczne niezgodności; z redukcją ruchu stany końcowe są natychmiastowe i powtarzalne.
+- Nowe strony i stories: Dialog, AlertDialog, DropdownMenu, Popover, Tooltip, Tabs (13 sekcji, macierze stanów, wąski ekran, testy klawiatury i powrotu fokusu po zamknięciu).
+- `Field`: naprawiona kolejność selektorów (`data-[invalid=true]:**:data-[slot=field-label]:text-destructive` zamiast koloru na całym kontenerze) – przy błędzie tylko etykieta i tekst błędu są czerwone, nie cała zawartość pola; dodane `min-w-0`, żeby pole w gęstej siatce (np. w Dialogu) nie wypychało karty.
+- Naprawiony niestabilny test Tabs: Base UI trzyma znikający panel w DOM z `inert` podczas przejścia, więc test filtruje `[inert]` i czeka (`waitFor`) zamiast zakładać dokładnie jeden `tabpanel` od razu.
+- Treść przykładu w Dialog (powód odrzucenia > 280 znaków) zamieniona z ciągu `"x".repeat(290)` na prawdziwe, realistyczne zdanie (zasada 7 promptu – żadnych sztucznych danych).
+
+### Sprawdzenie zasady 9 (motyw z `<html>`)
+Zrzuty i zapytanie w przeglądarce (motyw ciemny ustawiony przez toolbar Storybooka na `<html>`) potwierdzają: `DropdownMenuContent` i `PopoverContent` mają tło `--card`/`--popover` ciemnego motywu (`oklch(0.216 …)`, czyli stone-900); `TooltipContent` odwraca kolory celowo (tło `foreground`, czyli w ciemnym motywie jasne stone-50 – zamierzone, bo to napis na plakietce, nie panel). Żadna nakładka nie zażółciła się/nie została jasna przez przypadek.
+
+### Wyniki sprawdzeń
+| Komenda | Wynik |
+|---|---|
+| `npm run lint` | OK |
+| `npm run typecheck` | OK |
+| `npm run test:coverage` | OK – 170 testów, 100% |
+| `npm run build` | OK |
+| `npm run build-storybook` | OK; 8 nowych stron: po 13 sekcji, tabele równe, bez widocznych błędów |
+| `npm run test:storybook` | OK – 272/272 (136 stories × 2 motywy; po jednej niestabilności w Tabs, naprawionej i potwierdzonej powtórnym przebiegiem) |
+| `npm run lint:tokens` | OK – 0 wartości spoza tokenów (105 plików) |
+
+### Czego nie sprawdzono
+- Testy integracyjne aplikacji (Docker) – app nie używa jeszcze tych komponentów.
+- Prawdziwe urządzenie dotykowe (otwieranie nakładek, 40 px pozycji menu).
+- Ręczna obsługa klawiaturą poza testami play (np. zagnieżdżone nakładki jedna nad drugą – nie występuje w zaplanowanych ekranach).
+- Zachowanie przy `prefers-reduced-motion` na prawdziwej przeglądarce z włączoną redukcją ruchu systemowo (testy ustawiają to przez kontekst Playwrighta, nie przez CSS media query ręcznie sprawdzony wizualnie).
+
+## Etap 2 – partia 5 (ostatnia), wynik (2026-10-19)
+
+Skeleton (nowy, CLI), Spinner i Table (istniejące – dopasowane), favicon Storybooka, przegląd bloków `backend/` na żywej aplikacji. To zamyka minimalny zestaw komponentów bazowych z etapu 0/2.
+
+### Propozycje B60–B62 (materiały milczą; wdrożone zachowawczo, odwracalnie – zatwierdzone przez Arkadiusza 2026-10-19)
+| # | Propozycja | Źródło / dlaczego |
+|---|---|---|
+| B60 | Skeleton zatrzymuje pulsowanie przy `prefers-reduced-motion` (`motion-reduce:animate-none`) | F3 (propozycja strony Motion), WCAG 2.3.3 |
+| B61 | Nagłówek i komórka tabeli dostają padding `py-list-row`/`px-list-row` (8/12 px) zamiast sztywnego `px-2`/`h-10` – ten sam rytm poziomy co gęsty wiersz listy i pole formularza | T9, B8 |
+| B62 | Najechanie wiersza i stopka tabeli: pełne `bg-muted` zamiast tła `/50` – spójnie z najechaniem `Item` i wariantów `outline`/`ghost` przycisku | P4, B5 |
+
+Wynika wprost: `type-body`/`type-label` zamiast `text-sm`/`font-medium` (P2); `transition-colors motion-reduce:transition-none` na wierszu (B16); Skeleton `aria-hidden="true"` (WCAG 4.1.2, zasada analogiczna do avatara B44).
+
+### Favicon Storybooka (nie B-propozycja – wykonane wprost na prośbę właściciela)
+`.storybook/public/favicon.svg`: zaokrąglony kwadrat w `stone-950` ze stylizowaną literą „D” w `teal-400` – te same wartości co tokeny `--raw-stone-950`/`--raw-teal-400` (żadnego nowego koloru). Bez gradientu, poświaty, iskierek (A01). Podpięty w `manager-head.html` (`<link rel="icon">`, przed istniejącym skryptem naprawiającym tytuł – zasada 10 zostaje bez zmian) i w `main.ts` (`staticDirs: ["./public"]`, żeby plik był serwowany w dev i w zbudowanym Storybooku). Sprawdzony: `favicon.svg` trafia do `storybook-static/`, serwuje się z kodem 200, tytuł karty nadal kończy się na „DevMentor”.
+
+### Przegląd bloków `backend/` na żywej aplikacji (nie zmieniłem ich kodu)
+Uruchomiłem tymczasowo `next dev` na porcie 3101 (osobnym od serwera audytora na 3000, zatrzymany po sprawdzeniu) i przeszedłem `/admin` oraz `/admin/users` w prawdziwej przeglądarce, z prawdziwą bazą (test:integration wcześniej zostawił działający kontener). Utworzyłem dwóch użytkowników przez `CrudForm` i obejrzałem wynik w `DataTable`.
+
+**Renderują się poprawnie, bez regresji:**
+- `EmptyState` (panel z przerywaną ramką, wyśrodkowany tekst) – bez zmian wizualnych, pasuje do nowego `rounded-lg`/`border`.
+- `CrudForm` (Label, Input, NativeSelect, Button) – wysokości, padding i fokus zgodne z partią 1; przycisk `Create user` w akcencie teal, `Cancel` jako link-przycisk.
+- `ErrorMessage` (Alert destructive + przycisk) – nieużyty w tej ścieżce (brak błędu API), sprawdzony wcześniej w stories Alert.
+- `DataTable` (Table, Badge, Button) – nagłówek i komórki z nowym paddingiem (B61), rola użytkownika jako `Badge variant="secondary"` (prostokątna, nie pigułka – B46), akcje wiersza (`Edit`/`Delete` ghost) i potwierdzenie usunięcia (inline, nie `AlertDialog` – to istniejący kod aplikacji, poza zakresem design systemu) wyglądają spójnie z tokenami.
+- `LoadingMessage` – nieużyty w tej ścieżce (dane ładują się zbyt szybko, by złapać stan), sprawdzony wcześniej w stories Spinner.
+
+**Czego nie udało się sprawdzić:** ciemny motyw tych bloków w aplikacji – `/admin` nie ma przełącznika motywu (S16, znana luka produktu), a wymuszenie klasy `dark` przez skrypt przed hydracją nie zadziałało (strona wyrenderowała się w jasnym motywie mimo `document.documentElement.classList.add("dark")` w `addInitScript`) – prawdopodobnie Next.js resetuje klasę przy hydracji. Ciemny wygląd tych samych prymitywów (Button, Alert, Badge, Table) jest natomiast zweryfikowany w Storybooku w partiach 1–5.
+
+**Obserwacje, które NIE są dzisiejszymi B-propozycjami** (poza zakresem partii 5 – composer komponentów `backend/`, nie prymitywów), zapisane do rozważenia przy etapie 3 lub osobnej decyzji: `CrudForm` nadal buduje pola ręcznie (`Label` + `Input`/`NativeSelect` + `<p className="text-destructive text-sm">`) zamiast przez `Field`/`FieldLabel`/`FieldError` z partii 1 – działa poprawnie (kolor i tekst błędu są poprawne), ale nie korzysta z ikony błędu ani z `aria-describedby` tak jak nowy wzorzec; `CrudForm`/`EmptyState` używają `space-y-4`/`space-y-1.5`/`gap-2` (standardowe klasy Tailwinda) zamiast `gap-between-groups`/`gap-in-group` – wizualnie identyczne (te same wartości w skali odstępów), ale niespójne nazewnictwo. Żadne z tych nie jest błędem ani naruszeniem `lint:tokens` (zero znalezisk, 112 plików).
+
+### Wyniki sprawdzeń
+| Komenda | Wynik |
+|---|---|
+| `npm run lint` | OK |
+| `npm run typecheck` | OK |
+| `npm run test:coverage` | OK – 170 testów, 100%; w tym 50 istniejących testów `backend/*` bez zmian i bez awarii po dopasowaniu Table/Spinner/Skeleton |
+| `npm run build` | OK |
+| `npm run build-storybook` | OK; 3 nowe strony (Skeleton, Spinner, Table): po 13 sekcji, tabele równe, bez błędów; favicon obecny w zbudowanym katalogu |
+| `npm run test:storybook` | OK – 304/304 (152 stories × 2 motywy; 16 nowych stories) |
+| `npm run lint:tokens` | OK – 0 wartości spoza tokenów (112 plików) |
+
+### Czego nie sprawdzono
+- Testy integracyjne aplikacji (`npm run test:integration`, Docker) – nie uruchomione w tej sesji; ręczne sprawdzenie w przeglądarce (wyżej) zastąpiło je dla `/admin`/`/admin/users`.
+- Ciemny motyw aplikacji (patrz wyżej – znana luka S16).
+- Prawdziwe urządzenie dotykowe.

@@ -4,7 +4,10 @@
  *
  * Classes this file adds (besides the shadcn colour names):
  *   spacing   gap-in-group, gap-between-groups, p-panel, gap-section / mt-section,
- *             py-list-row, px-list-row, gap-message-group, gap-message, h-control / min-h-control
+ *             py-list-row, px-list-row, gap-message-group, gap-message, h-control / size-control, h-control-sm / size-control-sm
+ *   colour    bg-secondary-hover (B14), bg-overlay (B47)
+ *   grid      grid-cols-icon-content, grid-cols-content-action (B20)
+ *   link      link-text – links in running text (T11, B34)
  *   type      type-page-title, type-section-title, type-body, type-label, type-meta, type-code
  * Typography roles use the `type-` prefix (not `text-`) so `cn` never mistakes them for a colour (S17).
  */
@@ -23,6 +26,7 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary-hover: var(--secondary-hover);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
@@ -31,6 +35,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-overlay: var(--overlay);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -64,6 +69,11 @@
   --spacing-message-group: var(--message-group-gap);
   --spacing-message: var(--message-gap);
   --spacing-control: var(--control-height);
+  --spacing-control-sm: var(--control-height-sm);
+
+  /* Named grid templates instead of arbitrary grid column values (B20, rule 3) */
+  --grid-template-columns-icon-content: auto 1fr; /* alert: icon + text */
+  --grid-template-columns-content-action: 1fr auto; /* card header: title + action */
 }
 
 /* List-row padding (component tokens T9): py-list-row / px-list-row. */
@@ -72,6 +82,26 @@
 }
 @utility px-list-row {
   padding-inline: var(--list-row-px);
+}
+
+/*
+ * Link in running text (T11, B34): foreground, always underlined (WCAG 1.4.1 – colour is not the
+ * cue), thicker underline on hover, the neutral focus outline (T4; colour from the base layer).
+ * Storybook mirrors the hover/focus declarations under data-preview-state (.storybook/storybook.css).
+ */
+@utility link-text {
+  color: var(--foreground);
+  text-decoration-line: underline;
+  text-underline-offset: 4px;
+  border-radius: var(--radius-sm);
+  &:hover {
+    text-decoration-thickness: 2px;
+  }
+  &:focus-visible {
+    outline-style: solid;
+    outline-width: 3px;
+    outline-offset: 2px;
+  }
 }
 
 /* Typography roles (P2). */
