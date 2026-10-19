@@ -1,0 +1,6 @@
+# D01 — Version 1.0 is paid text sessions; the knowledge vault, MCP and subscriptions are later
+- Date, owner: 2026-10-19, Arkadiusz (product owner of this repository), confirmed in the om-discover session
+- Context and the options weighed: the workshop (2026-08-26) asked for "the smallest product that earns for a mentor without a call" (the vault). The mentee interviews (2026-08-20, 2026-09-01, 2026-09-02) ask for fast help from a person and did not want saved answers or a subscription; two mentor interviews (2026-08-22, 2026-09-03) call their notes the real value. Options: paid text sessions first; the vault first; both.
+- Decision and why: paid 25/50-minute text sessions with prepayment; a session note only with the mentee's approval. The vault, MCP access and subscriptions move to Later. Origin: the agent's recommendation, accepted by the owner – it follows the mentee accounts and fits the 25-hour build constraint; the cost is deferring the planned differentiator.
+- Consequences, and what would make us revisit it: mentors who see their notes as the value get no recurring income in 1.0; revisit when sessions show demand or when mentors decline because there is no vault.
+- Status: active
