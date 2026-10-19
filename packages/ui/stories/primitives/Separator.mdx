@@ -1,0 +1,111 @@
+import { Canvas, Meta, Source, Unstyled } from "@storybook/addon-docs/blocks";
+import * as SeparatorStories from "./Separator.stories";
+import { Separator } from "../../src/components/ui/separator";
+import { DoDont } from "../../.storybook/blocks/Docs";
+
+<Meta of={SeparatorStories} />
+
+# Separator
+
+`import { Separator } from "@devmentor/ui/components/ui/separator"`
+
+## 1. Purpose
+
+Divides groups of content inside one surface with a thin line, so the eye finds the groups without extra boxes or shadows.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Between groups inside one panel (prices / slot summary on the mentor checklist) | R01.3 (1 px lines, no box in a box) |
+| Between items of one line of metadata or a toolbar (vertical) | R01.1 |
+| Between groups of a menu (batch 4) | base-nova |
+
+## 3. When not to use
+
+| Instead of a separator… | Use | Why |
+|---|---|---|
+| Between rows of a list | the row's own `border-b` (dense list row, `item` in batch 3) | the list owns its lines (R01.3) |
+| Between page sections | space: `gap-section` (32 px) | T8 – sections are separated by space |
+| Around a group (a box) | nothing, or one panel border | no box in a box (R01.3/P3) |
+
+## 4. Anatomy
+
+One part: a 1 px line in `border` (stone-200 / white 10%), horizontal (full width) or vertical (full height of its row).
+
+## 5. Variants
+
+`orientation`: `horizontal` (default) or `vertical`. No colours or thicknesses (rule 6).
+
+<Canvas of={SeparatorStories.Orientations} />
+
+## 6. States
+
+<Canvas of={SeparatorStories.States} />
+
+Static: default only. The line is decorative and below 3 : 1 on purpose – it never identifies a control (T5). Hover, focus, pressed, disabled, loading, selected and error do not apply.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Base UI renders `role="separator"` with `aria-orientation`. | WAI-ARIA separator |
+| A separator is not focusable and carries no meaning that text does not also give. | WCAG 1.3.1 |
+| Contrast below 3 : 1 is accepted because it is decorative. | T5 |
+
+## 8. Content
+
+No text. Do not put a label on the line; use a heading for the next group if it needs a name.
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | Spans the panel; vertical separators in a metadata line may disappear when the line wraps (**proposal**). |
+| 768 px and 1440 px | Same as 320 px. |
+
+<Canvas of={SeparatorStories.Narrow} />
+
+## 10. API
+
+All props of Base UI `Separator`:
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | Direction of the line. |
+| `className` | `string` | – | Spacing around it comes from the parent's `gap`, not from margins on the separator. |
+
+## 11. Code
+
+<Source dark code={`<Separator />`} />
+
+<Source
+  dark
+  code={`<div className="flex items-center gap-in-group type-meta text-muted-foreground">
+  <span>3 bookable slots</span>
+  <Separator orientation="vertical" />
+  <span>Listed publicly</span>
+</div>`}
+/>
+
+## 12. Do and don't
+
+<Unstyled>
+  <DoDont
+    doExample={<div className="flex w-full flex-col gap-in-group"><span className="type-body">Prices</span><Separator /><span className="type-body">Slots</span></div>}
+    doText="One thin line inside one panel (R01.3)."
+    dontExample={<div className="flex w-full flex-col gap-in-group"><div className="rounded-lg border border-border p-panel type-body">Prices</div><div className="rounded-lg border border-border p-panel type-body">Slots</div></div>}
+    dontText="A box for every group inside a panel is a box in a box (R01.3/P3)."
+  />
+</Unstyled>
+
+## 13. Related
+
+- **Confused with:** list row borders (lists), section spacing (`gap-section`).
+- **Used in:** panels, metadata lines, menus (batch 4).
+
+### Interaction test
+
+Separator has no behaviour; the test checks its role and orientation.
+
+<Canvas of={SeparatorStories.Semantics} />

@@ -101,3 +101,17 @@ Verified: lint OK, typecheck OK, test:coverage OK (169, 100%), build OK, build-s
 Open issues: first cold-cache story run reloaded Vite (fixed with `optimizeDeps.include`, not re-verified on a clean cache); integration tests not run.
 
 Handoff: after "dalej" → batch 2 (Checkbox, RadioGroup, Switch, InputGroup, Kbd, Separator), see "Następny krok" in POSTEP.md.
+
+## Stage 2, batch 2 (2026-10-19)
+
+Goal: Checkbox, RadioGroup, Switch, InputGroup, Kbd, Separator; restore FieldSet, FieldLegend, FieldContent, horizontal Field. Batch 1 was committed by the coordinator (1710f15) after test:integration 11/11.
+
+Decisions: new proposals B26–B33 (see POSTEP.md), each implemented in its most conservative reversible form; B31 (36 px button inside an input group on touch, below P4's 40 px) flagged for confirmation.
+
+Verified: lint OK, typecheck OK, test:coverage OK (169, 100%), build OK, build-storybook OK (12 primitive docs pages checked in Chromium), test:storybook OK (148/148, both themes), lint:tokens FAIL with the same 6 values (card/alert/badge, batch 3). CLI: no overwrites, package.json and lockfile unchanged. No `git stash`; nothing committed.
+
+Bugs found: an `id` with a space broke the checkbox label; `cn` dropped `font-sans` placed before `type-meta`.
+
+Handoff: owner decisions on B26–B33, then batch 3 (Card, Badge, Alert, Avatar, Item, text link) – see "Następny krok" in POSTEP.md.
+
+Owner decisions on batch 2: B26–B30, B32, B33 accepted; B31 replaced by the alternative – on coarse pointers an InputGroup holding an inline button grows to 48 px so the button keeps 40 px (P4). Applied and re-verified: lint OK, typecheck OK, test:coverage OK (169, 100%), build-storybook OK (rule present in the built CSS), test:storybook 148/148 in both themes.

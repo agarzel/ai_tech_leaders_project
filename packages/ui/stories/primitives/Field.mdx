@@ -8,7 +8,7 @@ import { DoDont } from "../../.storybook/blocks/Docs";
 
 # Field
 
-`import { Field, FieldGroup, FieldLabel, FieldDescription, FieldError } from "@devmentor/ui/components/ui/field"`
+`import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@devmentor/ui/components/ui/field"`
 
 ## 1. Purpose
 
@@ -26,7 +26,6 @@ Keeps a control's name, hint and error together, so a person always knows what t
 
 | Instead of a Field… | Use | Why |
 |---|---|---|
-| A group of radios or checkboxes with one question | `FieldSet` + legend (batch 2) | the group needs a `<fieldset>` name |
 | A standalone search box in a toolbar | `Input` with `aria-label` (or `Label`) | no hint or error |
 | A form that `CrudForm` can render from a Zod schema | `CrudForm` | it already builds the fields (`packages/ui/AGENTS.md`) |
 | A message about the whole form or the server (*Payment failed*) | `Alert` (batch 3) | not tied to one field; never a toast for an error that needs action (prompt) |
@@ -43,10 +42,21 @@ Keeps a control's name, hint and error together, so a person always knows what t
 | Control | `Input`, `Textarea`, `NativeSelect` | no | gets `id`, `aria-invalid`, `aria-describedby` |
 | Hint | `FieldDescription` | yes | `type-body`, `muted-foreground` (7.3 : 1 – answer 2.4) |
 | Error | `FieldError` | only when invalid | `type-body`, `destructive`, `CircleAlert` icon, `role="alert"` (answer 2.4, WCAG 1.4.1) |
+| Group with one question | `FieldSet` + `FieldLegend` | for radios, checkboxes | `<fieldset>`, `gap-in-group`; legend in the `type-label` role (B32) |
+| Label + hint beside a control | `FieldContent` | in horizontal fields | title + one line, no extra gap, like a list row (B32, R01.1) |
 
 ## 5. Variants
 
-One, vertical: label above the control. The horizontal and responsive orientations of base-nova come back with checkbox, radio and switch in batch 2 (rule 6).
+`orientation`:
+
+| Value | Choose it when | Source |
+|---|---|---|
+| `vertical` (default) | text fields, selects, textareas: label above the control | prompt stage 3 (label always visible) |
+| `horizontal` | checkbox and radio (control first, then label) and switch (label first, switch at the end); with `FieldContent` the control aligns with the first line | WAI-ARIA, base-nova |
+
+The base-nova `responsive` orientation and the "choice card" label (a bordered label that highlights when checked) were not taken (B28, B33, rule 6).
+
+<Canvas of={FieldStories.Orientations} />
 
 ## 6. States
 
@@ -94,7 +104,10 @@ One, vertical: label above the control. The horizontal and responsive orientatio
 | Component | Props | Notes |
 |---|---|---|
 | `FieldGroup` | `<div>` props | wraps fields |
-| `Field` | `<div>` props + `data-invalid?: boolean`, `data-disabled?: boolean` | `role="group"` |
+| `Field` | `<div>` props + `orientation?: "vertical" \| "horizontal"` (default `vertical`), `data-invalid?: boolean`, `data-disabled?: boolean` | `role="group"` |
+| `FieldSet` | `<fieldset>` props | group with one question |
+| `FieldLegend` | `<legend>` props | the question, `type-label` |
+| `FieldContent` | `<div>` props | label + hint beside a control |
 | `FieldLabel` | `Label` props + `optional?: boolean` (default `false`) | adds *(optional)* |
 | `FieldDescription` | `<p>` props | give it an `id` for `aria-describedby` |
 | `FieldError` | `<div>` props + `errors?: { message?: string }[]` | `children` win over `errors`; several distinct messages render as a list; renders nothing when empty |
@@ -140,7 +153,7 @@ One, vertical: label above the control. The horizontal and responsive orientatio
 
 ## 13. Related
 
-- **Confused with:** `Label` (name only), `Alert` (form-level or server errors), `FieldSet` (groups of options, batch 2).
+- **Confused with:** `Label` (name only), `Alert` (form-level or server errors, batch 3).
 - **Used in:** `CrudForm` (to be moved onto `Field` – "What is missing"), product fields `QuestionField`, `SlotTimeField`; pattern *Form* (stage 3).
 
 ### Interaction test

@@ -1,0 +1,133 @@
+import { Canvas, Meta, Source, Unstyled } from "@storybook/addon-docs/blocks";
+import * as SwitchStories from "./Switch.stories";
+import { Switch } from "../../src/components/ui/switch";
+import { Field, FieldLabel } from "../../src/components/ui/field";
+import { DoDont } from "../../.storybook/blocks/Docs";
+
+<Meta of={SwitchStories} />
+
+# Switch
+
+`import { Switch } from "@devmentor/ui/components/ui/switch"`
+
+## 1. Purpose
+
+Lets a person turn a setting on or off and have it take effect immediately, without a *Save* button.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| *Show me on the public list* on the mentor profile (opt-in, R08) | mentor-accounts spec, R08 |
+| Any setting saved the moment it changes | WAI-ARIA switch pattern |
+
+## 3. When not to use
+
+| Instead of a switch… | Use | Why |
+|---|---|---|
+| An option saved later with the form | `Checkbox` | a switch promises an immediate effect |
+| Choosing between two named options (25 / 50 min) | `RadioGroup` | "on/off" does not name the alternative |
+| Starting an action (*Accept booking*) | `Button` | a switch holds state |
+
+## 4. Anatomy
+
+| Part | Optional | Notes |
+|---|---|---|
+| Track | no | 32 × 20 px, round (answer 2.2), `input` when off, `foreground` when on (B26, B29) |
+| Thumb | no | 16 px, `background` in both themes (B5) |
+| Label (+ hint) | no | before the switch in a settings row: `Field orientation="horizontal"`, `FieldContent` first |
+| Hit area | – | `::after`, 56 × 36 px, 56 × 44 px on touch (B27) |
+
+## 5. Variants
+
+One size (B29). The base-nova `sm` size (24 × 14 px, arbitrary values) was not taken (rule 3, rule 6).
+
+<Canvas of={SwitchStories.PublicListSetting} />
+
+## 6. States
+
+<Canvas of={SwitchStories.States} />
+
+| State | Looks | Source |
+|---|---|---|
+| Off | `input` track (4.81 : 1 on card, 3.64 : 1 dark card), thumb left | T3, WCAG 1.4.11 |
+| On | `foreground` track, thumb right – position is the main cue, not colour | B26, WCAG 1.4.1 |
+| Hover | no change | **proposal** (base-nova default kept) |
+| Focus | neutral 3 px ring | T4 |
+| Disabled | 50% opacity; the reason is in the hint next to it | B17 |
+| Saving | if saving can fail, keep the new position and show the error under the row; revert only after the server refuses | **proposal** (prompt stage 3: success only after the server confirms) |
+| Pressed, invalid | do not apply (an immediate setting has no validation state) | – |
+
+The thumb slides (transform) and the track changes colour; both stop with `prefers-reduced-motion` – **proposal**, follows F3.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| `role="switch"` with `aria-checked`; Space toggles; Enter also toggles in Base UI. | WAI-ARIA switch pattern |
+| The label says the setting, not the state: *Show me on the public list*, never *On*/*Off*. | WAI-ARIA |
+| `id` + `FieldLabel htmlFor`; the hint via `aria-describedby`. | WCAG 1.3.1 |
+| Announced as "\{label\}, switch, on / off". | WAI-ARIA |
+
+## 8. Content
+
+- Label: the setting as a positive statement (*Show me on the public list*). (**proposal**)
+- Hint: the consequence of either position (*Your share link works either way.*). (R08)
+- Long labels wrap; the switch stays at the end of the first line.
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | Label wraps; switch stays at the right edge. |
+| 768 px and 1440 px | Settings rows at most `max-w-prose`, so the switch stays near its label. (F2 **proposal**) |
+
+<Canvas of={SwitchStories.DisabledWithReasonNarrow} />
+
+## 10. API
+
+All props of Base UI `Switch.Root`:
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `checked` / `defaultChecked` | `boolean` | – / `false` | Controlled / uncontrolled. |
+| `onCheckedChange` | `(checked: boolean, details) => void` | – | Save the setting here. |
+| `disabled` | `boolean` | `false` | Dimmed, not focusable. |
+| `name`, `value` | `string` | – | Hidden input for forms. |
+
+The base-nova `size` prop was removed (B29).
+
+## 11. Code
+
+<Source dark code={`<Switch aria-label="Show me on the public list" />`} />
+
+<Source
+  dark
+  code={`<Field orientation="horizontal">
+  <FieldContent>
+    <FieldLabel htmlFor="listed">Show me on the public list</FieldLabel>
+    <FieldDescription id="listed-hint">Your share link works either way.</FieldDescription>
+  </FieldContent>
+  <Switch id="listed" aria-describedby="listed-hint" checked={listed} onCheckedChange={saveListed} />
+</Field>`}
+/>
+
+## 12. Do and don't
+
+<Unstyled>
+  <DoDont
+    doExample={<Field orientation="horizontal"><FieldLabel htmlFor="dd-sw-do">Show me on the public list</FieldLabel><Switch id="dd-sw-do" /></Field>}
+    doText="The label names the setting; the switch shows its state (WAI-ARIA)."
+    dontExample={<Field orientation="horizontal"><FieldLabel htmlFor="dd-sw-dont">Off</FieldLabel><Switch id="dd-sw-dont" /></Field>}
+    dontText="A label that only says the state does not say what is being switched."
+  />
+</Unstyled>
+
+## 13. Related
+
+- **Confused with:** `Checkbox` (saved later), `RadioGroup` (two named options).
+- **Used in:** mentor profile (`/mentor/profile`, public list opt-in); pattern *Checklist to bookable* (stage 3).
+
+### Interaction test
+
+<Canvas of={SwitchStories.TogglesByPointerAndKeyboard} />

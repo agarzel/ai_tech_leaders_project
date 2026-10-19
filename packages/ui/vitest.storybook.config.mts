@@ -16,7 +16,7 @@ const themeProject = (theme: "light" | "dark") => ({
   define: { __SB_THEME__: JSON.stringify(theme) },
   // Pre-bundle what the primitives import, so Vite does not reload the browser mid-run on a cold cache.
   optimizeDeps: {
-    include: ["@base-ui/react/button", "@base-ui/react/input", "@base-ui/react/separator", "class-variance-authority", "lucide-react"],
+    include: ["@base-ui/react/button", "@base-ui/react/input", "@base-ui/react/separator", "@base-ui/react/checkbox", "@base-ui/react/radio", "@base-ui/react/radio-group", "@base-ui/react/switch", "class-variance-authority", "lucide-react"],
   },
   test: {
     name: `storybook-${theme}`,

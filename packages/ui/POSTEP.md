@@ -8,15 +8,15 @@ Plik roboczy zadania z `lekcja-06/prompt-storybook.md`. Nowa sesja: przeczytaj p
 |---|---|
 | 0. Inwentaryzacja i plan | zakończony 2026-10-19 – decyzje właściciela zapisane niżej |
 | 1. Fundamenty | zakończony 2026-10-19 – F1 wdrożone, F2–F6 zapisane; czeka na „dalej” |
-| 2. Komponenty bazowe | w toku – partia 1 zakończona 2026-10-19 (Button, Input, Textarea, NativeSelect, Label, Field + B23–B25); czeka na „dalej” do partii 2 |
+| 2. Komponenty bazowe | w toku – partie 1 (1710f15) i 2 zakończone, B26–B33 rozstrzygnięte; czeka na „dalej” do partii 3 |
 | 3. Komponenty produktu, wzorce, ekrany | nie rozpoczęty |
 | 4. Strony, które uczą | nie rozpoczęty |
 | 5. Sprawdzenie i raport | nie rozpoczęty |
 
 ## Następny krok
 
-Po „dalej” → etap 2, partia 2: Checkbox, RadioGroup, Switch, InputGroup, Kbd, Separator (+ przywrócenie z rejestru `FieldSet`, `FieldLegend`, `FieldContent` i orientacji poziomej `Field`). Najpierw `npx shadcn@latest add checkbox radio-group switch input-group kbd` w `packages/ui` (odmowa nadpisania istniejących plików, `git show HEAD:<plik>` do porównań, nigdy `git stash`), potem `package.json` i lockfile (zasada 6), import `cn` z `@devmentor/ui/lib/utils` (ESLint pilnuje), dopasowanie wg B1–B25, strony i stories wg wzoru partii 1.
-Nic nie jest zacommitowane – commit robi właściciel.
+Decyzje B26–B33 podjęte (niżej). Po commicie partii 2 przez koordynatora i „dalej” → partia 3: Card, Badge, Alert, Avatar, Item, link w treści (B22) + poprawki lint:tokens w card/alert/badge (B20, B21). Te same zasady: CLI bez nadpisywania, `git show HEAD:<plik>`, nigdy `git stash`, kontrola `package.json`/lockfile, 13 sekcji, macierz stanów, testy play.
+Nic z partii 2 nie jest zacommitowane – commit robi właściciel.
 
 ## Zatwierdzone decyzje (źródła: `lekcja-06/referencje.md`, `lekcja-06/tokeny.md`)
 
@@ -308,3 +308,51 @@ Baza = shadcn base-nova w stanie z repo (`src/components/ui/*`, tokeny już nasz
 - `CrudForm` nie używa jeszcze `Field` (brak podpowiedzi, `aria-describedby`, „(optional)”).
 - Podpowiedź (Tooltip) dla przycisków-ikon – partia 4.
 - Licznik znaków (`QuestionField`) – komponent produktu, etap 3.
+
+## Etap 2 – partia 2, wynik (2026-10-19)
+
+Checkbox, RadioGroup, Switch, InputGroup, Kbd, Separator (dokumentacja; plik z partii 1) + przywrócone FieldSet, FieldLegend, FieldContent i `Field orientation="horizontal"`.
+
+### Propozycje B26–B33 (materiały milczą; wdrożone zachowawczo i odwracalnie – do zatwierdzenia)
+| # | Propozycja | Źródło / dlaczego |
+|---|---|---|
+| B26 | Zaznaczony checkbox, radio i włączony switch w neutralnym `foreground` (znak/kropka/kciuk w `background`), nie w akcencie `primary` jak w bazie | P5/K3 – akcent tylko na jednym elemencie ekranu (np. *Pay*); spójne z neutralnym fokusem T4 |
+| B27 | Pole 16 px, niewidoczny obszar trafienia `::after` 40 × 32 px, przy dotyku 40 × 40 (switch 56 × 36 / 56 × 44) | P4, WCAG 2.5.8 |
+| B28 | Bez wzorca „choice card” (etykieta-karta podświetlana po zaznaczeniu, `bg-primary/5`) | zasada 6; byłaby to ramka w ramce (R01.3/P3) i akcent (P5) |
+| B29 | Switch w jednym rozmiarze, tor 32 × 20 px ze skali (zamiast arbitralnych 32 × 18,4 i 24 × 14 px), bez propsa `size` | zasada 3, zasada 6 |
+| B30 | `InputGroupButton` ma rozmiary `icon-sm` (domyślny) i `sm` z Button zamiast `xs`/`icon-xs` bazy (usunięte w B1) | B1, B2 |
+| B31 | Przy dotyku przycisk w InputGroup ma 36 px (mieści się w grupie 40 px) – **poniżej P4 (40 px)**, powyżej WCAG 2.5.8 (24 px). **Do potwierdzenia**; alternatywa: grupa z przyciskiem 48 px przy dotyku | P4 vs geometria grupy |
+| B32 | `FieldLegend` bez wariantów, zawsze rola `type-label`; `FieldContent` bez dodatkowego odstępu (tytuł + linia podpowiedzi jak wiersz listy); FieldSet `gap-in-group` | P2, R01.1/T12, T8 |
+| B33 | Bez orientacji `responsive` w Field (etykieta obok pola od szerokości @md) | zasada 6; formularze jednokolumnowe |
+
+Decyzje wynikające wprost: radio i tor przełącznika okrągłe (2.2), `rounded-md` checkboxa i Kbd (B3), brak ciemnych wypełnień `input/30` (B6), neutralny fokus przy błędzie (B13), `transition-colors` + `motion-reduce` (B16), Kbd w Geist sans, nie mono (R01.2), odstęp między opcjami 8 px (T8), wyłączona grupa bez przyciemniania jednostki (*PLN*) – tylko pole jest wyciszone (axe: kontrast 2,24 : 1 przy `opacity-50` na całej grupie).
+
+### Co się zmieniło
+- CLI `npx shadcn@latest add checkbox radio-group switch input-group kbd`: 5 nowych plików; nadpisania `button`, `input`, `textarea` odmówiłem; `package.json` i lockfile bez zmian (porównane z kopią sprzed CLI).
+- `vitest.storybook.config.mts`: `optimizeDeps.include` rozszerzone o checkbox/radio/radio-group/switch Base UI (pierwszy przebieg znów przeładował Vite).
+- Strony batch 1 (Button, Input, NativeSelect, Label) odsyłają teraz do istniejących komponentów zamiast „(batch 2)”; Field.mdx: anatomia, orientacje, API.
+- Story `Field/Orientations`.
+
+### Wyniki sprawdzeń
+| Komenda | Wynik |
+|---|---|
+| `npm run lint` | OK |
+| `npm run typecheck` | OK |
+| `npm run test:coverage` | OK – 169 testów, 100% |
+| `npm run build` | OK |
+| `npm run build-storybook` | OK; 12 stron prymitywów: po 13 sekcji, tabele bez rozjechanych wierszy, bez widocznych błędów renderowania |
+| `npm run test:storybook` | OK – 148/148 (74 stories × 2 motywy; 32 nowe, 7 nowych testów interakcji) |
+| `npm run lint:tokens` | FAIL – bez zmian, 6 wartości w card/alert/badge (partia 3) |
+
+Znalezione i naprawione po drodze: `id` z spacją (`tag-AI agents`) psuł etykietę checkboxa (axe `aria-toggle-field-name`); `cn` usuwał `font-sans` przed `type-meta` w Kbd (role `type-*` kolidują z font-family w konfiguracji `cn`) – kolejność klas odwrócona.
+
+### Czego nie sprawdzono
+- Prawdziwe urządzenie dotykowe (obszary trafienia przy `pointer: coarse`, B27/B31).
+- Testy integracyjne aplikacji (Docker) – app nie używa nowych komponentów.
+- Ręczna klawiatura w managerze Storybooka.
+
+### Decyzje właściciela B26–B33 (Arkadiusz, 2026-10-19)
+
+- B26, B27, B28, B29, B30, B32, B33 – przyjęte.
+- B31 – przyjęta alternatywa: przy `pointer: coarse` InputGroup z przyciskiem (addon `inline-*`) rośnie do 48 px, przycisk ma 40 px (P4); bez przycisku grupa zostaje 40 px. Wdrożone (`pointer-coarse:has-[>[data-align^=inline]_button]:h-12`, usunięte 36 px przycisku), dokumentacja InputGroup zaktualizowana.
+- Po B31: lint, typecheck, test:coverage, build-storybook, test:storybook – wyniki w logu przebiegu.

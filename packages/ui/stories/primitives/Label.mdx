@@ -28,7 +28,7 @@ In forms prefer `FieldLabel` (it is this `Label` plus the *(optional)* marker an
 | Instead of a label… | Use | Why |
 |---|---|---|
 | A field in a form | `Field` + `FieldLabel` | hint, error and optional marker in one structure |
-| A title for a group of radios or checkboxes | `FieldSet` + legend (batch 2) | a label names one control |
+| A title for a group of radios or checkboxes | `FieldSet` + `FieldLegend` | a label names one control |
 | Explaining format or limits | `FieldDescription` | the label stays short |
 | A placeholder as the only name | never | it disappears on typing (prompt stage 3) |
 
@@ -38,7 +38,7 @@ In forms prefer `FieldLabel` (it is this `Label` plus the *(optional)* marker an
 |---|---|---|
 | `<label>` | no | `type-label` (14 px / 500, P2), `gap-in-group` to an inline control |
 | Text | no | |
-| Inline control (checkbox, switch) | yes | batch 2 |
+| Inline control (checkbox, switch) | yes | use `Field orientation="horizontal"` |
 
 ## 5. Variants
 
@@ -73,7 +73,7 @@ None (rule 6).
 | Width | Behaviour |
 |---|---|
 | 320 px | Above the control, wraps as needed. |
-| 768 px and 1440 px | Above the control (one column forms); side-by-side labels only with `Field` horizontal (batch 2). |
+| 768 px and 1440 px | Above the control (one column forms); side-by-side only for checkbox, radio and switch (`Field orientation="horizontal"`). |
 
 <Canvas of={LabelStories.LongLabelNarrow} />
 

@@ -1,15 +1,39 @@
 "use client"
 
 import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
 import { CircleAlertIcon } from "lucide-react"
 import { cn } from "@devmentor/ui/lib/utils"
 
 import { Label } from "@devmentor/ui/components/ui/label"
 
-// Adapted from shadcn base-nova (POSTEP.md, stage 2, batch 1). Kept only the parts batch 1 documents:
-// Field, FieldGroup, FieldLabel, FieldDescription, FieldError (rule 6). FieldSet, FieldLegend,
-// FieldContent and the horizontal orientation return with checkbox, radio and switch (batch 2).
-// Spacing: 8 px inside a field, 16 px between fields (T8).
+// Adapted from shadcn base-nova (POSTEP.md, stage 2). Batch 1: Field, FieldGroup, FieldLabel,
+// FieldDescription, FieldError. Batch 2 restored FieldSet, FieldLegend, FieldContent and the horizontal
+// orientation for checkbox, radio and switch. Not taken (rule 6): FieldTitle, FieldSeparator, the
+// "responsive" orientation and the choice-card label (B28, B33).
+// Spacing: 8 px inside a field or option group, 16 px between fields (T8).
+
+/** A group of options or fields with one question: <fieldset> + FieldLegend. */
+function FieldSet({ className, ...props }: React.ComponentProps<"fieldset">) {
+  return (
+    <fieldset
+      data-slot="field-set"
+      className={cn("flex min-w-0 flex-col gap-in-group", className)}
+      {...props}
+    />
+  )
+}
+
+/** The question of a FieldSet, in the label role (B32, P2). */
+function FieldLegend({ className, ...props }: React.ComponentProps<"legend">) {
+  return (
+    <legend
+      data-slot="field-legend"
+      className={cn("mb-in-group type-label", className)}
+      {...props}
+    />
+  )
+}
 
 function FieldGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -21,18 +45,43 @@ function FieldGroup({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+const fieldVariants = cva(
+  "group/field flex w-full gap-in-group data-[invalid=true]:text-destructive",
+  {
+    variants: {
+      orientation: {
+        vertical: "flex-col *:w-full [&>.sr-only]:w-auto",
+        // Checkbox, radio, switch beside their label; the control aligns with the first text line.
+        horizontal:
+          "flex-row items-center has-[>[data-slot=field-content]]:items-start *:data-[slot=field-label]:flex-auto has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio],[role=switch]]:mt-0.5",
+      },
+    },
+    defaultVariants: { orientation: "vertical" },
+  }
+)
+
 function Field({
   className,
+  orientation = "vertical",
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div"> & VariantProps<typeof fieldVariants>) {
   return (
     <div
       role="group"
       data-slot="field"
-      className={cn(
-        "group/field flex w-full flex-col gap-in-group *:w-full data-[invalid=true]:text-destructive [&>.sr-only]:w-auto",
-        className
-      )}
+      data-orientation={orientation}
+      className={cn(fieldVariants({ orientation }), className)}
+      {...props}
+    />
+  )
+}
+
+/** Label and hint stacked beside a checkbox, radio or switch – title + one line, like a list row (B32). */
+function FieldContent({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="field-content"
+      className={cn("group/field-content flex flex-1 flex-col", className)}
       {...props}
     />
   )
@@ -115,4 +164,13 @@ function FieldError({
   )
 }
 
-export { Field, FieldDescription, FieldError, FieldGroup, FieldLabel }
+export {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+}

@@ -2,7 +2,9 @@ import { useId, useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
 
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "../../src/components/ui/field";
+import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "../../src/components/ui/field";
+import { Checkbox } from "../../src/components/ui/checkbox";
+import { Switch } from "../../src/components/ui/switch";
 import { Input } from "../../src/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "../../src/components/ui/native-select";
 import { Textarea } from "../../src/components/ui/textarea";
@@ -59,6 +61,36 @@ export const Anatomy: Story = {
       <HeadlineField label="Headline" hint="Up to 120 characters. Name the work, not the years." error="" optional={false} invalid={false} disabled={false} />
       <HeadlineField label="Second public work link" hint="A repository, talk or article you made." error="" optional invalid={false} disabled={false} />
       <HeadlineField label="Price for 25 minutes (PLN)" hint="" error="Enter a price between PLN 10 and PLN 10,000." optional={false} invalid disabled={false} />
+    </FieldGroup>
+  ),
+};
+
+/** Vertical for text fields; horizontal for checkbox, radio and switch, with FieldSet for a group. */
+export const Orientations: Story = {
+  render: () => (
+    <FieldGroup className="max-w-md">
+      <Field>
+        <FieldLabel htmlFor="orient-headline">Headline</FieldLabel>
+        <Input id="orient-headline" />
+      </Field>
+      <FieldSet>
+        <FieldLegend>Stack tags</FieldLegend>
+        <Field orientation="horizontal">
+          <Checkbox id="orient-ts" />
+          <FieldLabel htmlFor="orient-ts">TypeScript</FieldLabel>
+        </Field>
+        <Field orientation="horizontal">
+          <Checkbox id="orient-py" />
+          <FieldLabel htmlFor="orient-py">Python</FieldLabel>
+        </Field>
+      </FieldSet>
+      <Field orientation="horizontal">
+        <FieldContent>
+          <FieldLabel htmlFor="orient-listed">Show me on the public list</FieldLabel>
+          <FieldDescription id="orient-listed-hint">Your share link works either way.</FieldDescription>
+        </FieldContent>
+        <Switch id="orient-listed" aria-describedby="orient-listed-hint" />
+      </Field>
     </FieldGroup>
   ),
 };
