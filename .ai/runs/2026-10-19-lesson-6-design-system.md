@@ -155,3 +155,25 @@ Verified: lint OK, typecheck OK, test:coverage OK (170, 100%, including the 50 p
 This closes the minimal primitive set from stage 0/2.
 
 Handoff: owner decisions on B60–B62, then stage 3 (product components, patterns, screens for epics E01/E02) — see "Następny krok" in POSTEP.md.
+
+## Stage 3 — plan (2026-10-19)
+
+Goal: plan product components, patterns, screens and batches for E01/E02 without code. Wrote "Etap 3 – plan" in `packages/ui/POSTEP.md` (26 product components with props from spec DTOs and data states, 7 generic blocks, 11 patterns, 14 screens with state maps, 6 batches, MSW plan, known-debt placement, proposals C1–C17, questions Q1–Q5). Owner decisions: Q1 yes (msw 3.0.3 + addon 3.0.3), Q2 count in a sentence allowed, Q3 accent on Accept of the nearest deadline on /mentor/bookings and none on /m/[slug], Q4 keep the E01 /m/[slug] variant, Q5 plain text (monospace code blocks → What is missing), C1–C17 accepted.
+
+## Stage 3, batch 1 (2026-10-19)
+
+Goal: MSW install + wiring, `lib/format`, `lib/time`, CrudForm on Field, DataTable/Pagination and feedback blocks on tokens, ErrorMessage without raw `error.message`, the Form pattern.
+
+Decisions: proposals C18–C28 in POSTEP.md (error descriptions for technical codes, explicit `optional`, blur validation for changed fields, autocomplete defaults, pagination as metadata, "Primitives/Panel blocks" menu group, `errorTitle`, EmptyState/LoadingMessage spacing tokens, spinner in the submit button, focusable form-level error, docs pages link to play-driven stories instead of showing initial states).
+
+Install deviation: npm 10.9.2 crashes (`edgesOut` in arborist `#loadPeerSet`) on the approved command, on each package alone and on the 3.0.2 fallback. A `--legacy-peer-deps` attempt dropped vite/typescript/rolldown from the lockfile and was fully reverted from a pre-install copy (no git stash; `cmp` confirmed the restore). Final route: the same install with `npx npm@11 --package-lock-only` on a scratch copy of the manifests and lockfile, diff reviewed (33 new msw-tree entries, no version changes, nothing removed), copied in, `npm install` with npm 10. Result: +2 lines in ui package.json, lockfile +453/−0. `npm audit` unchanged (10 pre-existing high). msw 3 / addon 3 APIs differ from the plan (`mswLoader` from `msw-storybook-addon/csf3`; `onUnhandledFrame` instead of `onUnhandledRequest`) – preview uses its own setup.
+
+Verified: lint OK, typecheck OK, test:coverage OK (213, 100%), build OK, build-storybook OK (7 new docs pages checked in Chromium: 13 sections on block pages, tables render, no page errors; MSW answers in the built Storybook), test:storybook OK (382/382, both themes, +39 stories, +16 interaction tests), lint:tokens OK (0, 133 files), test:integration OK (11/11). Live app on a temporary `next dev -p 3102` (stopped, build dir removed): CrudForm/DataTable/Pagination render and behave as designed at 1440 and 320 px; test users created in the local dev DB.
+
+Finding outside the design system: on that dev server a duplicate email in `POST /api/users` returns 500 (`ConflictError` logged as unhandled), reproducible with curl; the integration suite's fresh server returns 409 for the same case. Suspected duplicate `AppError` class across Turbopack chunks (related to #16) – not investigated further, not changed; listed for a separate issue.
+
+Bug fixed on the way: `{things}` in MDX prose broke the LoadingMessage docs page (caught by the built-page check).
+
+Nothing committed. No `git stash`.
+
+Handoff: owner decisions on C18–C28, then batch 2 (E01 shell, auth, admin) per POSTEP.md 3.4.

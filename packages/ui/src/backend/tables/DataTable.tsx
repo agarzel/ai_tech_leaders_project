@@ -1,11 +1,12 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Button } from "@devmentor/ui/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@devmentor/ui/components/ui/table";
+import type { ApiError } from "../api/types";
 import { EmptyState } from "../feedback/EmptyState";
 import { ErrorMessage } from "../feedback/ErrorMessage";
 import { LoadingMessage } from "../feedback/LoadingMessage";
+import { Pagination } from "./Pagination";
 
 export type DataTableColumn<T> = {
   key: string;
@@ -27,7 +28,8 @@ type DataTableProps<T> = {
   rows: T[] | undefined;
   getRowId: (row: T) => string;
   isLoading?: boolean;
-  error?: string | null;
+  /** A message written for people, or the API error (technical codes are explained – C18). */
+  error?: string | ApiError | null;
   onRetry?: () => void;
   emptyTitle?: string;
   emptyDescription?: string;
@@ -48,12 +50,18 @@ export function DataTable<T>({
   pagination,
   rowActions,
 }: DataTableProps<T>) {
-  if (error) return <ErrorMessage message={error} onRetry={onRetry} />;
+  if (error) {
+    return typeof error === "string" ? (
+      <ErrorMessage message={error} onRetry={onRetry} />
+    ) : (
+      <ErrorMessage title="Could not load the list" error={error} onRetry={onRetry} />
+    );
+  }
   if (isLoading && !rows) return <LoadingMessage />;
   if (!rows || rows.length === 0) return <EmptyState title={emptyTitle} description={emptyDescription} />;
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-in-group">
       <div className="rounded-lg border" aria-busy={isLoading}>
         <Table>
           <TableHeader>
@@ -81,36 +89,6 @@ export function DataTable<T>({
         </Table>
       </div>
       {pagination && <Pagination {...pagination} isLoading={isLoading} />}
-    </div>
-  );
-}
-
-function Pagination({ page, pageSize, total, onPageChange, isLoading }: DataTablePagination & { isLoading: boolean }) {
-  const pageCount = Math.max(1, Math.ceil(total / pageSize));
-  const first = (page - 1) * pageSize + 1;
-  const last = Math.min(page * pageSize, total);
-
-  return (
-    <div className="text-muted-foreground flex items-center justify-between gap-4 text-sm">
-      <span>
-        {first}–{last} of {total}
-      </span>
-      <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" disabled={isLoading || page <= 1} onClick={() => onPageChange(page - 1)}>
-          Previous
-        </Button>
-        <span>
-          Page {page} of {pageCount}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={isLoading || page >= pageCount}
-          onClick={() => onPageChange(page + 1)}
-        >
-          Next
-        </Button>
-      </div>
     </div>
   );
 }

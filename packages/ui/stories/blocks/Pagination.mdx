@@ -1,0 +1,90 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as PaginationStories from "./Pagination.stories";
+
+<Meta of={PaginationStories} />
+
+# Pagination
+
+`import { Pagination } from "@devmentor/ui/backend/tables/Pagination"`
+
+Panel block, extracted from `DataTable` so product lists use the same paging (C9).
+
+## 1. Purpose
+
+Lets a person move through a long list one page at a time and see where they are.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Under `DataTable` (admin users, invitations) | `DataTable` source |
+| Under long product lists that the API pages (`Page<T>`: `/api/mentors`, `/api/bookings`, `/api/mentor/bookings`) | spec E01 and E02, API Contracts |
+
+## 3. When not to use
+
+| Instead of `Pagination`… | Use | Why |
+|---|---|---|
+| A list that fits on one page (a mentor's slots – at most 60 days) | nothing | rule 6 |
+| An endless feed | nothing – DevMentor has none | A04 (no community feed) |
+
+## 4. Anatomy
+
+`nav` landmark with: range (*11–20 of 34*), *Previous* button, page count (*Page 2 of 4*), *Next* button.
+
+## 5. Variants
+
+None.
+
+## 6. States
+
+<Canvas of={PaginationStories.States} />
+
+First page (*Previous* disabled), middle, last page (*Next* disabled), loading (both disabled, so a slow page is not requested twice). The disabled reason is visible: the range shows the first or last page. Hover, focus and pressed: see `Button`.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| A `nav` landmark named by `label` (default *Pagination*); name it after the list when a screen has two. | WAI-ARIA landmarks, WCAG 2.4.1 |
+| Native buttons: Tab, Enter and Space; targets ≥ 28 px (40 px on touch). | B2, P4, WCAG 2.5.8 |
+
+<Canvas of={PaginationStories.NextPage} />
+
+## 8. Content
+
+Range and page count are metadata (`type-meta`, `tabular-nums`, P2), printed as plain integers. Button labels stay *Previous* / *Next*; in a longer language they may wrap to two lines.
+
+## 9. Responsive
+
+At 320 px the range and the buttons wrap onto two lines; nothing scrolls sideways.
+
+<Canvas of={PaginationStories.Narrow} />
+
+## 10. API
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `page` | `number` | – | 1-based |
+| `pageSize` | `number` | – | rows per page |
+| `total` | `number` | – | all rows |
+| `onPageChange` | `(page) => void` | – | requested page |
+| `isLoading` | `boolean` | `false` | disables both buttons |
+| `label` | `string` | `"Pagination"` | landmark name |
+
+<Controls of={PaginationStories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<Pagination page={page} pageSize={20} total={data.total} onPageChange={setPage} label="Booking pages" />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| Disable both buttons while the next page loads. | Let a second click request the same page twice. |
+| Name the landmark after the list when there are two lists. | Two landmarks both called *Pagination*. |
+
+## 13. Related
+
+- **Confused with:** `Tabs` (switch between views, not pages of one list).
+- **Used in:** `DataTable`; product lists from batch 4 (`/mentors`) and batch 6 (`/bookings`, `/mentor/bookings`).

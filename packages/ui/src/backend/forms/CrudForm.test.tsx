@@ -120,9 +120,13 @@ describe("CrudForm", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-    expect(screen.getByRole("alert")).toHaveTextContent("Could not save");
-    expect(screen.getByRole("alert")).toHaveTextContent("Already exists");
+    const [formAlert] = screen.getAllByRole("alert");
+    expect(formAlert).toHaveTextContent("Could not save");
+    expect(formAlert).toHaveTextContent("Already exists");
     expect(screen.getByText("Email taken")).toBeInTheDocument();
+    // Focus moves to the first field the server rejected; the typed values stay.
+    expect(screen.getByLabelText("Email")).toHaveFocus();
+    expect(screen.getByLabelText("Name")).toHaveValue("Ada");
   });
 
   it("shows a server error without field errors", async () => {
@@ -134,9 +138,76 @@ describe("CrudForm", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-    expect(screen.getByRole("alert")).toHaveTextContent("Offline");
+    // A technical error is explained (C18), and focus moves to it because no field is at fault.
+    expect(screen.getByRole("alert")).toHaveTextContent("No connection");
+    expect(screen.getByRole("alert")).not.toHaveTextContent("Offline");
+    expect(screen.getByRole("alert").parentElement).toHaveFocus();
     expect(screen.getByLabelText("Email")).not.toHaveAttribute("aria-invalid");
     expect(onSuccess).not.toHaveBeenCalled();
+  });
+
+  it("shows a domain error's own message under the given error title", async () => {
+    const onSubmit = vi.fn(
+      async (): Promise<ApiResult<unknown>> => ({ ok: false, status: 409, error: { code: "conflict", message: "Already invited" } }),
+    );
+    setup({ onSubmit, errorTitle: "Could not send the invitation" });
+    await fillValid();
+
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Could not send the invitation");
+    expect(screen.getByRole("alert")).toHaveTextContent("Already invited");
+  });
+
+  it("moves focus to the first invalid field after a failed submit", async () => {
+    setup();
+    await userEvent.type(screen.getByLabelText("Name"), "Ada");
+
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(screen.getByLabelText("Email")).toHaveFocus();
+  });
+
+  it("validates a changed field when it is left, not an untouched one", async () => {
+    setup();
+    await userEvent.click(screen.getByLabelText("Name"));
+    await userEvent.tab();
+    expect(screen.queryByText("Name is required")).not.toBeInTheDocument();
+
+    await userEvent.type(screen.getByLabelText("Email"), "ada@");
+    await userEvent.tab();
+
+    expect(screen.getByText("Enter a valid email")).toBeInTheDocument();
+    expect(screen.queryByText("Name is required")).not.toBeInTheDocument();
+  });
+
+  it("clears a field's error as soon as it is fixed, keeping other errors", async () => {
+    setup();
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(screen.getByText("Enter a valid email")).toBeInTheDocument();
+
+    await userEvent.type(screen.getByLabelText("Email"), "ada@example.com");
+
+    expect(screen.queryByText("Enter a valid email")).not.toBeInTheDocument();
+    expect(screen.getByText("Name is required")).toBeInTheDocument();
+  });
+
+  it("leaves a valid changed field without an error when it is left", async () => {
+    setup();
+    await userEvent.type(screen.getByLabelText("Name"), "Ada");
+    await userEvent.tab();
+
+    expect(screen.getByLabelText("Name")).not.toHaveAttribute("aria-invalid");
+  });
+
+  it("marks the submit button busy while saving", async () => {
+    const onSubmit = vi.fn(() => new Promise<ApiResult<unknown>>(() => undefined));
+    setup({ onSubmit });
+    await fillValid();
+
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(screen.getByRole("button", { name: "Saving…" })).toHaveAttribute("aria-busy", "true");
   });
 
   it("disables the form while submitting and ignores repeated submits", async () => {
@@ -195,5 +266,48 @@ describe("CrudForm", () => {
     const select = screen.getByLabelText<HTMLSelectElement>("Kind");
     expect(select.options).toHaveLength(0);
     expect(select.value).toBe("");
+  });
+
+  it("links a description to its field and marks optional fields", () => {
+    setup({
+      fields: [
+        { name: "name", label: "Name", description: "As it appears on your public profile." },
+        { name: "email", label: "Email", optional: true },
+        { name: "role", label: "Role" },
+      ],
+    });
+
+    expect(screen.getByLabelText("Name")).toHaveAccessibleDescription("As it appears on your public profile.");
+    expect(screen.getByText("(optional)")).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Email/)).not.toHaveAttribute("aria-describedby");
+  });
+
+  it("renders password fields declared with meta, with autocomplete", () => {
+    const authSchema = z.object({
+      password: z.string().min(12).meta({ input: "password" }),
+      newPassword: z.string().optional().meta({ input: "password" }),
+      repeat: z.string().meta({ input: "password" }).optional(),
+      hint: z.string().meta({ input: "text" }),
+    });
+    render(
+      <CrudForm
+        schema={authSchema}
+        fields={[
+          { name: "password", label: "Password" },
+          { name: "newPassword", label: "New password", autoComplete: "new-password" },
+          { name: "repeat", label: "Repeat password" },
+          { name: "hint", label: "Hint" },
+        ]}
+        onSubmit={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText("Password")).toHaveAttribute("type", "password");
+    expect(screen.getByLabelText("Password")).toHaveAttribute("autocomplete", "current-password");
+    expect(screen.getByLabelText("New password")).toHaveAttribute("type", "password");
+    expect(screen.getByLabelText("New password")).toHaveAttribute("autocomplete", "new-password");
+    expect(screen.getByLabelText("Repeat password")).toHaveAttribute("type", "password");
+    expect(screen.getByLabelText("Hint")).toHaveAttribute("type", "text");
+    expect(screen.getByLabelText("Hint")).not.toHaveAttribute("autocomplete");
   });
 });

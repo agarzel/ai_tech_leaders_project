@@ -1,0 +1,138 @@
+import { Canvas, Controls, Meta, Source, Unstyled } from "@storybook/addon-docs/blocks";
+import * as CrudFormStories from "./CrudForm.stories";
+import { Field, FieldLabel } from "../../src/components/ui/field";
+import { Input } from "../../src/components/ui/input";
+import { DoDont } from "../../.storybook/blocks/Docs";
+
+<Meta of={CrudFormStories} />
+
+# CrudForm
+
+`import { CrudForm, type CrudFormField } from "@devmentor/ui/backend/forms/CrudForm"`
+
+Panel block (not a shadcn primitive): composed of `Field`, `Input`, `NativeSelect`, `Button`, `Spinner` and `ErrorMessage`. It implements the [Form pattern](?path=/docs/patterns-form--docs).
+
+## 1. Purpose
+
+Lets a person create or edit one record – an account, an invitation, a user – with the same validation the server uses, and tells them exactly what to fix.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Sign-up and log-in forms (`/register`, `/login`, `/register/mentor`) | spec E01, UI/UX ("Forms use `CrudForm`") |
+| Admin forms: users, mentor invitations | spec E01; `AGENTS.md` (reference example `admin/users`) |
+| Any form whose fields are text, email, number, password or one choice from a list | `AGENTS.md` |
+
+## 3. When not to use
+
+| Instead of `CrudForm`… | Use | Why |
+|---|---|---|
+| Fields it cannot infer: multi-select tags, a list of links, a price with currency, a switch | a bespoke form from `Field` parts (`MentorProfileForm`, batch 3) | C7, `AGENTS.md` ("bespoke only when the UX does not fit – say why") |
+| A single action without input (*Accept*, *Delete slot*) | `Button` (+ `AlertDialog` to confirm) | nothing to validate |
+| A long text with a counter (the booking question) | `QuestionField` in `BookingForm` (batch 5) | live counter, not a schema-inferred input |
+
+## 4. Anatomy
+
+1. Form-level error (`ErrorMessage`, optional – only after the server rejects the form).
+2. Fields (`FieldGroup` of `Field`): label (always), control, hint (optional), error (when invalid).
+3. Actions: submit button (label = verb + object), *Cancel* (optional, only with `onCancel`).
+
+## 5. Variants
+
+None. The inputs come from the schema: `z.enum` → select, `z.email()` → email, `z.number()` → number, `z.string().meta({ input: "password" })` → password, otherwise text.
+
+<Canvas of={CrudFormStories.FieldKinds} />
+
+## 6. States
+
+<Canvas of={CrudFormStories.States} />
+
+On this page the three forms wait for input; the [States story](?path=/story/primitives-panel-blocks-crudform--states) submits them, so the second shows *Saving…* and the third the server's field error. Every state with a real API response is in the [Form pattern](?path=/docs/patterns-form--docs).
+
+| State | What the person sees | Source |
+|---|---|---|
+| Default | labels, empty or initial values | – |
+| Field error | red outline, error text with an icon under the field, label in red, `aria-invalid` | B10, B13, WCAG 1.4.1 |
+| Submitting | fields and buttons disabled, button *Saving…* with a spinner, `aria-busy` | B18 |
+| Form error | `Alert` above the fields; technical errors explained (C18) | answer 2.4 |
+| Disabled | only while submitting – the reason (*Saving…*) is visible on the button | B17 |
+
+Hover, focus and pressed come from `Input`, `NativeSelect` and `Button` – see their pages.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Labels are `<label for>`; hints and errors are linked with `aria-describedby`. | WCAG 1.3.1, 3.3.2 |
+| A changed field is checked on blur; a field with an error is re-checked as the person types. | prompt stage 3; C20 (**proposal**) |
+| After a failed submit, focus moves to the first invalid field, or to the form-level error. | prompt stage 3; WCAG 3.3.1 |
+| Each field error is announced (`role="alert"` from `FieldError`). | WAI-ARIA alert role |
+| Cmd/Ctrl+Enter submits from any field; Escape cancels when `onCancel` is set. | `CrudForm` source |
+| One submit at a time; success only after the server confirms. | prompt stage 3 |
+
+<Canvas of={CrudFormStories.Keyboard} />
+
+## 8. Content
+
+- Labels: a noun, sentence case, no colon (*Mentor's email*). Optional fields: "(optional)" (answer 2.5).
+- Hints: the format, limit or consequence (*12 to 128 characters.*, *The invitation link is valid for 14 days.*).
+- Placeholder: an example value only, or none. Never a name, never real-looking personal data (audit: "Ada Lovelace").
+- Submit: verb + object (*Send invitation*, *Create account*); `errorTitle` names the failed action (*Could not create the account*).
+- Errors: what happened and what to do (*Enter an email address, like ola@example.com.*). Longer languages: labels and hints wrap, never truncate.
+
+## 9. Responsive
+
+One column at every width; controls fill the column. At 320 px long labels and hints wrap; buttons wrap to a new line when they do not fit.
+
+<Canvas of={CrudFormStories.LongContentNarrow} />
+
+## 10. API
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `schema` | `z.ZodObject` | – | The schema the API route validates with (from `@devmentor/core` in the app). |
+| `fields` | `CrudFormField[]` | – | `{ name, label, placeholder?, description?, optional?, autoComplete? }`, in display order. |
+| `initialValues` | `Partial<z.infer<S>>` | – | Values for editing; `null` is treated as empty. |
+| `submitLabel` | `string` | `"Save"` | Verb + object. |
+| `errorTitle` | `string` | `"Could not save"` | Title of the form-level error. (C24, **proposal**) |
+| `onSubmit` | `(values) => Promise<ApiResult>` | – | Usually `apiCall(...)`; `fieldErrors` in the result go next to the fields. |
+| `onSuccess` | `() => void` | – | Called only after `ok: true`. |
+| `onCancel` | `() => void` | – | Shows *Cancel* and enables Escape. |
+
+<Controls of={CrudFormStories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<CrudForm schema={invitationSchema} fields={[{ name: "email", label: "Mentor's email" }]} onSubmit={send} />`} />
+
+<Source
+  dark
+  code={`<CrudForm
+  schema={invitationCreateSchema}
+  fields={[{ name: "email", label: "Mentor's email", autoComplete: "off", description: "The invitation link is valid for 14 days." }]}
+  submitLabel="Send invitation"
+  errorTitle="Could not create the invitation"
+  onSubmit={(values) => apiCall("/api/admin/invitations", { method: "POST", body: values })}
+  onSuccess={showLinkOnce}
+  onCancel={close}
+/>`}
+/>
+
+<Canvas of={CrudFormStories.Playground} />
+
+## 12. Do and don't
+
+<Unstyled>
+  <DoDont
+    doExample={<Field><FieldLabel htmlFor="dd-email">Mentor's email</FieldLabel><Input id="dd-email" placeholder="marek@example.com" /></Field>}
+    doText="The label names the field; the placeholder only shows the format."
+    dontExample={<Input aria-label="Mentor's email" placeholder="Mentor's email" />}
+    dontText="A placeholder as the label disappears while typing (WCAG 3.3.2)."
+  />
+</Unstyled>
+
+## 13. Related
+
+- **Confused with:** a bespoke form from `Field` parts (when fields do not fit), `Dialog` (a container – it can hold a `CrudForm`).
+- **Used in:** the [Form pattern](?path=/docs/patterns-form--docs), `/admin/users`, `/admin/invitations`, `/register`, `/login`.

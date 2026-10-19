@@ -3,6 +3,8 @@ import "@fontsource-variable/geist-mono";
 import "./storybook.css";
 
 import type { Preview } from "@storybook/react-vite";
+import { mswLoader } from "msw-storybook-addon/csf3";
+import { setupWorker } from "msw/browser";
 import { addons } from "storybook/preview-api";
 
 import { applyTheme, initialTheme, type ThemeName } from "./theme";
@@ -14,7 +16,27 @@ addons.getChannel().on("globalsUpdated", ({ globals }: { globals: { theme?: Them
   if (globals.theme) applyTheme(globals.theme);
 });
 
+/**
+ * Mock Service Worker simulates the DevMentor API in stories (S3, Q1, C15): stories declare responses in
+ * `parameters.msw.handlers` (helpers in stories/mocks/api.ts) and components call the real `apiCall`.
+ * Only /api/* requests are checked: one without a handler is reported as an error, everything else
+ * (Vite modules, fonts, Storybook internals) passes through untouched.
+ */
+async function startMockApi() {
+  const worker = setupWorker();
+  await worker.start({
+    quiet: true,
+    // msw 3: unhandled requests are "frames"; only HTTP frames to /api/* are reported.
+    onUnhandledFrame({ frame, defaults }) {
+      const data = frame.data as { request?: Request };
+      if (frame.protocol === "http" && data.request && new URL(data.request.url).pathname.startsWith("/api/")) defaults.error();
+    },
+  });
+  return worker;
+}
+
 const preview: Preview = {
+  loaders: [mswLoader(startMockApi)],
   globalTypes: {
     theme: {
       description: "Colour theme",

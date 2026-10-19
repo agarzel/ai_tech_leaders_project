@@ -1,0 +1,128 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as DataTableStories from "./DataTable.stories";
+
+<Meta of={DataTableStories} />
+
+# DataTable
+
+`import { DataTable, type DataTableColumn } from "@devmentor/ui/backend/tables/DataTable"`
+
+Panel block: `Table` + `Pagination` + the feedback blocks (`LoadingMessage`, `ErrorMessage`, `EmptyState`).
+
+## 1. Purpose
+
+Lets an admin scan and act on many records of the same kind – users, invitations – column by column.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Admin lists: users (`/admin/users`), mentor invitations (`/admin/invitations`) | spec E01; S21 |
+| Records compared by several attributes at once (email, role, status, created) | R01.1 (dense, scannable) |
+
+## 3. When not to use
+
+| Instead of `DataTable`… | Use | Why |
+|---|---|---|
+| Product lists: bookings, slots, mentors | the dense list (`ItemGroup` + `Item`: title + one line of metadata) | S21, R01.1, R01.3 |
+| Two or three facts about one record | a detail view (`Card`) | no comparison across rows |
+
+## 4. Anatomy
+
+1. Frame (`rounded-lg border`, 1 px – R01.3) with the table: header row, body rows, optional *Actions* column.
+2. Pagination under the table (optional).
+3. Instead of the table: loading, error or empty state.
+
+## 5. Variants
+
+None. Optional parts: row actions (`rowActions`), paging (`pagination`), custom cells (`column.cell`).
+
+## 6. States
+
+| State | Story | Source |
+|---|---|---|
+| Loading (first load) | `Loading` | prompt stage 3 (data states) |
+| Reloading (rows stay, `aria-busy`) | `Reloading` | `DataTable` source |
+| Empty – why and what next | `Empty` | prompt stage 4 (Content: empty states) |
+| Error with *Try again* | `LoadError` | answer 2.4; C18 |
+| Many rows, paged | `ManyRowsWithPaging` | prompt stage 3 |
+| Long content | `LongContentNarrow` | prompt stage 2 |
+
+<Canvas of={DataTableStories.Empty} />
+
+<Canvas of={DataTableStories.LoadError} />
+
+Row hover is `bg-muted` (B62); focus is on the controls inside rows. Rows themselves are not clickable – use explicit row actions.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| A real `<table>` with `<th>` headers, so screen readers announce the column for each cell. | WCAG 1.3.1 |
+| Row actions repeat in every row, so each needs a unique accessible name (`aria-label="Edit {name}"`). | `AGENTS.md` (integration tests), WCAG 2.4.6 |
+| The table keeps its rows while reloading and marks itself `aria-busy`. | WAI-ARIA `aria-busy` |
+| Paging is a `nav` landmark; *Previous*/*Next* are disabled at the ends and while loading. | WAI-ARIA landmarks |
+| A delete in a row asks for confirmation that names the record (*Delete Marek Zieliński?*). | prompt stage 3 (delete confirmation) |
+
+<Canvas of={DataTableStories.ManyRowsWithPaging} />
+
+## 8. Content
+
+Headers: one or two words, sentence case. Cells: values, not sentences; dates as *Wed 4 Nov, 18:00* (C5); roles and statuses as `Badge variant="secondary"` (T10). Empty state: why it is empty and the next step. Long values do not wrap – the table scrolls inside its frame.
+
+## 9. Responsive
+
+1440 and 768 px: the full table. 320 px: the table scrolls sideways inside its frame (WCAG 1.4.10 exempts data tables); the page itself does not scroll sideways.
+
+<Canvas of={DataTableStories.LongContentNarrow} />
+
+## 10. API
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `columns` | `DataTableColumn<T>[]` | – | `{ key, header, cell?, className? }` |
+| `rows` | `T[] \| undefined` | – | `undefined` while the first page loads |
+| `getRowId` | `(row) => string` | – | stable React key |
+| `isLoading` | `boolean` | `false` | first load (no rows) or reload (rows kept) |
+| `error` | `string \| ApiError \| null` | – | an `ApiError` is explained by `describeApiError` (C18) |
+| `onRetry` | `() => void` | – | shows *Try again* |
+| `emptyTitle`, `emptyDescription` | `string` | `"Nothing here yet"` | the empty state |
+| `pagination` | `{ page, pageSize, total, onPageChange }` | – | shows `Pagination` |
+| `rowActions` | `(row) => ReactNode` | – | adds the *Actions* column |
+
+<Controls of={DataTableStories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<DataTable columns={columns} rows={data?.items} getRowId={(user) => user.id} isLoading={isLoading} />`} />
+
+<Source
+  dark
+  code={`<DataTable
+  columns={columns}
+  rows={data?.items}
+  getRowId={(user) => user.id}
+  isLoading={isLoading}
+  error={result.ok ? null : result.error}
+  onRetry={load}
+  emptyTitle="No users yet"
+  emptyDescription="Users appear here when they register or when you create one."
+  pagination={data && { page: data.page, pageSize: data.pageSize, total: data.total, onPageChange: setPage }}
+  rowActions={(user) => <Button size="sm" variant="outline" aria-label={\`Edit \${user.name}\`}>Edit</Button>}
+/>`}
+/>
+
+<Canvas of={DataTableStories.Playground} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| `aria-label="Delete Marek Zieliński"` on a row button – the name says which row it acts on. | Ten buttons all named *Delete* – a screen reader cannot tell them apart. |
+| Pass the `ApiError` (`error={result.error}`) – technical failures are explained. | Pass `result.error.message` for a network failure – the person reads "Unexpected response from the server (502)". |
+| Use the dense `Item` list for bookings and slots (S21). | A table with one column of booking titles. |
+
+## 13. Related
+
+- **Confused with:** the dense list (`Item`) for product lists; `Table` (the primitive without states).
+- **Used in:** `/admin/users`, `/admin/invitations` (batch 2); composes `Pagination`, `EmptyState`, `ErrorMessage`, `LoadingMessage`.

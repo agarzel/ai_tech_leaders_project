@@ -1,0 +1,94 @@
+import { Canvas, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as FormStories from "./Form.stories";
+
+<Meta of={FormStories} />
+
+# Form
+
+A form collects what one action needs – an account, a profile, a booking question – and tells the person exactly what to fix when something is wrong. In DevMentor every create/edit form is `CrudForm` unless its fields do not fit (then a bespoke form built from the same `Field` parts – C7, `AGENTS.md`).
+
+Example on this page: mentee registration (`/register`, spec E01 – *Accounts and sessions*). The request goes through the real `apiCall`; Mock Service Worker answers it in Storybook (S3, C15).
+
+<Canvas of={FormStories.Default} />
+
+## Rules
+
+| Rule | Source |
+|---|---|
+| Every field has a visible label above it. A placeholder is only an example of the format, never the field's name. | WCAG 3.3.2; prompt stage 3 |
+| Required fields carry no marker; optional ones say "(optional)" in the label. | answer 2.5, B11 |
+| Hints (format, limit, consequence) sit under the field and are linked with `aria-describedby`. | WCAG 1.3.1, 3.3.2; answer 2.4 |
+| A field the person changed is checked when they leave it. Untouched fields stay quiet until submit. | prompt stage 3; C20 (**proposal**) |
+| A field showing an error is re-checked as the person types, so the message disappears as soon as it is fixed. | C20 (**proposal**) |
+| Submit checks every field. After a failed submit, focus moves to the first field with an error – or to the form-level error when no field is at fault. | prompt stage 3; WCAG 3.3.1 |
+| Errors say what happened and what to do, with an icon, never by colour alone. | answer 2.4, B10; WCAG 1.4.1, 3.3.3 |
+| Typed values stay after any error. | prompt stage 3 |
+| One request at a time: while waiting, the button says *Saving…*, is disabled and `aria-busy`; repeated submits are ignored. | prompt stage 3; B18 |
+| Success appears only after the server confirms – never optimistically. | prompt stage 3 |
+| Technical failures (network, invalid response, `internal_error`) are explained in plain words; domain errors keep the server's message, written for people. | audit (raw `error.message`); C18 (**proposal**) |
+| A failed submit is a blocking error in the form (`Alert`), never a toast. | S10; prompt stage 4 |
+
+## States
+
+Every state is its own story. API responses are simulated with Mock Service Worker (`parameters.msw.handlers`, helpers in `stories/mocks/api.ts`).
+
+| State | Story | Response |
+|---|---|---|
+| Empty form | `Default` | – |
+| Error after leaving a changed field | `ValidationOnBlur` | – |
+| Errors after submit, focus on the first | `ValidationOnSubmit` | – |
+| Waiting for the server, double submit blocked | `Submitting` | never completes |
+| Server rejects a field | `FieldErrorFromServer` | 409 `conflict` with `fieldErrors` |
+| Too many attempts | `RateLimited` | 429 `rate_limited` |
+| Server failure | `ServerError` | 500 `internal_error` |
+| No network | `NetworkError` | network error |
+| Success after confirmation | `Success` | 201 with `SessionUserDto` |
+| Narrow screen | `Narrow320` | – |
+
+These states appear after typing and submitting, which the story's interaction test does. On this docs page the previews would only show the empty form, so open the stories themselves: [errors after submit](?path=/story/patterns-form--validation-on-submit), [server rejects a field](?path=/story/patterns-form--field-error-from-server), [server failure](?path=/story/patterns-form--server-error), [waiting](?path=/story/patterns-form--submitting). The *Interactions* panel shows each step.
+
+## Code
+
+<Source
+  dark
+  code={`<CrudForm
+  schema={registerSchema} // the schema the API route validates with (from @devmentor/core in the app)
+  fields={[
+    { name: "name", label: "Name", autoComplete: "name", description: "Mentors see this name on your bookings." },
+    { name: "email", label: "Email", autoComplete: "email" },
+    { name: "password", label: "Password", autoComplete: "new-password", description: "12 to 128 characters." },
+  ]}
+  submitLabel="Create account"
+  errorTitle="Could not create the account"
+  onSubmit={(values) => apiCall("/api/auth/register", { method: "POST", body: values })}
+  onSuccess={() => router.push("/")}
+/>`}
+/>
+
+A password field is declared in the shared schema: `z.string().meta({ input: "password" })` (spec E01, UI/UX).
+
+## Simulating the API in a story
+
+<Source
+  dark
+  code={`export const RateLimited: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        respondError("post", "/api/auth/register", {
+          status: 429,
+          code: "rate_limited",
+          message: "Too many sign-up attempts from this network. Try again in 40 minutes.",
+        }),
+      ],
+    },
+  },
+};`}
+/>
+
+Helpers: `respondOk`, `respondError`, `respondNever` (pending), `respondNetworkError`. A request to `/api/*` without a handler is reported as an error in the browser console.
+
+## Related
+
+- Components: `CrudForm`, `Field`, `Input`, `NativeSelect`, `Button`, `ErrorMessage`.
+- Patterns that build on it: booking with a question (E02, batch 5), profile and prices (E01, batch 3).
