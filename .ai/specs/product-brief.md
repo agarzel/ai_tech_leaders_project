@@ -127,6 +127,7 @@ The team's intended direction: mentors earn twice – once for the session and a
 | D13 | 2026-10-19 | Slots are bookable only from 24 h ahead, so the mentor always has ≥ 12 h to accept (R05) | a booking made just after 12 h ahead would leave minutes to accept and expire into a refund; agent's recommendation accepted | Arkadiusz | active | after the first bookings (A01) | superseding row approved by the owner | `[DOCUMENT]` `decisions/D13-bookable-from-24-hours.md` | D09 |
 | D14 | 2026-10-19 | The platform's Stripe account collects the full price; mentor payouts and Stripe Connect are a later, separate spec | Q01 and Q05 are open; one mentor refused payout onboarding before a first booking; agent's recommendation accepted | Arkadiusz | active | before launch (Q01, Q05) | superseding row approved by the owner | `[DOCUMENT]` `decisions/D14-platform-collects-payouts-later.md` | none |
 | D15 | 2026-10-19 | Mentors learn about bookings in the app only; email is a later, separate spec | no email sending exists; the expiry rate is the signal to add it; agent's recommendation accepted | Arkadiusz | active | when bookings expire unaccepted | superseding row approved by the owner | `[DOCUMENT]` `decisions/D15-in-app-booking-notice.md` | none |
+| D16 | 2026-10-19 | Card payments only in the booking spec; BLIK and Przelewy24 decided separately | delayed confirmations complicate holds; agent's recommendation accepted | Arkadiusz | active | when abandoned Checkouts or requests for BLIK appear | superseding row approved by the owner | `[DOCUMENT]` `decisions/D16-card-payments-only.md` | none |
 
 ## Riskiest assumptions
 
@@ -158,7 +159,7 @@ None – no synthetic walkthrough has been run.
 
 ## Definition of Ready addendum (own)
 
-Problems and Target group rest on seven interviews, one Discord export and one survey from a single community – real accounts, but few and self-selected; frequency and willingness to pay are not established. Now is decided (D01–D15); Q02 is answered by D09/D13 (no bookings within 24 h); Q01, Q03, Q04 must be answered before launch, and Q03 before the booking rules are specified in full. A01 is accepted untested by the owner (D02); A02 and A03 are untested. Ready for: implementation planning of the booking-and-session scope, without same-day help (D13); demand is not tested before the build (A01, A03 are observed only once mentors are live); not ready for launch.
+Problems and Target group rest on seven interviews, one Discord export and one survey from a single community – real accounts, but few and self-selected; frequency and willingness to pay are not established. Now is decided (D01–D16); Q02 is answered by D09/D13 (no bookings within 24 h); Q01, Q03, Q04 must be answered before launch, and Q03 before the booking rules are specified in full. A01 is accepted untested by the owner (D02); A02 and A03 are untested. Ready for: implementation planning of the booking-and-session scope, without same-day help (D13); demand is not tested before the build (A01, A03 are observed only once mentors are live); not ready for launch.
 
 ## Collection plan
 
