@@ -8,15 +8,15 @@ Plik roboczy zadania z `lekcja-06/prompt-storybook.md`. Nowa sesja: przeczytaj p
 |---|---|
 | 0. Inwentaryzacja i plan | zakończony 2026-10-19 – decyzje właściciela zapisane niżej |
 | 1. Fundamenty | zakończony 2026-10-19 – F1 wdrożone, F2–F6 zapisane; czeka na „dalej” |
-| 2. Komponenty bazowe | w toku – partie 1 (1710f15), 2 (661d3c7), 3 (5b1ea6c) i 4 (2026-10-19, niezacommitowana) zakończone; czekają decyzje B47–B59; `lint:tokens` = 0 |
+| 2. Komponenty bazowe | **zakończony** 2026-10-19 – partie 1–5 (minimalny zestaw z etapu 0 gotowy); partia 5 niezacommitowana, czeka na „dalej” do etapu 3 |
 | 3. Komponenty produktu, wzorce, ekrany | nie rozpoczęty |
 | 4. Strony, które uczą | nie rozpoczęty |
 | 5. Sprawdzenie i raport | nie rozpoczęty |
 
 ## Następny krok
 
-Decyzje B47–B59 (partia 4, sekcja niżej) – wszystkie wdrożone w zachowawczej, odwracalnej wersji. Po commicie partii 4 przez koordynatora i „dalej” → partia 5: Skeleton, Spinner (istniejący – dopasowanie), Table (istniejący – dopasowanie) i przegląd bloków `backend/` (EmptyState, ErrorMessage, LoadingMessage). To zamyka listę minimalnego zestawu z etapu 0/2; potem etap 3 (komponenty produktu, wzorce, ekrany).
-Nic z partii 4 nie jest zacommitowane – commit robi właściciel.
+Partia 5 (ostatnia etapu 2) gotowa: Skeleton, Spinner i Table dopasowane, favicon Storybooka dodany, bloki `backend/` sprawdzone wizualnie na żywej aplikacji. Po „dalej” → **etap 3**: komponenty produktu, wzorce i ekrany dla epików E01 (mentors/availability/auth) i E02 (bookings), wyprowadzone z `.ai/specs/2026-10-19-mentor-accounts-and-offer.md` i `.ai/specs/2026-10-19-booking-and-prepayment.md` (plan komponentów produktu jest już w sekcji „Plan” etapu 0 wyżej).
+Nic z partii 5 nie jest zacommitowane – commit robi właściciel.
 
 ## Zatwierdzone decyzje (źródła: `lekcja-06/referencje.md`, `lekcja-06/tokeny.md`)
 
@@ -462,3 +462,49 @@ Zrzuty i zapytanie w przeglądarce (motyw ciemny ustawiony przez toolbar Storybo
 - Prawdziwe urządzenie dotykowe (otwieranie nakładek, 40 px pozycji menu).
 - Ręczna obsługa klawiaturą poza testami play (np. zagnieżdżone nakładki jedna nad drugą – nie występuje w zaplanowanych ekranach).
 - Zachowanie przy `prefers-reduced-motion` na prawdziwej przeglądarce z włączoną redukcją ruchu systemowo (testy ustawiają to przez kontekst Playwrighta, nie przez CSS media query ręcznie sprawdzony wizualnie).
+
+## Etap 2 – partia 5 (ostatnia), wynik (2026-10-19)
+
+Skeleton (nowy, CLI), Spinner i Table (istniejące – dopasowane), favicon Storybooka, przegląd bloków `backend/` na żywej aplikacji. To zamyka minimalny zestaw komponentów bazowych z etapu 0/2.
+
+### Propozycje B60–B62 (materiały milczą; wdrożone zachowawczo, odwracalnie – zatwierdzone przez Arkadiusza 2026-10-19)
+| # | Propozycja | Źródło / dlaczego |
+|---|---|---|
+| B60 | Skeleton zatrzymuje pulsowanie przy `prefers-reduced-motion` (`motion-reduce:animate-none`) | F3 (propozycja strony Motion), WCAG 2.3.3 |
+| B61 | Nagłówek i komórka tabeli dostają padding `py-list-row`/`px-list-row` (8/12 px) zamiast sztywnego `px-2`/`h-10` – ten sam rytm poziomy co gęsty wiersz listy i pole formularza | T9, B8 |
+| B62 | Najechanie wiersza i stopka tabeli: pełne `bg-muted` zamiast tła `/50` – spójnie z najechaniem `Item` i wariantów `outline`/`ghost` przycisku | P4, B5 |
+
+Wynika wprost: `type-body`/`type-label` zamiast `text-sm`/`font-medium` (P2); `transition-colors motion-reduce:transition-none` na wierszu (B16); Skeleton `aria-hidden="true"` (WCAG 4.1.2, zasada analogiczna do avatara B44).
+
+### Favicon Storybooka (nie B-propozycja – wykonane wprost na prośbę właściciela)
+`.storybook/public/favicon.svg`: zaokrąglony kwadrat w `stone-950` ze stylizowaną literą „D” w `teal-400` – te same wartości co tokeny `--raw-stone-950`/`--raw-teal-400` (żadnego nowego koloru). Bez gradientu, poświaty, iskierek (A01). Podpięty w `manager-head.html` (`<link rel="icon">`, przed istniejącym skryptem naprawiającym tytuł – zasada 10 zostaje bez zmian) i w `main.ts` (`staticDirs: ["./public"]`, żeby plik był serwowany w dev i w zbudowanym Storybooku). Sprawdzony: `favicon.svg` trafia do `storybook-static/`, serwuje się z kodem 200, tytuł karty nadal kończy się na „DevMentor”.
+
+### Przegląd bloków `backend/` na żywej aplikacji (nie zmieniłem ich kodu)
+Uruchomiłem tymczasowo `next dev` na porcie 3101 (osobnym od serwera audytora na 3000, zatrzymany po sprawdzeniu) i przeszedłem `/admin` oraz `/admin/users` w prawdziwej przeglądarce, z prawdziwą bazą (test:integration wcześniej zostawił działający kontener). Utworzyłem dwóch użytkowników przez `CrudForm` i obejrzałem wynik w `DataTable`.
+
+**Renderują się poprawnie, bez regresji:**
+- `EmptyState` (panel z przerywaną ramką, wyśrodkowany tekst) – bez zmian wizualnych, pasuje do nowego `rounded-lg`/`border`.
+- `CrudForm` (Label, Input, NativeSelect, Button) – wysokości, padding i fokus zgodne z partią 1; przycisk `Create user` w akcencie teal, `Cancel` jako link-przycisk.
+- `ErrorMessage` (Alert destructive + przycisk) – nieużyty w tej ścieżce (brak błędu API), sprawdzony wcześniej w stories Alert.
+- `DataTable` (Table, Badge, Button) – nagłówek i komórki z nowym paddingiem (B61), rola użytkownika jako `Badge variant="secondary"` (prostokątna, nie pigułka – B46), akcje wiersza (`Edit`/`Delete` ghost) i potwierdzenie usunięcia (inline, nie `AlertDialog` – to istniejący kod aplikacji, poza zakresem design systemu) wyglądają spójnie z tokenami.
+- `LoadingMessage` – nieużyty w tej ścieżce (dane ładują się zbyt szybko, by złapać stan), sprawdzony wcześniej w stories Spinner.
+
+**Czego nie udało się sprawdzić:** ciemny motyw tych bloków w aplikacji – `/admin` nie ma przełącznika motywu (S16, znana luka produktu), a wymuszenie klasy `dark` przez skrypt przed hydracją nie zadziałało (strona wyrenderowała się w jasnym motywie mimo `document.documentElement.classList.add("dark")` w `addInitScript`) – prawdopodobnie Next.js resetuje klasę przy hydracji. Ciemny wygląd tych samych prymitywów (Button, Alert, Badge, Table) jest natomiast zweryfikowany w Storybooku w partiach 1–5.
+
+**Obserwacje, które NIE są dzisiejszymi B-propozycjami** (poza zakresem partii 5 – composer komponentów `backend/`, nie prymitywów), zapisane do rozważenia przy etapie 3 lub osobnej decyzji: `CrudForm` nadal buduje pola ręcznie (`Label` + `Input`/`NativeSelect` + `<p className="text-destructive text-sm">`) zamiast przez `Field`/`FieldLabel`/`FieldError` z partii 1 – działa poprawnie (kolor i tekst błędu są poprawne), ale nie korzysta z ikony błędu ani z `aria-describedby` tak jak nowy wzorzec; `CrudForm`/`EmptyState` używają `space-y-4`/`space-y-1.5`/`gap-2` (standardowe klasy Tailwinda) zamiast `gap-between-groups`/`gap-in-group` – wizualnie identyczne (te same wartości w skali odstępów), ale niespójne nazewnictwo. Żadne z tych nie jest błędem ani naruszeniem `lint:tokens` (zero znalezisk, 112 plików).
+
+### Wyniki sprawdzeń
+| Komenda | Wynik |
+|---|---|
+| `npm run lint` | OK |
+| `npm run typecheck` | OK |
+| `npm run test:coverage` | OK – 170 testów, 100%; w tym 50 istniejących testów `backend/*` bez zmian i bez awarii po dopasowaniu Table/Spinner/Skeleton |
+| `npm run build` | OK |
+| `npm run build-storybook` | OK; 3 nowe strony (Skeleton, Spinner, Table): po 13 sekcji, tabele równe, bez błędów; favicon obecny w zbudowanym katalogu |
+| `npm run test:storybook` | OK – 304/304 (152 stories × 2 motywy; 16 nowych stories) |
+| `npm run lint:tokens` | OK – 0 wartości spoza tokenów (112 plików) |
+
+### Czego nie sprawdzono
+- Testy integracyjne aplikacji (`npm run test:integration`, Docker) – nie uruchomione w tej sesji; ręczne sprawdzenie w przeglądarce (wyżej) zastąpiło je dla `/admin`/`/admin/users`.
+- Ciemny motyw aplikacji (patrz wyżej – znana luka S16).
+- Prawdziwe urządzenie dotykowe.

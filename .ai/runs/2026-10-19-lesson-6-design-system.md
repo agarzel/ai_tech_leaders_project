@@ -141,3 +141,17 @@ Rule 9 (overlay theme from `<html>`) verified explicitly in a headless browser: 
 Bugs found and fixed: Field's invalid-state colour was applied to the whole container instead of just the label/error (fixed with a scoped selector); a flaky Tabs interaction test (Base UI keeps the outgoing panel `inert` in the DOM during its exit transition — test now filters `[inert]` and waits); a Dialog story used `"x".repeat(290)` as decline-reason text — replaced with a realistic sentence (prompt rule 7, no invented filler data).
 
 Handoff: owner decisions on B47–B59, then batch 5 (Skeleton, Spinner, Table — adapting existing primitives — and a review of the `backend/` blocks), which closes the stage-2 minimal set.
+
+## Stage 2, batch 5 — last of stage 2 (2026-10-19)
+
+Goal: Skeleton (new), adapt the existing Spinner and Table to tokens, review the backend/ blocks (CrudForm, DataTable, feedback) that consume them; add a Storybook favicon. Batch 4 committed by the coordinator (0c7e0a1), B47–B59 approved as proposed.
+
+Decisions: proposals B60–B62 (Skeleton respects reduced motion; Table gets list-row padding and a consistent full bg-muted instead of /50 tints). Favicon done directly per the owner's explicit, open-ended request (not a B-proposal): a minimal teal "D" mark on a stone-950 square, using the exact raw token hex values, no gradients/glow/sparkles; linked via `.storybook/public/favicon.svg`, `staticDirs` in main.ts, `<link rel="icon">` in manager-head.html (kept the existing title-fix script).
+
+Backend/ review: started a temporary `next dev` on port 3101 (separate from the coordinator's own port-3000 server, which was left untouched and stopped afterward), exercised `/admin` and `/admin/users` against the running database, created rows through `CrudForm` and viewed them in `DataTable`. Everything renders correctly with the restyled primitives — no regressions. Noted but not changed (out of this batch's scope): `CrudForm` still hand-builds fields instead of using the `Field`/`FieldLabel`/`FieldError` parts from batch 1 (works, just not aligned to the newer pattern); `CrudForm`/`EmptyState` use plain Tailwind spacing (`space-y-4`, `gap-2`) instead of the semantic `gap-*` utilities (visually identical, same scale values, just not using the named vocabulary). Neither trips `lint:tokens`. Could not verify dark mode in the app itself — it has no theme toggle (known gap, S16); forcing the `dark` class via an init script did not survive Next.js hydration.
+
+Verified: lint OK, typecheck OK, test:coverage OK (170, 100%, including the 50 pre-existing backend/ unit tests passing unchanged), build OK, build-storybook OK (3 new docs pages, 13 sections each, favicon present in the built output), test:storybook OK (304/304, both themes), lint:tokens OK (0 findings, 112 files). CLI: no overwrites, package.json and lockfile unchanged. No `git stash`; nothing committed.
+
+This closes the minimal primitive set from stage 0/2.
+
+Handoff: owner decisions on B60–B62, then stage 3 (product components, patterns, screens for epics E01/E02) — see "Następny krok" in POSTEP.md.
