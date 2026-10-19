@@ -113,7 +113,7 @@ All responses use the existing envelope; state-changing requests carry `x-devmen
 | `POST /api/auth/login` | public, rate-limited | `{ email, password }` → `SessionUserDto`, sets cookie | generic `unauthorized` "Invalid email or password" |
 | `POST /api/auth/logout` | session | → `null`, clears cookie | |
 | `GET /api/auth/me` | public | → `SessionUserDto \| null` | |
-| `GET, POST /api/admin/invitations` | admin | `{ email }` → `{ invitation, link }` | the link (with the raw token) is returned **only** in the POST response |
+| `GET, POST /api/admin/invitations` | admin (= a founder, D11) | `{ email }` → `{ invitation, link }` | the link (with the raw token) is returned **only** in the POST response; `createdBy` records which founder invited |
 | `GET, PUT /api/mentor/profile` | mentor (own) | profile fields + `price25`, `price50` (grosze) | `assertOwner`; prices 1,000–1,000,000 grosze (10–10,000 PLN, sanity bounds, not a business rule) |
 | `GET, POST /api/mentor/slots`, `DELETE /api/mentor/slots/[id]` | mentor (own) | `{ startsAt }` (ISO UTC) → `SlotDto` | rules in Edge Cases |
 | `GET /api/mentors` | public | `?page&pageSize&tag` → `Page<PublicMentorDto>` | only `listed` **and** bookable mentors (prices set, ≥ 1 bookable slot), ordered by soonest bookable slot |
@@ -135,9 +135,12 @@ Public and mentor pages use Tailwind; admin pages use `@devmentor/ui` (shadcn). 
 - **Invitation misuse:** used, expired or unknown token → one generic "This invitation is no longer valid" (no detail on which). Two parallel registrations with one token → the transaction's `usedAt IS NULL` condition lets exactly one succeed.
 - **Existing email at mentor registration** (someone registered as a mentee first) → `conflict`; the admin can promote the account instead (admin user edit already sets `role`; the profile is created on the first visit to `/mentor`, as for invited mentors).
 - **Slot rules (server-side, in `SlotService`, inside a transaction):** `startsAt` must be at least 12 h from now and at most 60 days ahead, on a 15-minute grid, and at least 50 minutes from any other slot of the same mentor; violations → `validation_error` with a field message. Duplicate start → unique constraint → `conflict`.
+- **Concurrent slot writes:** two requests adding slots 20 minutes apart could both pass the spacing check. `SlotService.publish` first locks the mentor's `mentor_profiles` row (`LockMode.PESSIMISTIC_WRITE`, i.e. `SELECT … FOR UPDATE`) inside the transaction, then checks spacing and inserts, so one mentor's slot writes are serialized. An integration-level test fires two overlapping publishes in parallel and expects exactly one `201` and one `validation_error`.
 - **Deleting a slot:** only `open` slots of the owner; a `booked` slot → `conflict` "Cancel the booking instead" (cancellation is R04, #34).
 - **Slot becomes too soon:** visibility is computed at read time with `Clock` (`startsAt ≥ now + 12 h`); nothing is mutated, so there is no job to fail.
-- **Time zones and DST:** the browser converts the mentor's local date-time to an ISO UTC string; every display shows the viewer's local time with a zone label (`Intl.DateTimeFormat`). The mentor and mentee may see different clock times for the same slot, by design.
+- **Time zones and DST:** the browser converts the mentor's local date-time to an ISO UTC string, using the browser's zone (`Intl.DateTimeFormat().resolvedOptions().timeZone`, shown on the form); every display shows the viewer's local time with a zone label. The mentor and mentee may see different clock times for the same slot, by design.
+  - *Nonexistent local time* (spring-forward gap, e.g. 02:30 on the last Sunday of March in Europe/Warsaw): the form converts and converts back; if the round trip does not return the entered time, it refuses with "This time does not exist in your time zone".
+  - *Ambiguous local time* (fall-back, 02:00–02:59 occurs twice): the browser picks the first occurrence; before saving, the form previews "Starts {weekday, date, time} ({zone}, UTC{offset})" so the mentor sees which one. No server-side zone logic.
 - **Unlisted mentor:** absent from `/mentors`; `/m/[slug]` still works (R08, D03). A mentor without prices or bookable slots is listed nowhere, and their share page says "No times available right now" (empty state, not an error).
 - **Deleted or demoted user with a live cookie:** `requireSession` reloads the user and fails closed.
 - **Missing or short `AUTH_SECRET`:** `getEnv()` throws at container creation — the app does not start rather than signing weak tokens.
@@ -152,14 +155,22 @@ Public and mentor pages use Tailwind; admin pages use `@devmentor/ui` (shadcn). 
 ## 📝 Decisions in play
 Relied on (from `product-brief.md`): R01 (25/50-min text sessions), R07 (mentor sets prices; commission is a setting — Q01 still open, so no commission is computed here), R08 (opt-in list, share link for every mentor), D01, D03, D08, N02 (no ratings), N03 (no help within the hour). R05/D07 (acceptance until 12 h before) is what makes D09 necessary.
 
-New decisions from this spec's gate, owner Arkadiusz, 2026-10-19 — to be added to the brief:
+New decisions from this spec's gate, owner Arkadiusz, 2026-10-19 — recorded in the brief and in `research/decisions/D09–D12`:
 
 | Id | Decision | Why |
 |---|---|---|
 | D09 | Answers Q02: slots starting less than 12 h ahead are not bookable in 1.0 | keeps R05/D07 intact; revisit with A01 data after the first bookings |
 | D10 | Sign-in is email + password only in 1.0; GitHub is a public-work link on the profile | no new provider; standards already define the password path |
-| D11 | Mentors register only through a founder-issued invitation link; mentees self-register | matches the recruitment test (A02) and keeps the mentor list curated |
+| D11 | Mentors register only through an invitation link issued by an admin; every admin is a founder (the first admin exists only via `auth:create-admin`); mentees self-register | matches the recruitment test (A02) and keeps the mentor list curated |
 | D12 | Prices are in PLN only, stored in grosze | the evidence comes from a Polish developer community |
+
+## 🔍 Review decisions
+Owner decisions on the reviews, 2026-10-19:
+
+- **Scope-cohesion review** (fresh-context subagent, same model family): verdict *revise*; all ten findings accepted and applied — lazy profile creation so Phase 1 ships alone, `shareSlug`/`listed` in the Phase 2 migration, UI receives domain values through DTOs, `priceFor`/`assertBookable` left to the booking spec, invitations split into Phase 1b, open implementation choices stated.
+- **Cross-model review** (Codex, GPT): verdict *revise*.
+  - Accepted: D09 recorded in the brief (Q02 closed); guard-change consumers spelled out (integration login helper, local admin bootstrap); invitation authority defined (admins are founders, first admin only via the script); per-mentor serialization of slot writes; DST handling for nonexistent and ambiguous local times.
+  - Rejected: "move research, booking foundations and the phase plan out of the spec". The shared foundations were an explicit requirement of this spec (build once for #29–#36), the research section is part of the `om-spec-writing` format, and the phase/step plan is what `om-auto-create-pr` executes. `Slot.status` stays so #30 needs no migration on `slots`.
 
 ## 📋 Phasing
 1. **Accounts and sessions** (#26) — shippable alone: mentees can register and sign in, and admins are protected by a real session.
@@ -175,7 +186,9 @@ New decisions from this spec's gate, owner Arkadiusz, 2026-10-19 — to be added
 2. `AUTH_SECRET` in `env.ts` (≥ 32 chars), `.env.example`, README, CI and integration setup; logger redaction list extended. Unit tests for the env schema.
 3. `User.passwordHash` + migration (reviewed SQL). `Clock` and `RateLimiter` (using `Clock`) in core with unit tests (fake clock).
 4. `AuthService` (register, login with bcryptjs cost 12, token issue/verify with `jose`) and `requireSession` / `requireRole` / `assertOwner`; `TooManyRequestsError`; `BACKWARD_COMPATIBILITY.md` error-code registry updated. 100% unit coverage including every fail-closed branch.
-5. Refactor: `makeCrudRoute` guards take the request (`users.crud.ts` updated); `requireAdmin` rebuilt on the session; `auth:create-admin` script (sets or resets a password for an email, creating an admin if absent); integration global setup seeds an admin and logs in. Existing admin integration tests pass.
+5. Refactor: `makeCrudRoute` guards take the request (`users.crud.ts` updated); `requireAdmin` rebuilt on the session; `auth:create-admin` script (sets or resets a password for an email, creating an admin if absent; it runs against `DATABASE_URL`, so only someone with database access can create the first admin). Consumers of the changed guard, in the same PR:
+   - **Integration tests:** `global-setup.ts` creates an admin through the same service the script uses, with a generated password passed to the tests via the setup context; a `loginAs(browser, role)` helper in `tests/integration/support/` signs in through `/login` before admin pages are visited. Existing admin tests call it first and otherwise stay unchanged.
+   - **Local development:** `npm run auth:create-admin -- --email you@example.com` once after `npm run setup`; README and `AGENTS.md` "Commands" document it. `/api/users` keeps its paths, methods and envelope — only an anonymous caller now gets `401` instead of data, which `BACKWARD_COMPATIBILITY.md` allows as a security fix and the PR states.
 6. Routes `api/auth/*`, pages `/login`, `/register`, header state; `CrudForm` password field. Integration test: mentee registers, logs out, logs in; wrong password shows the generic message; admin pages refuse an anonymous visitor. Screenshots.
 
 ### Phase 1b — Mentor invitations (#26, second PR)
