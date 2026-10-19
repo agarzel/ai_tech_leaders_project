@@ -11,7 +11,7 @@ Four phases, each shippable on its own (see Phasing):
 
 1. **Accounts and sessions (`auth`)** — email + password registration for mentees, login/logout, a signed session cookie, and `requireSession` / `requireRole` / `assertOwner` replacing the temporary guard.
    **1b. Mentor invitations (`mentors`)** — mentor registration only through a founder-issued invitation link (creates the User only).
-2. **Mentor profile and prices (`mentors`)** — profile (display name, headline, bio, stack tags, public-work links), the two prices in PLN, and the share slug, created on the mentor's first visit to `/mentor`.
+2. **Mentor profile and prices (`mentors`)** — profile (name, headline, bio, stack tags, public-work links), the two prices in PLN, and the share slug, created on the mentor's first visit to `/mentor`.
 3. **Slots (`availability`)** — a mentor publishes start times; each blocks 50 minutes; only slots starting at least 12 hours ahead are bookable.
 4. **Share link and public list (`mentors`)** — a public mentor page at a stable link, and a public list of opted-in, bookable mentors.
 
@@ -54,7 +54,7 @@ Takeaway: routes stay thin (validation → `requireSession` → service); every 
 
 **Sessions.** Stateless JWT (HS256, `AUTH_SECRET` ≥ 32 bytes from `env.ts`), 24 h expiry, no refresh (documented limitation), in cookie `devmentor_session` (`httpOnly`, `secure` in production, `sameSite=lax`, `path=/`). `requireSession(req)` verifies the token from the request's `Cookie` header **and reloads the user** through the request-scoped `em`, so a deleted user or changed role takes effect immediately; any failure → `UnauthorizedError` (fail closed). Core never imports `next`: it returns the token and cookie options; the app route sets the cookie with `cookies()` from `next/headers`. CSRF stays the existing `x-devmentor-client` header check plus `sameSite`.
 
-Known limitations (accepted for 1.0): logout clears the cookie but a copied token stays valid until it expires (≤ 24 h) — `requireSession` reloading the user limits the damage to the account's own data; no refresh token.
+Known limitations (accepted for 1.0, Grill Me 2026-10-19): no email verification — the system sends no email yet, and for mentors the invitation link the founder delivers stands in for it; no self-service password reset — a founder resets it with `auth:set-password`; no account deactivation — a mentor hides by unlisting and deleting slots (the share link then shows "No times available"); no self-service account deletion — tied to brief Q04 (terms and data processing); passwords are 12–128 characters with no composition rules; sessions last 24 h with no refresh (standards). Logout clears the cookie but a copied token stays valid until it expires (≤ 24 h) — `requireSession` reloading the user limits the damage to the account's own data; no refresh token.
 
 **Guards.** `core/src/http/auth.ts` exports `requireSession(req)`, `requireRole(session, ...roles)` (throws `ForbiddenError`) and `assertOwner(ownerUserId, session)` (throws `ForbiddenError`; admins are not exempt for mentor-owned writes). `requireAdmin` becomes `requireSession` + `requireRole("admin")` in **every** environment — the dev-open behavior is removed. Refactor of an existing contract: `makeCrudRoute`'s `accessGuards` changes from `Record<Access, () => void>` to `Record<Access, (req: Request) => Promise<Session>>`; the only consumer is `api/users/users.crud.ts`, updated in the same step.
 
@@ -79,9 +79,9 @@ Deliberately left to the booking spec (no consumer here): `MentorService.priceFo
 ## 📝 Data Model
 All tables use `baseProperties()` (UUID, timestamps). Money in integer grosze. Times are `timestamptz`, stored in UTC.
 
-- **User** (changed, `users`): add `passwordHash` (string, nullable — existing admin-created rows have none and cannot log in; `npm run auth:create-admin -- --email <e>` sets or resets a password for any existing email; the admin user CRUD never handles passwords). Email is already unique and normalized. `role` keeps `mentor | mentee | admin`; registration sets `mentee`, invitation sets `mentor`.
+- **User** (changed, `users`): add `passwordHash` (string, nullable — existing admin-created rows have none and cannot log in; `npm run auth:set-password -- --email <e>` sets or resets a password for any existing email without changing its role; the admin user CRUD never handles passwords). Email is already unique and normalized. `role` keeps `mentor | mentee | admin`; registration sets `mentee`, invitation sets `mentor`.
 - **MentorInvitation** (new, `mentor_invitations`, concept `mentors`): `email` (normalized), `tokenHash` (SHA-256 of a 32-byte random token; the token itself is shown once and never stored), `expiresAt` (14 days), `usedAt` (nullable), `createdBy` → User (n-1), `usedBy` → User (n-1, nullable).
-- **MentorProfile** (new, `mentor_profiles`, concept `mentors`): `user` → User (1-1, unique), `displayName`, `headline` (≤ 120), `bio` (≤ 2,000, plain text), `tags` (subset of `MENTOR_TAGS = TypeScript, React, Python, AI agents`), `links` (JSON array, ≤ 5 `https` URLs), `price25` and `price50` (integer grosze, nullable until set), `shareSlug` (unique; `displayName` slug + 6 random characters, generated when the profile is created, never regenerated or reused), `listed` (boolean, default `false` — R08 opt-in). All columns arrive in the Phase 2 migration; Phase 4 only adds the UI and queries that use `shareSlug` and `listed`. The profile is created lazily by `MentorService.getOrCreateOwn` on a mentor's first visit to `/mentor` — the same path for invited mentors and for mentees an admin promoted.
+- **MentorProfile** (new, `mentor_profiles`, concept `mentors`): `user` → User (1-1, unique; the mentor's name is `User.name`, editable on the profile page — no separate display name), `headline` (≤ 120), `bio` (≤ 2,000, plain text), `tags` (subset of `MENTOR_TAGS = TypeScript, React, Python, AI agents`), `links` (JSON array, ≤ 5 `https` URLs), `price25` and `price50` (integer grosze, nullable until set), `shareSlug` (unique; slug of `User.name` + 6 random characters, generated when the profile is created, never regenerated or reused), `listed` (boolean, default `false` — R08 opt-in). All columns arrive in the Phase 2 migration; Phase 4 only adds the UI and queries that use `shareSlug` and `listed`. The profile is created lazily by `MentorService.getOrCreateOwn` on a mentor's first visit to `/mentor` — the same path for invited mentors and for mentees an admin promoted.
 - **Slot** (new, `slots`, concept `availability`): `mentor` → MentorProfile (n-1), `startsAt` (timestamptz, minute divisible by 15), `status` (`open | booked`, default `open`). Unique `(mentor_id, starts_at)`; index `(status, starts_at)`.
 
 ```mermaid
@@ -131,7 +131,7 @@ Public and mentor pages use Tailwind; admin pages use `@devmentor/ui` (shadcn). 
 - Header shows *Log in* / *Register*, or the user's name and *Log out*.
 
 ## 📝 Edge Cases & Failure Scenarios
-- **Brute force:** 5 failed logins per IP + email within 15 min → 429 with a retry time. The limiter is in-memory, per process: acceptable for one container in 1.0; documented as needing a shared store before scaling out.
+- **Brute force:** 5 failed logins per IP + email within 15 min → 429 with a retry time; registration (both routes) is limited to 10 accounts per IP per hour. The limiter is in-memory, per process: acceptable for one container in 1.0; documented as needing a shared store before scaling out.
 - **Invitation misuse:** used, expired or unknown token → one generic "This invitation is no longer valid" (no detail on which). Two parallel registrations with one token → the transaction's `usedAt IS NULL` condition lets exactly one succeed.
 - **Existing email at mentor registration** (someone registered as a mentee first) → `conflict`; the admin can promote the account instead (admin user edit already sets `role`; the profile is created on the first visit to `/mentor`, as for invited mentors).
 - **Slot rules (server-side, in `SlotService`, inside a transaction):** `startsAt` must be at least 12 h from now and at most 60 days ahead, on a 15-minute grid, and at least 50 minutes from any other slot of the same mentor; violations → `validation_error` with a field message. Duplicate start → unique constraint → `conflict`.
@@ -147,7 +147,7 @@ Public and mentor pages use Tailwind; admin pages use `@devmentor/ui` (shadcn). 
 
 ## 📝 Risks & Impact Review
 - **Hard to reverse:** the `users.password_hash` column and the three new tables (migrations); the share slug format once links are shared publicly (slugs are never regenerated); the `rate_limited` error code (contract).
-- **Behavior change for developers:** admin pages are no longer open in development. Integration tests and local work need a seeded admin — Phase 1 adds it to the integration global setup and a `npm run auth:create-admin` script (a new root npm script: additive contract, documented in `AGENTS.md`). Coordinate with #17 (db seeder).
+- **Behavior change for developers:** admin pages are no longer open in development. Integration tests and local work need a seeded admin — Phase 1 adds it to the integration global setup and a `npm run auth:set-password` script (a new root npm script: additive contract, documented in `AGENTS.md`). Coordinate with #17 (db seeder).
 - **Product limitation, owner-accepted (D09):** no same-day help in 1.0 — every bookable slot is at least 12 h away, which the brief's Decision summary and the synthetic panel flagged as the most likely reason urgent developers leave (A01). Measured once bookings exist.
 - **Security review required:** `risk-high` (auth, sessions, money fields, migrations) — needs QA and a second reviewer per `SDLC.md`; no self-QA.
 - **Dependencies:** `bcryptjs` and `jose` in `@devmentor/core` (both pure JS, no native build).
@@ -161,11 +161,13 @@ New decisions from this spec's gate, owner Arkadiusz, 2026-10-19 — recorded in
 |---|---|---|
 | D09 | Answers Q02: slots starting less than 12 h ahead are not bookable in 1.0 | keeps R05/D07 intact; revisit with A01 data after the first bookings |
 | D10 | Sign-in is email + password only in 1.0; GitHub is a public-work link on the profile | no new provider; standards already define the password path |
-| D11 | Mentors register only through an invitation link issued by an admin; every admin is a founder (the first admin exists only via `auth:create-admin`); mentees self-register | matches the recruitment test (A02) and keeps the mentor list curated |
+| D11 | Mentors register only through an invitation link issued by an admin; every admin is a founder (the first admin exists only via `auth:set-password --admin`); mentees self-register | matches the recruitment test (A02) and keeps the mentor list curated |
 | D12 | Prices are in PLN only, stored in grosze | the evidence comes from a Polish developer community |
 
 ## 🔍 Review decisions
 Owner decisions on the reviews, 2026-10-19:
+
+- **Grill Me** (after both reviews): 11 questions, all recommendations accepted — the limitations listed under Architecture, `auth:set-password` replacing `auth:create-admin`, slot constants kept (60-day horizon, 15-minute grid, 50-minute spacing), public list ordered by soonest bookable slot, one name field (`User.name`), a registration limit, and a requirement handed to the booking spec: a price change applies only to new bookings, so #30 stores the price on the booking at payment time.
 
 - **Scope-cohesion review** (fresh-context subagent, same model family): verdict *revise*; all ten findings accepted and applied — lazy profile creation so Phase 1 ships alone, `shareSlug`/`listed` in the Phase 2 migration, UI receives domain values through DTOs, `priceFor`/`assertBookable` left to the booking spec, invitations split into Phase 1b, open implementation choices stated.
 - **Cross-model review** (Codex, GPT): verdict *revise*.
@@ -186,9 +188,9 @@ Owner decisions on the reviews, 2026-10-19:
 2. `AUTH_SECRET` in `env.ts` (≥ 32 chars), `.env.example`, README, CI and integration setup; logger redaction list extended. Unit tests for the env schema.
 3. `User.passwordHash` + migration (reviewed SQL). `Clock` and `RateLimiter` (using `Clock`) in core with unit tests (fake clock).
 4. `AuthService` (register, login with bcryptjs cost 12, token issue/verify with `jose`) and `requireSession` / `requireRole` / `assertOwner`; `TooManyRequestsError`; `BACKWARD_COMPATIBILITY.md` error-code registry updated. 100% unit coverage including every fail-closed branch.
-5. Refactor: `makeCrudRoute` guards take the request (`users.crud.ts` updated); `requireAdmin` rebuilt on the session; `auth:create-admin` script (sets or resets a password for an email, creating an admin if absent; it runs against `DATABASE_URL`, so only someone with database access can create the first admin). Consumers of the changed guard, in the same PR:
+5. Refactor: `makeCrudRoute` guards take the request (`users.crud.ts` updated); `requireAdmin` rebuilt on the session; `auth:set-password` script (`--email X` sets or resets that account's password; with `--admin` it creates the account as an admin or promotes it; it runs against `DATABASE_URL`, so only someone with database access can create the first admin or reset a password). Consumers of the changed guard, in the same PR:
    - **Integration tests:** `global-setup.ts` creates an admin through the same service the script uses, with a generated password passed to the tests via the setup context; a `loginAs(browser, role)` helper in `tests/integration/support/` signs in through `/login` before admin pages are visited. Existing admin tests call it first and otherwise stay unchanged.
-   - **Local development:** `npm run auth:create-admin -- --email you@example.com` once after `npm run setup`; README and `AGENTS.md` "Commands" document it. `/api/users` keeps its paths, methods and envelope — only an anonymous caller now gets `401` instead of data, which `BACKWARD_COMPATIBILITY.md` allows as a security fix and the PR states.
+   - **Local development:** `npm run auth:set-password -- --email you@example.com --admin` once after `npm run setup`; README and `AGENTS.md` "Commands" document it. `/api/users` keeps its paths, methods and envelope — only an anonymous caller now gets `401` instead of data, which `BACKWARD_COMPATIBILITY.md` allows as a security fix and the PR states.
 6. Routes `api/auth/*`, pages `/login`, `/register`, header state; `CrudForm` password field. Integration test: mentee registers, logs out, logs in; wrong password shows the generic message; admin pages refuse an anonymous visitor. Screenshots.
 
 ### Phase 1b — Mentor invitations (#26, second PR)
