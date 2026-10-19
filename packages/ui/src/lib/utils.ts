@@ -1,7 +1,7 @@
 import { createCn } from "cn/config"
 
 /** Spacing steps added by the design system (src/styles/theme.css, tokens T8, T9, P4). */
-const SPACING = ["in-group", "between-groups", "panel", "section", "message-group", "message", "control"]
+const SPACING = ["in-group", "between-groups", "panel", "section", "message-group", "message", "control", "control-sm"]
 /** Typography role utilities (src/styles/theme.css, P2). */
 const TYPE_ROLES = ["page-title", "section-title", "body", "label", "meta", "code"]
 

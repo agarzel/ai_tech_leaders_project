@@ -4,7 +4,8 @@
  *
  * Classes this file adds (besides the shadcn colour names):
  *   spacing   gap-in-group, gap-between-groups, p-panel, gap-section / mt-section,
- *             py-list-row, px-list-row, gap-message-group, gap-message, h-control / min-h-control
+ *             py-list-row, px-list-row, gap-message-group, gap-message, h-control / size-control, h-control-sm / size-control-sm
+ *   colour    bg-secondary-hover (B14)
  *   type      type-page-title, type-section-title, type-body, type-label, type-meta, type-code
  * Typography roles use the `type-` prefix (not `text-`) so `cn` never mistakes them for a colour (S17).
  */
@@ -23,6 +24,7 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary-hover: var(--secondary-hover);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
@@ -64,6 +66,7 @@
   --spacing-message-group: var(--message-group-gap);
   --spacing-message: var(--message-gap);
   --spacing-control: var(--control-height);
+  --spacing-control-sm: var(--control-height-sm);
 }
 
 /* List-row padding (component tokens T9): py-list-row / px-list-row. */

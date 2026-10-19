@@ -14,6 +14,10 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 const themeProject = (theme: "light" | "dark") => ({
   plugins: [storybookTest({ configDir: path.join(dirname, ".storybook") }), tailwindcss()],
   define: { __SB_THEME__: JSON.stringify(theme) },
+  // Pre-bundle what the primitives import, so Vite does not reload the browser mid-run on a cold cache.
+  optimizeDeps: {
+    include: ["@base-ui/react/button", "@base-ui/react/input", "@base-ui/react/separator", "class-variance-authority", "lucide-react"],
+  },
   test: {
     name: `storybook-${theme}`,
     browser: {

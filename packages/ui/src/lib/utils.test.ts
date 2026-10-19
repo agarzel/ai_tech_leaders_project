@@ -16,6 +16,8 @@ describe("cn with design-system utilities", () => {
     expect(cn("py-2", "py-list-row")).toBe("py-list-row");
     expect(cn("px-3", "px-list-row")).toBe("px-list-row");
     expect(cn("h-8", "h-control")).toBe("h-control");
+    expect(cn("h-control", "h-control-sm")).toBe("h-control-sm");
+    expect(cn("size-8", "size-control-sm")).toBe("size-control-sm");
   });
 
   it("keeps a typography role next to a colour class (roles use the type- prefix, not text-)", () => {

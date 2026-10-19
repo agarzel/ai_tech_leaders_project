@@ -8,6 +8,12 @@ const mikroOrm = { group: ["@mikro-orm/*"], message: "Only @devmentor/db may imp
 const pkg = (name, reason) => ({ name, message: reason });
 const pkgGroup = (group, reason) => ({ group, message: reason });
 
+const uiPaths = [
+  pkg("@devmentor/core", "ui is standalone – pass data in via props."),
+  pkg("@devmentor/db", "ui is standalone – pass data in via props."),
+  pkg("@devmentor/app", "ui must not depend on the app."),
+];
+
 const restrict = (files, { paths = [], patterns = [] }) => ({
   files,
   rules: { "no-restricted-imports": ["error", { paths, patterns }] },
@@ -36,12 +42,11 @@ const eslintConfig = defineConfig([
     ],
     patterns: [pkgGroup(["next", "next/*"], "core must not import Next.js."), mikroOrm],
   }),
-  restrict(["packages/ui/**"], {
-    paths: [
-      pkg("@devmentor/core", "ui is standalone – pass data in via props."),
-      pkg("@devmentor/db", "ui is standalone – pass data in via props."),
-      pkg("@devmentor/app", "ui must not depend on the app."),
-    ],
+  restrict(["packages/ui/**"], { paths: uiPaths, patterns: [mikroOrm] }),
+  // The shadcn CLI generates `import { cn } from "cn"`; primitives must use the configured cn that
+  // knows the design-system utilities (h-control, type-label …) – POSTEP.md F5/B25.
+  restrict(["packages/ui/src/components/**"], {
+    paths: [...uiPaths, pkg("cn", 'Import cn from "@devmentor/ui/lib/utils" (configured for design-system classes).')],
     patterns: [mikroOrm],
   }),
   restrict(["packages/app/**"], {

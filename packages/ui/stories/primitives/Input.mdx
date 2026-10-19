@@ -1,0 +1,138 @@
+import { Canvas, Meta, Source, Unstyled } from "@storybook/addon-docs/blocks";
+import * as InputStories from "./Input.stories";
+import { Input } from "../../src/components/ui/input";
+import { Field, FieldLabel } from "../../src/components/ui/field";
+import { DoDont } from "../../.storybook/blocks/Docs";
+
+<Meta of={InputStories} />
+
+# Input
+
+`import { Input } from "@devmentor/ui/components/ui/input"`
+
+## 1. Purpose
+
+Lets a person type one short value – an email, a headline, a link, a price, a slot time – and see whether it was accepted.
+
+## 2. When to use
+
+| Situation in DevMentor | `type` | Source |
+|---|---|---|
+| Sign in and register | `email`, `password` (12–128 characters) | mentor-accounts spec |
+| Mentor headline (≤ 120), public-work links (≤ 5 `https` URLs) | `text`, `url` | mentor-accounts spec |
+| Prices for 25 and 50 minutes in PLN | `number` with `inputMode="decimal"` | D12 |
+| Adding a slot (date and time, shown with the browser's time zone) | `datetime-local` | mentor-accounts spec |
+
+Always inside a `Field` with a visible label.
+
+## 3. When not to use
+
+| Instead of an input… | Use | Why |
+|---|---|---|
+| Text longer than one line: the booking question, bio, decline reason | `Textarea` | multi-line content |
+| A choice from a fixed list (session length, stack tag) | `NativeSelect` or radio group (batch 2) | no typing errors |
+| A value that is shown but cannot be changed | plain text | a disabled field looks broken and is skipped by screen readers' form mode |
+
+## 4. Anatomy
+
+| Part | Optional | Notes |
+|---|---|---|
+| Field (`Field`) | no | label, hint and error around the input |
+| Label (`FieldLabel`) | no | always visible; the placeholder is never the label |
+| Input | no | `h-control`, 1 px `border-input` (4.81 : 1 – T3), 12 px padding (B8) |
+| Placeholder | yes | an example (*e.g. …*), `muted-foreground` |
+| Hint (`FieldDescription`) | yes | format or limit |
+| Error (`FieldError`) | only when invalid | icon + what happened + what to do |
+
+## 5. Variants
+
+None. One look for every `type` (rule 6); the type changes the keyboard and the browser's checks.
+
+<Canvas of={InputStories.Types} />
+
+## 6. States
+
+<Canvas of={InputStories.States} />
+
+| State | Looks | Source |
+|---|---|---|
+| Default | transparent fill, `border-input` | B6, T3 |
+| Hover | no change – the outline already identifies the field | **proposal** (base-nova default kept) |
+| Focus | ring border + neutral 3 px ring | T4, WCAG 2.4.7 |
+| Disabled | `muted` fill, 50% opacity; the reason is written in the hint | B6, B17 |
+| Invalid | `border-destructive` (8.37 : 1 light) + error text with icon; focus keeps the neutral ring | tokeny.md, B13, WCAG 3.3.1 |
+| Loading, pressed, selected | do not apply to a text field | – |
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Label with `<FieldLabel htmlFor={id}>`; hint and error linked with `aria-describedby`. | WCAG 1.3.1, 3.3.2 |
+| Invalid: `aria-invalid="true"` on the input and `data-invalid` on the `Field`; the error is `role="alert"`, so it is announced once. | WCAG 3.3.1, 4.1.3 |
+| Validate when the person leaves the field and on submit, not on every keystroke; typed data stays after an error. | prompt stage 3 (form pattern) |
+| `autoComplete` on personal fields (`email`, `current-password`, `new-password`, `name`). | WCAG 1.3.5 |
+| Text size 14 px with a pointer, 16 px on touch so iOS does not zoom. | P2, B9 |
+| Height 32 px, 40 px on touch. | P4, WCAG 2.5.8 |
+
+## 8. Content
+
+- Label: a noun, sentence case, no colon: *Headline*, *Public work link*. Optional fields add *(optional)*; required ones have no marker. (answer 2.5)
+- Placeholder: an example starting with *e.g.*, never instructions that disappear while typing. (prompt stage 3)
+- Limits go in the hint (*Up to 120 characters*), not only in `maxLength`. (**proposal**)
+- Errors say what happened and what to do: *Enter a full address starting with https://*. (answer 2.4)
+- Long values scroll inside the field; translations make labels longer – labels wrap (P2).
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | Full width of the form; 16 px text and 40 px height on touch. |
+| 768 px | Full width of the form column. |
+| 1440 px | The form column is at most `max-w-prose`; short values (price) may be narrower. (F2 **proposal**) |
+
+<Canvas of={InputStories.LongValueNarrow} />
+
+## 10. API
+
+All props of `<input>` (passed to Base UI `Input`), including `type`, `value`, `defaultValue`, `onChange`, `disabled`, `aria-invalid`, `aria-describedby`.
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `type` | HTML input type | `"text"` | Keyboard and browser checks. |
+| `aria-invalid` | `boolean` | – | Shows the error state. |
+| `className` | `string` | – | Width only (`w-48`, `max-w-xs`). |
+
+## 11. Code
+
+<Source dark code={`<Input aria-label="Search mentors by stack" />`} />
+
+<Source
+  dark
+  code={`<Field data-invalid={!!error}>
+  <FieldLabel htmlFor="headline">Headline</FieldLabel>
+  <Input id="headline" maxLength={120} aria-invalid={!!error}
+         aria-describedby={error ? "headline-error" : "headline-hint"} />
+  <FieldDescription id="headline-hint">Up to 120 characters. Name the work, not the years.</FieldDescription>
+  <FieldError id="headline-error">{error}</FieldError>
+</Field>`}
+/>
+
+## 12. Do and don't
+
+<Unstyled>
+  <DoDont
+    doExample={<Field><FieldLabel htmlFor="dd-link-do">Public work link</FieldLabel><Input id="dd-link-do" placeholder="e.g. https://github.com/your-name" /></Field>}
+    doText="The label stays visible while typing; the placeholder is only an example (prompt stage 3)."
+    dontExample={<Input aria-label="Public work link (don't example)" placeholder="Public work link" />}
+    dontText="A placeholder as the label disappears on the first keystroke."
+  />
+</Unstyled>
+
+## 13. Related
+
+- **Confused with:** `Textarea` (multi-line), `NativeSelect` (fixed choices).
+- **Used in:** `CrudForm`, `Field`; patterns *Form*, *Time with zone (DST)*, *Amount in PLN* (stage 3).
+
+### Interaction test
+
+<Canvas of={InputStories.TypingAndError} />

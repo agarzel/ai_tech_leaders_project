@@ -67,6 +67,7 @@
   --primary-foreground: var(--raw-white); /* text on primary – 7.53:1 */
   --secondary: var(--raw-stone-100); /* secondary buttons, status badges – P4, T10 */
   --secondary-foreground: var(--raw-stone-900); /* P4 */
+  --secondary-hover: var(--raw-stone-200); /* hover of secondary buttons; secondary = muted = accent, so it needs its own step – B14; secondary-foreground on it 13.92:1 */
   --accent: var(--raw-stone-100); /* neutral hover/selection in menus – NOT the brand accent – P4 */
   --accent-foreground: var(--raw-stone-900); /* P4 */
   --destructive: var(--raw-red-800); /* errors, decline, irreversible actions – T6 */
@@ -112,12 +113,14 @@
   --message-group-gap: 0.75rem; /* 12 px – between authors' message groups – R02.1, R02.3, T9 */
   --message-gap: 0.25rem; /* 4 px – between one author's messages – R02.3, T9 */
   --control-height: 2rem; /* 32 px – buttons, inputs, selects on fine pointers – P4 */
+  --control-height-sm: 1.75rem; /* 28 px – row actions in dense lists only – B2, answer 2.1, WCAG 2.5.8 */
 }
 
 /* Coarse pointers (touch): taller controls – P4. */
 @media (pointer: coarse) {
   :root {
     --control-height: 2.5rem; /* 40 px – P4 */
+    --control-height-sm: 2.5rem; /* 40 px – no small controls on touch – B2, answer 2.1 */
   }
 }
 
@@ -139,6 +142,7 @@
   --primary-foreground: var(--raw-stone-950); /* 10.59:1 */
   --secondary: var(--raw-stone-800); /* T15 */
   --secondary-foreground: var(--raw-stone-50); /* T15 */
+  --secondary-hover: var(--raw-stone-700); /* B14; secondary-foreground on it 9.85:1 */
   --accent: var(--raw-stone-800); /* T15 */
   --accent-foreground: var(--raw-stone-50); /* T15 */
   --destructive: var(--raw-red-300); /* F1 (2026-10-19): red-300 so the dark tinted button passes – 5.97:1 on card at /20, 4.64:1 at /30 hover; replaces the shadcn red-400 – T6 */

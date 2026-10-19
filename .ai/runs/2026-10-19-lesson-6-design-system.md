@@ -81,3 +81,23 @@ Handoff: next is stage 2, after the owner's "dalej" and the F1–F6 decisions.
 - F4 and F5 accepted for stage 2.
 - F6 will be decided on the Content page.
 - Rule: never run `git stash` (review rule R3: never destroy local state). The incident above must not repeat; use read-only commands such as `git show HEAD:<file>` to compare against the last commit.
+
+## Stage 2, part 1 and batch 1 (2026-10-19)
+
+Goal: list how shape, density and states differ from base-nova (B1–B25, questions 2.1–2.5), then after the owner's decisions build batch 1: Button, Input, Textarea, NativeSelect, Label, Field, plus B23–B25.
+
+Owner decisions: 2.1 `sm` 28 px only in dense rows (40 px on touch); 2.2 round radio and switch; 2.3 12 px padding; 2.4 hints muted-foreground, errors destructive + icon + instruction; 2.5 "(optional)", no asterisks; B1–B25 accepted (B14 contrast computed first: 13.92 / 9.85; B16 follows F3).
+
+Done: see `packages/ui/POSTEP.md` → "Etap 2 – partia 1, wynik".
+
+Decisions and why:
+- `npm install -w @devmentor/ui shadcn@^4.21.4` resolved to 4.22.1 and changed the lockfile; I restored my own pre-install copy of the lockfile and wrote the ranges into `package.json` by hand, then `npm install` – B23 promised no new versions.
+- Field trimmed to what batch 1 documents (rule 6); the rest comes back in batch 2.
+- Frozen hover/focus/active: Storybook-only `@custom-variant` overrides, so the matrix uses the component's own declarations.
+- ESLint rule instead of a review note for `cn`, because every CLI add regenerates the wrong import.
+
+Verified: lint OK, typecheck OK, test:coverage OK (169, 100%), build OK, build-storybook OK, test:storybook OK (84/84, both themes), lint:tokens FAIL with 6 remaining values in card/alert/badge (batch 3). No `git stash`; nothing committed.
+
+Open issues: first cold-cache story run reloaded Vite (fixed with `optimizeDeps.include`, not re-verified on a clean cache); integration tests not run.
+
+Handoff: after "dalej" → batch 2 (Checkbox, RadioGroup, Switch, InputGroup, Kbd, Separator), see "Następny krok" in POSTEP.md.

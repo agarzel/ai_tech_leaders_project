@@ -1,0 +1,138 @@
+import { Canvas, Meta, Source, Unstyled } from "@storybook/addon-docs/blocks";
+import * as SelectStories from "./NativeSelect.stories";
+import { NativeSelect, NativeSelectOption } from "../../src/components/ui/native-select";
+import { Field, FieldLabel } from "../../src/components/ui/field";
+import { DoDont } from "../../.storybook/blocks/Docs";
+
+<Meta of={SelectStories} />
+
+# NativeSelect
+
+`import { NativeSelect, NativeSelectOption, NativeSelectOptGroup } from "@devmentor/ui/components/ui/native-select"`
+
+## 1. Purpose
+
+Lets a person pick one value from a known list – a session length, a time zone, a stack tag – using the browser's own list, which works the same with mouse, keyboard, touch and screen readers.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Filtering mentors by stack tag (TypeScript, React, Python, AI agents) | mentor-accounts spec, S12 |
+| Choosing a role or status in admin forms (`CrudForm` renders `z.enum` as a select) | `packages/ui/AGENTS.md` |
+| Time zone or session length when more than about 5 options or when space is tight | **proposal** |
+| A filter or setting inside a dense row, e.g. rows per page (`size="sm"`) | B2, answer 2.1 |
+
+## 3. When not to use
+
+| Instead of a select… | Use | Why |
+|---|---|---|
+| 2–4 options that are worth comparing (25 or 50 min with prices) | radio group (batch 2) | all options and prices visible at once (R01.5/P5) |
+| Searching a long list | combobox – not in 1.0 (S12, "What is missing") | – |
+| Several values (tags) | checkboxes (batch 2) | a native multi-select is hard to use |
+| An action menu (*Edit*, *Delete*) | dropdown menu (batch 4) | a select holds a value, a menu runs actions |
+
+## 4. Anatomy
+
+| Part | Optional | Notes |
+|---|---|---|
+| Wrapper | no | receives `className` (width) |
+| `<select>` | no | `h-control`, 1 px `border-input`, 12 px padding (B8) |
+| Chevron icon | no | `muted-foreground`, `aria-hidden` |
+| Options / option groups | no / yes | on the `popover` surface (B7); the open list is drawn by the browser |
+| Placeholder option | yes | `value=""` + `disabled`: *Choose a length* |
+
+## 5. Variants
+
+Size `default` (32 px, 40 px on touch) for forms; `sm` (28 px, 40 px on touch) only inside dense rows. No other variants.
+
+<Canvas of={SelectStories.SizesAndGroups} />
+
+## 6. States
+
+<Canvas of={SelectStories.States} />
+
+| State | Looks | Source |
+|---|---|---|
+| Default | transparent fill, `border-input` | B6, T3 |
+| Hover | no change | **proposal** (base-nova dark hover fill removed, B6) |
+| Focus | ring border + neutral 3 px ring | T4, WCAG 2.4.7 |
+| Open | the browser's list; options use `popover` colours where the browser allows | B7 |
+| Disabled | `muted` fill, 50% opacity; reason in the hint | B6, B17 |
+| Invalid | `border-destructive` + error; focus keeps the neutral ring | tokeny.md, B13 |
+| Loading, pressed | do not apply | – |
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Native `<select>`: role *combobox*; arrow keys change the value, Space/Alt+↓ opens the list, type-ahead jumps to an option. | HTML, WAI-ARIA |
+| Label with `htmlFor` on the `<select>` id (the id is passed through to the select, not the wrapper). | WCAG 1.3.1 |
+| Do not submit or navigate on `change`: keyboard users change the value with arrow keys. | WCAG 3.2.2 |
+| Hint and error via `aria-describedby`; `aria-invalid` when invalid. | WCAG 3.3.1 |
+
+## 8. Content
+
+- Options: short, parallel, sentence case; add the one fact that decides (*50 minutes · PLN 220.00*). (R01.5/P5; price format F6, temporary)
+- Placeholder option says the action: *Choose a length*, not *Select…*. (**proposal**)
+- The closed select cuts long option text – keep options under about 40 characters. (**proposal**)
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | `className="w-full"`; the phone shows its own picker. |
+| 768 px and 1440 px | Width of the longest option (`w-fit`) or of the form column. |
+
+<Canvas of={SelectStories.LongOptionNarrow} />
+
+## 10. API
+
+`NativeSelect` takes all `<select>` props (`value`, `defaultValue`, `onChange`, `disabled`, `required`, `aria-*`) except the HTML `size`, plus:
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `size` | `"default" \| "sm"` | `"default"` | `sm` only in dense rows. |
+| `className` | `string` | – | Applied to the wrapper; width only. |
+
+`NativeSelectOption` and `NativeSelectOptGroup` take all `<option>` / `<optgroup>` props.
+
+## 11. Code
+
+<Source
+  dark
+  code={`<NativeSelect aria-label="Stack tag">
+  <NativeSelectOption value="react">React</NativeSelectOption>
+</NativeSelect>`}
+/>
+
+<Source
+  dark
+  code={`<Field>
+  <FieldLabel htmlFor="tag">Stack tag</FieldLabel>
+  <NativeSelect id="tag" value={tag} onChange={(e) => setTag(e.target.value)}>
+    <NativeSelectOption value="">All stacks</NativeSelectOption>
+    {tags.map((t) => <NativeSelectOption key={t} value={t}>{t}</NativeSelectOption>)}
+  </NativeSelect>
+</Field>`}
+/>
+
+## 12. Do and don't
+
+<Unstyled>
+  <DoDont
+    doExample={<Field><FieldLabel htmlFor="dd-tz-do">Time zone</FieldLabel><NativeSelect id="dd-tz-do"><NativeSelectOption>Europe/Warsaw (CET)</NativeSelectOption></NativeSelect></Field>}
+    doText="A visible label names the value being chosen (WCAG 3.3.2)."
+    dontExample={<NativeSelect aria-label="Actions (don't example)"><NativeSelectOption>Actions…</NativeSelectOption><NativeSelectOption>Delete slot</NativeSelectOption></NativeSelect>}
+    dontText="A select used as an action menu deletes on change, which keyboard users trigger by accident (WCAG 3.2.2)."
+  />
+</Unstyled>
+
+## 13. Related
+
+- **Confused with:** radio group (few comparable options), dropdown menu (actions), combobox (search, not in 1.0).
+- **Used in:** `CrudForm` (`z.enum`); patterns *List with filters*, *Time with zone (DST)* (stage 3).
+
+### Interaction test
+
+<Canvas of={SelectStories.KeyboardChoice} />

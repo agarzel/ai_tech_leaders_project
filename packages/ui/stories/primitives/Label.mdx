@@ -1,0 +1,112 @@
+import { Canvas, Meta, Source, Unstyled } from "@storybook/addon-docs/blocks";
+import * as LabelStories from "./Label.stories";
+import { Label } from "../../src/components/ui/label";
+import { Input } from "../../src/components/ui/input";
+import { DoDont } from "../../.storybook/blocks/Docs";
+
+<Meta of={LabelStories} />
+
+# Label
+
+`import { Label } from "@devmentor/ui/components/ui/label"`
+
+## 1. Purpose
+
+Names a form control so people (and screen readers) know what to enter, and gives a larger click target that focuses the control.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Inside your own layout when `Field` does not fit (e.g. a label next to a control in a dense toolbar) | WCAG 1.3.1, 3.3.2 |
+| Inside `CrudForm` (already uses it) | `packages/ui/AGENTS.md` |
+
+In forms prefer `FieldLabel` (it is this `Label` plus the *(optional)* marker and the Field's disabled state).
+
+## 3. When not to use
+
+| Instead of a label… | Use | Why |
+|---|---|---|
+| A field in a form | `Field` + `FieldLabel` | hint, error and optional marker in one structure |
+| A title for a group of radios or checkboxes | `FieldSet` + legend (batch 2) | a label names one control |
+| Explaining format or limits | `FieldDescription` | the label stays short |
+| A placeholder as the only name | never | it disappears on typing (prompt stage 3) |
+
+## 4. Anatomy
+
+| Part | Optional | Notes |
+|---|---|---|
+| `<label>` | no | `type-label` (14 px / 500, P2), `gap-in-group` to an inline control |
+| Text | no | |
+| Inline control (checkbox, switch) | yes | batch 2 |
+
+## 5. Variants
+
+None (rule 6).
+
+## 6. States
+
+<Canvas of={LabelStories.States} />
+
+| State | Looks | Source |
+|---|---|---|
+| Default | `foreground`, `type-label` | P2 |
+| Disabled | 50% opacity when the control before it is disabled (`peer`) or the Field has `data-disabled` | base-nova, B17 |
+| Hover, focus, pressed, loading, selected, error | do not apply to a label; the error state is shown by the Field (label turns `destructive`) and the error text | – |
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| `htmlFor` equals the control's `id`; clicking the label focuses the control. | HTML, WCAG 1.3.1 |
+| The label's text is the control's accessible name; voice-control users say it. Keep the visible text inside `aria-label` if one is ever added. | WCAG 2.5.3 |
+| Every control has exactly one label. | WCAG 4.1.2 |
+
+## 8. Content
+
+- A noun or short noun phrase, sentence case, no colon: *Email*, *Session length*. (**proposal**, tone waits for the Content page)
+- About 1–5 words; long labels wrap (normal line height, P2).
+- Required fields are not marked; optional ones get *(optional)* via `FieldLabel optional`. (answer 2.5)
+
+## 9. Responsive
+
+| Width | Behaviour |
+|---|---|
+| 320 px | Above the control, wraps as needed. |
+| 768 px and 1440 px | Above the control (one column forms); side-by-side labels only with `Field` horizontal (batch 2). |
+
+<Canvas of={LabelStories.LongLabelNarrow} />
+
+## 10. API
+
+All `<label>` props.
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `htmlFor` | `string` | – | Id of the control. Required in practice. |
+| `className` | `string` | – | Layout only. |
+
+## 11. Code
+
+<Source dark code={`<Label htmlFor="email">Email</Label>
+<Input id="email" type="email" autoComplete="email" />`} />
+
+## 12. Do and don't
+
+<Unstyled>
+  <DoDont
+    doExample={<div className="flex flex-col gap-in-group"><Label htmlFor="dd-label-do">Email</Label><Input id="dd-label-do" type="email" /></div>}
+    doText="A short noun, connected with htmlFor, so clicking it focuses the field."
+    dontExample={<div className="flex flex-col gap-in-group"><Label htmlFor="dd-label-dont">Please enter the email address you use for GitHub:</Label><Input id="dd-label-dont" type="email" /></div>}
+    dontText="Instructions in the label make it long; put them in the hint."
+  />
+</Unstyled>
+
+## 13. Related
+
+- **Confused with:** `FieldLabel` (use in forms), `FieldDescription` (the hint).
+- **Used in:** `Field`, `CrudForm`.
+
+### Interaction test
+
+<Canvas of={LabelStories.ClickFocusesControl} />
