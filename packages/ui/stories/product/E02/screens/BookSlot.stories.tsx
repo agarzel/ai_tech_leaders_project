@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, userEvent, within } from "storybook/test";
+import { expect, fireEvent, userEvent, within, waitFor } from "storybook/test";
 
 import { apiCall } from "../../../../src/backend/api/apiCall";
 import { AppHeader } from "../../../../src/backend/layout/AppHeader";
@@ -66,7 +66,7 @@ export const QuestionInvalid: Story = {
     const canvas = within(canvasElement);
     await pay(canvas);
     await expect(canvas.getByRole("alert")).toHaveTextContent("Write your question for the mentor.");
-    await expect(canvas.getByLabelText("Your question")).toHaveFocus();
+    await waitFor(() => expect(canvas.getByLabelText("Your question")).toHaveFocus());
   },
 };
 

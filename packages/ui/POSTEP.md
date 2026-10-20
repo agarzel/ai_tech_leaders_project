@@ -7,15 +7,15 @@ Plik roboczy zadania z `lekcja-06/prompt-storybook.md`. Nowa sesja: przeczytaj p
 | Etap | Stan |
 |---|---|
 | 0. Inwentaryzacja i plan | zakończony 2026-10-19 – decyzje właściciela zapisane niżej |
-| 1. Fundamenty | zakończony 2026-10-19 – F1 wdrożone, F2–F6 zapisane; czeka na „dalej” |
+| 1. Fundamenty | **zakończony** 2026-10-19 – F1 wdrożone, F2–F6 zapisane (PR #39) |
 | 2. Komponenty bazowe | **zakończony** 2026-10-19 – partie 1–5, scalone w `main` (PR #41) |
-| 3. Komponenty produktu, wzorce, ekrany | **zakończony** 2026-10-20 – partie 1–5 zacommitowane; partia 6 (ostatnia) gotowa, czeka na decyzje C69–C72, Q13–Q14 i „dalej” do etapu 4 |
-| 4. Strony, które uczą | **zakończony** 2026-10-20 – 7 nowych stron + rozszerzone „What is missing”, `.ai/docs/design-system.md`; decyzje D-S1–D-S4 i Q15 podjęte (niżej); czeka na „dalej” |
-| 5. Sprawdzenie i raport | **w toku** 2026-10-20 – wdrożone: #40 (strona główna), D-S3, D-S4, S7 (joby CI); sprawdzenia przeszły; **czeka test agentem w osobnej sesji** (nie uruchomiony) |
+| 3. Komponenty produktu, wzorce, ekrany | **zakończony** 2026-10-20 – partie 1–6, decyzje C1–C72, Q1–Q14 (PR #42) |
+| 4. Strony, które uczą | **zakończony** 2026-10-20 – strony Design system, `.ai/docs/design-system.md`, D-S1–D-S4, Q15 (PR #43) |
+| 5. Sprawdzenie i raport | **zakończony** 2026-10-20 – joby CI, `lint:tokens` z aplikacją, #40 (PR #44); test agentem 28/11/18 z 57 i domknięcie luk (PR #45); niestabilne asercje fokusu poprawione |
 
 ## Następny krok
 
-Etap 5: sprawdzenie i raport (po „dalej”; plan zawiera D-S3 i D-S4): build, typecheck, lint, `lint:tokens` z listą trafień, dostępność wszystkich stories, szerokości 320/768/1440 w obu motywach, klawiatura i nakładki, przygotowanie testu agentem (jeden nowy ekran z backlogu, opis w tym pliku – test w nowej sesji), liczenie stron, komponentów, stories i testów interakcji; S7 (job CI Storybooka).
+Zadanie domowe lekcji 6 zakończone. Kolejne prace: specyfikacja E03 (wejście w „What is missing”), podpięcie komponentów w aplikacji przy implementacji E01/E02.
 
 ## Zatwierdzone decyzje (źródła: `lekcja-06/referencje.md`, `lekcja-06/tokeny.md`)
 
