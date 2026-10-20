@@ -1,0 +1,84 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./MentorProfileHeader.stories";
+
+<Meta of={Stories} />
+
+# MentorProfileHeader
+
+`import { MentorProfileHeader, MentorProfileHeaderSkeleton, type PublicMentor } from "@devmentor/ui/components/mentors/MentorProfileHeader"`
+
+Product component, concept `mentors` (E01, #28).
+
+## 1. Purpose
+
+Tells a developer who the mentor is and what they have done, on the mentor's share page.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| `/m/[slug]`, above prices and times (batch 4 screen) | spec E01, UI/UX |
+
+## 3. When not to use
+
+| Instead of `MentorProfileHeader`… | Use | Why |
+|---|---|---|
+| A row in the public list | `MentorCard` (batch 4) | dense row, one line of metadata (R01.1) |
+| An avatar wall, years of experience | nothing | A05 |
+
+## 4. Anatomy
+
+Region *About the mentor*: headline (section-title size), `TagList`, `PublicWorkLinks`, bio (plain text, line breaks kept). The name is the page title (`PageLayout`).
+
+## 5. Variants
+
+None.
+
+## 6. States
+
+Not interactive (links have their states). Data states: loading (`MentorProfileHeaderSkeleton`), partial (missing parts left out), empty (nothing filled in), long content.
+
+<Canvas of={Stories.Partial} />
+
+<Canvas of={Stories.Loading} />
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| A named region inside `main`; the name is the page's `h1`. | WCAG 1.3.1 |
+| Bio is plain text with line breaks – no Markdown. | spec E01 ("bio … plain text") |
+| Text lines stay within about 65 characters (`max-w-prose`). | prompt stage 1 (typography) |
+
+<Canvas of={Stories.Region} />
+
+## 8. Content
+
+The mentor's own words. No avatar, no "X years", no ratings (A03, A05). Bio up to 2,000 characters.
+
+## 9. Responsive
+
+<Canvas of={Stories.LongContentNarrow} />
+
+## 10. API
+
+| Prop | Type | Description |
+|---|---|---|
+| `mentor` | `Pick<PublicMentor, "headline" \| "bio" \| "tags" \| "links">` | from `PublicMentorDto` |
+
+<Controls of={Stories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<PageLayout title={mentor.name} header={header}><MentorProfileHeader mentor={mentor} /><PriceList … /></PageLayout>`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| Leave out a missing bio. | "This mentor has not written a bio yet." – noise on a public page. |
+
+## 13. Related
+
+- **Confused with:** `MentorCard`, `PageLayout` (title).
+- **Used in:** `/m/[slug]` (batch 4).

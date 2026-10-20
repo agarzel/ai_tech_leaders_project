@@ -1,0 +1,90 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./BookingQuestion.stories";
+
+<Meta of={Stories} />
+
+# BookingQuestion
+
+`import { BookingQuestion } from "@devmentor/ui/components/bookings/BookingQuestion"`
+
+Product component, concept `bookings` (E02, #30, #32). Pulled forward from batch 6: `/bookings/[id]` shows the question.
+
+## 1. Purpose
+
+Shows a booking's question as the mentee wrote it.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| `/bookings/[id]` | spec E02, UI/UX |
+| `/mentor/bookings` (batch 6) | spec E02, UI/UX |
+
+## 3. When not to use
+
+| Instead of `BookingQuestion`… | Use | Why |
+|---|---|---|
+| Markdown or code blocks | not built | plain text only (Q5); a future session spec may add code blocks |
+
+## 4. Anatomy
+
+One paragraph of body text with the line breaks kept.
+
+## 5. Variants
+
+`collapsible`: a preview of 280 characters with a toggle (`aria-expanded`) for rows in the mentor's list.
+
+<Canvas of={Stories.Playground} />
+
+## 6. States
+
+| State | Story |
+|---|---|
+| Short | [Playground](?path=/story/product-e02-bookingquestion--playground) |
+| 2,000 characters with a log and a long URL | [LongQuestion](?path=/story/product-e02-bookingquestion--long-question) |
+| Collapsed (preview and toggle) | [Collapsed](?path=/story/product-e02-bookingquestion--collapsed) |
+| Markup as text | [MarkupIsText](?path=/story/product-e02-bookingquestion--markup-is-text) |
+
+Not interactive.
+
+<Canvas of={Stories.LongQuestion} />
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Rendered as text; markup is never interpreted. | security (spec E02: the question may hold code) |
+| Long words and URLs wrap. | WCAG 1.4.10 |
+
+## 8. Content
+
+Exactly the mentee's words. Never in a title, an error or a log.
+
+## 9. Responsive
+
+<Canvas of={Stories.Narrow} />
+
+## 10. API
+
+| Prop | Type | Description |
+|---|---|---|
+| `question` | `string` | plain text |
+| `collapsible` | `boolean` | rows show the first 280 characters and *Show full question* |
+
+<Controls of={Stories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<BookingQuestion question={booking.question} />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| Keep the line breaks. | Collapse a pasted log into one line. |
+| Show markup as typed. | Render HTML. |
+
+## 13. Related
+
+- **Confused with:** `QuestionField` (collects it).
+- **Used in:** [/bookings/[id]](?path=/story/product-e02-screens-bookingdetail--long-question).

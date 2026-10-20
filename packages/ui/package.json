@@ -5,9 +5,11 @@
   "type": "module",
   "exports": {
     "./components/ui/*": "./src/components/ui/*.tsx",
+    "./components/*": "./src/components/*.tsx",
     "./backend/*": "./src/backend/*.tsx",
     "./backend/api/*": "./src/backend/api/*.ts",
     "./lib/utils": "./src/lib/utils.ts",
+    "./lib/*": "./src/lib/*.ts",
     "./styles/*": "./src/styles/*"
   },
   "scripts": {
@@ -40,6 +42,8 @@
     "@types/react": "^19",
     "@vitest/browser": "5.0.4",
     "@vitest/browser-playwright": "5.0.4",
+    "msw": "3.0.3",
+    "msw-storybook-addon": "3.0.3",
     "playwright": "1.64.1",
     "remark-gfm": "4.0.1",
     "storybook": "10.6.2",

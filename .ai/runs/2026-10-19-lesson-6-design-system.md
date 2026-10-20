@@ -155,3 +155,102 @@ Verified: lint OK, typecheck OK, test:coverage OK (170, 100%, including the 50 p
 This closes the minimal primitive set from stage 0/2.
 
 Handoff: owner decisions on B60–B62, then stage 3 (product components, patterns, screens for epics E01/E02) — see "Następny krok" in POSTEP.md.
+
+## Stage 3 — plan (2026-10-19)
+
+Goal: plan product components, patterns, screens and batches for E01/E02 without code. Wrote "Etap 3 – plan" in `packages/ui/POSTEP.md` (26 product components with props from spec DTOs and data states, 7 generic blocks, 11 patterns, 14 screens with state maps, 6 batches, MSW plan, known-debt placement, proposals C1–C17, questions Q1–Q5). Owner decisions: Q1 yes (msw 3.0.3 + addon 3.0.3), Q2 count in a sentence allowed, Q3 accent on Accept of the nearest deadline on /mentor/bookings and none on /m/[slug], Q4 keep the E01 /m/[slug] variant, Q5 plain text (monospace code blocks → What is missing), C1–C17 accepted.
+
+## Stage 3, batch 1 (2026-10-19)
+
+Goal: MSW install + wiring, `lib/format`, `lib/time`, CrudForm on Field, DataTable/Pagination and feedback blocks on tokens, ErrorMessage without raw `error.message`, the Form pattern.
+
+Decisions: proposals C18–C28 in POSTEP.md (error descriptions for technical codes, explicit `optional`, blur validation for changed fields, autocomplete defaults, pagination as metadata, "Primitives/Panel blocks" menu group, `errorTitle`, EmptyState/LoadingMessage spacing tokens, spinner in the submit button, focusable form-level error, docs pages link to play-driven stories instead of showing initial states).
+
+Install deviation: npm 10.9.2 crashes (`edgesOut` in arborist `#loadPeerSet`) on the approved command, on each package alone and on the 3.0.2 fallback. A `--legacy-peer-deps` attempt dropped vite/typescript/rolldown from the lockfile and was fully reverted from a pre-install copy (no git stash; `cmp` confirmed the restore). Final route: the same install with `npx npm@11 --package-lock-only` on a scratch copy of the manifests and lockfile, diff reviewed (33 new msw-tree entries, no version changes, nothing removed), copied in, `npm install` with npm 10. Result: +2 lines in ui package.json, lockfile +453/−0. `npm audit` unchanged (10 pre-existing high). msw 3 / addon 3 APIs differ from the plan (`mswLoader` from `msw-storybook-addon/csf3`; `onUnhandledFrame` instead of `onUnhandledRequest`) – preview uses its own setup.
+
+Verified: lint OK, typecheck OK, test:coverage OK (213, 100%), build OK, build-storybook OK (7 new docs pages checked in Chromium: 13 sections on block pages, tables render, no page errors; MSW answers in the built Storybook), test:storybook OK (382/382, both themes, +39 stories, +16 interaction tests), lint:tokens OK (0, 133 files), test:integration OK (11/11). Live app on a temporary `next dev -p 3102` (stopped, build dir removed): CrudForm/DataTable/Pagination render and behave as designed at 1440 and 320 px; test users created in the local dev DB.
+
+Finding outside the design system: on that dev server a duplicate email in `POST /api/users` returns 500 (`ConflictError` logged as unhandled), reproducible with curl; the integration suite's fresh server returns 409 for the same case. Suspected duplicate `AppError` class across Turbopack chunks (related to #16) – not investigated further, not changed; listed for a separate issue.
+
+Bug fixed on the way: `{things}` in MDX prose broke the LoadingMessage docs page (caught by the built-page check).
+
+Nothing committed. No `git stash`.
+
+Handoff: owner decisions on C18–C28, then batch 2 (E01 shell, auth, admin) per POSTEP.md 3.4.
+
+## Stage 3, batch 2 (2026-10-19)
+
+Goal: E01 shell (AppHeader + RoleNav, PageLayout, AccountMenu), sign-in and registration screens (login, register, register/mentor with invitation states), admin invitations (InvitationLinkPanel with CopyField, InvitationStatusBadge), admin home without the card grid, pattern "Link shown once", E01 screen state map. Batch 1 committed by the coordinator (91e24b6), C18–C28 accepted; the dev-server 409→500 finding was moved to #16 (fresh server returns 409).
+
+Decisions: proposals C29–C40 in POSTEP.md (renderLink instead of importing next, inline account area, PageLayout block, monospace copy value, 401 on logout = signed out, one nav-link style, link panel replaces the form until Done, invited email on /register/mentor, admin home as a dense list, invalid-invitation wording, per-role nav items, Register as outline link). Questions Q6 (second invitation for the same email – spec silent, story removed rather than inventing a rule) and Q7 (reading the invitation server-side to show the email).
+
+Verified: lint OK, typecheck OK, test:coverage OK (237, 100%), build OK, build-storybook OK (9 new docs pages checked in Chromium; every `?path=` link in MDX exists in the story index), test:storybook OK (512/512, both themes; +65 stories, +28 interaction tests), lint:tokens OK (0, 164 files). Screens viewed at 1440 and 320 px in the built Storybook, no page-level horizontal scroll. Fixed on the way: duplicate banner/nav landmarks in the AppHeader per-role story (axe), 401 on logout shown as an error (now treated as signed out), a decision id in product copy, word-mark alignment.
+
+Not run: live app (nothing the app uses changed in this batch). No new dependencies, no CLI. Nothing committed. No `git stash`.
+
+Handoff: owner decisions on C29–C40 and Q6–Q7, then batch 3 (mentor profile and offer) per POSTEP.md 3.4.
+
+### Batch 2 follow-up – Q6/Q7 (2026-10-20)
+
+Owner accepted C29–C40; Q6 (re-inviting revokes the pending invitation, `revokedAt`) and Q7 (`GET /api/auth/invitations/[token]` → `{ email, expiresAt }`, generic `not_found` otherwise) were written into the E01 spec by the coordinator. Applied: `revoked` status and *Revoked* badge; `AdminInvitations/ReinviteRevokesOld` story (stateful MSW handlers); `RegisterMentor` reads the invitation via MSW (Loading, Default with email, InvitationInvalid on 404, UsedMeanwhile, Success); state map and "Link shown once" pattern updated. Gate: lint, typecheck, test:coverage (238, 100%), build, build-storybook (all MDX links resolve), test:storybook (516/516), lint:tokens (0) – all OK. Nothing committed; no dev server started.
+
+## Stage 3, batch 3 (2026-10-20)
+
+Goal: mentor profile and offer (E01 #25–#28): TagList, PublicWorkLinks, PriceList, MentorProfileHeader, OfferChecklist, MentorProfileForm (price fields inside), `parsePrice`/`formatPriceInput`; screens `/mentor` and `/mentor/profile` with MSW; patterns "Amount in PLN" and "Bookability checklist"; E01 state map extended. Batch 2 (with Q6/Q7) committed by the coordinator.
+
+Decisions: proposals C41–C53 in POSTEP.md (price input format, empty parts not rendered, same-tab links, profile-complete rule, checklist accent and statuses, slot counts from SlotDto.bookable, optional prices with early bounds check, bio counter in the hint, 5-link sentence, inline saved status, page titles, name as page title on /m/[slug], 403 as form error). Questions Q8 (what makes the profile complete) and Q9 (where /mentor gets bookable/too-soon counts) – not invented as rules, implemented as marked proposals.
+
+Verified: lint OK (one unused test constant removed), typecheck OK, test:coverage OK (274, 100%), build OK, build-storybook OK (9 pages checked in Chromium, all MDX links resolve), test:storybook OK (638/638, both themes; +61 stories, +17 interaction tests), lint:tokens OK (0, 187 files). Screens viewed at 1440/320 px, no page-level horizontal scroll; checklist rows top-aligned after review; a repeated-sentence long bio replaced with realistic text (rule 7).
+
+Nothing committed, no dev server, no new dependencies, no git stash.
+
+Handoff: owner decisions on C41–C53 and Q8–Q9, then batch 4 (slots and public list) per POSTEP.md 3.4.
+
+### Batch 3 follow-up – Q8/Q9 (2026-10-20)
+
+Owner accepted C41–C53; Q8 (save requires name + headline 1–120; listing depends only on prices + a bookable slot) and Q9 (`SlotDto` = `{ id, startsAt, status, bookable }`, `bookable` computed by the server) are in the E01 spec. Batch 3 already matched both (form validation, SlotDto shape); only comments and docs were re-sourced from "proposal C44/C46" to the spec. Re-run: lint, typecheck, test:coverage (274, 100%), test:storybook (638/638), lint:tokens (0) – all OK. Nothing committed.
+
+
+## Stage 3, batch 4 (2026-10-20)
+
+Goal: slots and the public list (E01 #27–#28). Continued by a fresh agent after the previous one stopped at the start of batch 4; kept its `formatDay`, `formatTime`, `localDayKey`.
+
+Built: `SlotTimeField` (DST: refuse skipped, preview repeated), `SlotList`/`SlotRow`, `AddSlotForm`, `DeleteSlotDialog`, `MentorCard`, `ActiveFilters`, `ResultCount`; patterns Time with zone and DST, Delete confirmation, List with filters; screens `/mentor/slots`, `/mentors`, `/m/[slug]` (E01, disabled Book with reason); state map extended. Proposals C54–C62 and question Q10 in `packages/ui/POSTEP.md`.
+
+Decisions: UI does not re-check server slot rules (C55); no new dependencies; stateful MSW for the slots screen via story `beforeEach`.
+
+Verified: lint, typecheck, test:coverage (312 tests, 100%), build, build-storybook (all MDX links resolve), test:storybook (810/810), lint:tokens (0, 215 files). Visual check at 1440/320 px found one overflow (long name in `PageLayout` h1), fixed with `break-words`; axe found `aria-required-children` in a MentorCard story, fixed.
+
+Open: C54–C62 and Q10 await the owner; nothing committed.
+
+Handoff: next is batch 5 (E02 booking and payment) per `packages/ui/POSTEP.md` "Następny krok". Note for tests of date inputs: jsdom and Chromium accept `fireEvent.change` with a valid ISO value.
+
+
+## Stage 3, batch 5 (2026-10-20)
+
+Goal: booking and prepayment screens (E02 #29–#30, #32). Owner had accepted C54–C62 and Q10 (spec E01 updated by the coordinator).
+
+Built: `SlotBookActions`, `BookingSummary`, `QuestionField`, `BookingForm`, `BookingStatusBadge`, `BookingStatusPanel`, `PaymentPending`, `BookingQuestion` (pulled forward from batch 6) and `bookingStatus.ts` (all state-machine wording in one place); screens `/book/[slotId]`, `/bookings/[id]` (with polling) and the E02 `/m/[slug]`; patterns Payment and waiting, Status and next action, Detail view; E02 state map. Proposals C63–C68, questions Q11–Q12 in `packages/ui/POSTEP.md`.
+
+Decisions: spec decisions respected (card only, 35 min hold, price stored by the server, max 2 unpaid, mentee name only to the mentor); the UI shows server wording for refusals and never computes price or deadlines; docs pages for the 8 components generated from one skeleton (scratchpad script, not in the repo) to keep the 13-section structure identical.
+
+Verified: lint, typecheck, test:coverage (362 tests, 100%), build, build-storybook (all MDX links resolve), test:storybook (986/986), lint:tokens (0, 247 files). Visual check at 1440/320 px: no horizontal scroll.
+
+Open: C63–C68, Q11, Q12 await the owner; nothing committed.
+
+Handoff: next is batch 6 (booking lists, mentor decisions, `AcceptDeadline`, `DeclineBookingDialog`, `PendingBookingsNotice`) per `packages/ui/POSTEP.md` "Następny krok". Gotcha: formatted amounts contain a no-break space – use `\u00a0` in accessible-name queries, a plain space in text matchers.
+
+
+## Stage 3, batch 6 — last of stage 3 (2026-10-20)
+
+Goal: booking lists and the mentor's decisions (E02 #30, #32), epic pages and "What is missing". Owner had accepted C63–C68; Q11 (question required) and Q12 (`BookingDto` shape) answered.
+
+Built: `BookingRow`, `MentorBookingRow`, `AcceptDeadline`, `DeclineBookingDialog`, `PendingBookingsNotice`, collapsible `BookingQuestion`, `useNow`; screens `/bookings`, `/mentor/bookings`, "Pending" on `/mentor`; pattern Deadline with a countdown; pages `Design system/Epics/E01`, `Epics/E02`, `What is missing` (backlog coverage, app debt from the audit, Q5 monospace and other future proposals). Proposals C69–C72, questions Q13–Q14 in `packages/ui/POSTEP.md`.
+
+Decisions: accent on `Accept` only for the nearest deadline (Q3); count in a sentence, no badge (Q2); E03/E04 only listed, not built (P3); `/mentor` counts pending bookings from the first page of the list (flagged in Q13).
+
+Verified: lint, typecheck, test:coverage (393 tests, 100%), build, build-storybook (all MDX links resolve), test:storybook (1096/1096), lint:tokens (0, 269 files). Visual check at 1440/320 px: no horizontal scroll.
+
+Open: C69–C72, Q13, Q14 await the owner; nothing committed.
+
+Handoff: stage 3 is complete. Next is stage 4 (documentation pages that teach: Start here, Components, How to choose, Usage and accessibility, Content, What to avoid, Contributing; `.ai/docs/design-system.md`; agent test) per `packages/ui/POSTEP.md` "Następny krok".

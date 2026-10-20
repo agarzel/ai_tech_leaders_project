@@ -30,6 +30,21 @@ describe("ErrorMessage", () => {
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
+  it("explains a technical API error instead of showing its raw message", () => {
+    render(<ErrorMessage error={{ code: "invalid_response", message: "Unexpected response from the server (502)." }} />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Something went wrong on our side");
+    expect(screen.getByRole("alert")).toHaveTextContent("Try again in a moment.");
+    expect(screen.getByRole("alert")).not.toHaveTextContent("502");
+  });
+
+  it("shows a domain API error's message under the given title", () => {
+    render(<ErrorMessage title="Could not book" error={{ code: "conflict", message: "This time was just taken" }} />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Could not book");
+    expect(screen.getByRole("alert")).toHaveTextContent("This time was just taken");
+  });
+
   it("renders a custom title and calls onRetry", async () => {
     const onRetry = vi.fn();
     render(<ErrorMessage title="Could not save" message="Try later" onRetry={onRetry} />);

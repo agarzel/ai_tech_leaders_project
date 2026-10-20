@@ -1,0 +1,86 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as LoadingMessageStories from "./LoadingMessage.stories";
+
+<Meta of={LoadingMessageStories} />
+
+# LoadingMessage
+
+`import { LoadingMessage } from "@devmentor/ui/backend/feedback/LoadingMessage"`
+
+Panel block: `Spinner` + label in one live region.
+
+## 1. Purpose
+
+Tells a person that a view is loading when its shape is not known yet.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| First load of an admin list (`DataTable`) | `DataTable` source |
+| A short wait with no known layout | prompt stage 4 (skeleton vs spinner) |
+
+## 3. When not to use
+
+| Instead of `LoadingMessage`… | Use | Why |
+|---|---|---|
+| A list or card whose shape is known (bookings, slots, mentor cards) | `Skeleton` in that shape | the layout does not jump (prompt stage 4) |
+| Saving a form | the button's *Saving…* state | B18 – the wait is where the person clicked |
+| Waiting for payment confirmation | `PaymentPending` (batch 5) | a longer wait with its own wording (spec E02) |
+
+## 4. Anatomy
+
+Live region (`role="status"`), decorative spinner (`aria-hidden`), label.
+
+## 5. Variants
+
+None. The label names what loads (*Loading invitations…*).
+
+## 6. States
+
+One state: shown while loading; replaced by the content, `EmptyState` or `ErrorMessage`.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| One live region per wait; the spinner does not announce itself again. | `AGENTS.md` (duplicate live regions), WAI-ARIA status |
+| The spinner keeps turning under reduced motion – it is essential information. | Spinner page, WCAG 2.3.3 |
+
+<Canvas of={LoadingMessageStories.AnnouncedOnce} />
+
+## 8. Content
+
+*Loading…* or *Loading invitations…* (name what loads) with the ellipsis character. No jokes, no "Hang tight!" (tone: matter-of-fact, calm – decision 1).
+
+## 9. Responsive
+
+Centered in its area at every width; long labels wrap.
+
+<Canvas of={LoadingMessageStories.LongContentNarrow} />
+
+## 10. API
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `label` | `string` | `"Loading…"` | what is loading |
+
+<Controls of={LoadingMessageStories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<LoadingMessage />`} />
+
+<Source dark code={`{isLoading && !rows ? <LoadingMessage label="Loading invitations…" /> : <InvitationList rows={rows} />}`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| `Skeleton` rows for a list whose shape is known. | A centered spinner where a list will appear – the page jumps. |
+| One status per wait. | A spinner inside a live region next to another live region – announced twice. |
+
+## 13. Related
+
+- **Confused with:** `Spinner` (the icon alone), `Skeleton`.
+- **Used in:** `DataTable` (first load).

@@ -1,0 +1,133 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Product/E01/Screens/State map" />
+
+# E01 screens – state map
+
+Each screen state has its own full-screen story (C14). Screens are compositions of package components; the pages themselves are app code. Batches 2–4 cover sign-in, admin, the mentor overview, profile, slots and the public pages.
+
+## /login (spec E01, Phase 1)
+
+| State | Story |
+|---|---|
+| Form | [Default](?path=/story/product-e01-screens-login--default) |
+| Wrong email or password (generic message) | [InvalidCredentials](?path=/story/product-e01-screens-login--invalid-credentials) |
+| Too many attempts (429) | [RateLimited](?path=/story/product-e01-screens-login--rate-limited) |
+| No network | [NetworkError](?path=/story/product-e01-screens-login--network-error) |
+| Signed in | [Success](?path=/story/product-e01-screens-login--success) |
+| 320 px | [Narrow320](?path=/story/product-e01-screens-login--narrow-320) |
+
+## /register (Phase 1)
+
+| State | Story |
+|---|---|
+| Form | [Default](?path=/story/product-e01-screens-register--default) |
+| Password under 12 characters | [PasswordTooShort](?path=/story/product-e01-screens-register--password-too-short) |
+| Email cannot be used (409) | [EmailTaken](?path=/story/product-e01-screens-register--email-taken) |
+| Account created | [Success](?path=/story/product-e01-screens-register--success) |
+| 320 px | [Narrow320](?path=/story/product-e01-screens-register--narrow-320) |
+
+## /register/mentor?token=… (Phase 1b)
+
+| State | Story |
+|---|---|
+| Checking the link (`GET /api/auth/invitations/[token]`) | [Loading](?path=/story/product-e01-screens-registermentor--loading) |
+| Valid invitation – invited email shown, name and password | [Default](?path=/story/product-e01-screens-registermentor--default) |
+| Used, expired, revoked or unknown link (same 404) – no form | [InvitationInvalid](?path=/story/product-e01-screens-registermentor--invitation-invalid) |
+| Link used in another tab while the form was open | [UsedMeanwhile](?path=/story/product-e01-screens-registermentor--used-meanwhile) |
+| Account created | [Success](?path=/story/product-e01-screens-registermentor--success) |
+| 320 px | [Narrow320](?path=/story/product-e01-screens-registermentor--narrow-320) |
+
+## /admin
+
+| State | Story |
+|---|---|
+| Sections as a dense list (replaces the "Coming soon" card grid – audit) | [Default](?path=/story/product-e01-screens-adminhome--default) |
+| One focus style for every link | [KeyboardFocus](?path=/story/product-e01-screens-adminhome--keyboard-focus) |
+| 320 px | [Narrow320](?path=/story/product-e01-screens-adminhome--narrow-320) |
+
+## /admin/invitations (Phase 1b)
+
+| State | Story |
+|---|---|
+| Form + list (pending, used, expired) | [Default](?path=/story/product-e01-screens-admininvitations--default) |
+| List loading | [Loading](?path=/story/product-e01-screens-admininvitations--loading) |
+| No invitations yet | [Empty](?path=/story/product-e01-screens-admininvitations--empty) |
+| List failed to load | [LoadError](?path=/story/product-e01-screens-admininvitations--load-error) |
+| Link shown once | [LinkShownOnce](?path=/story/product-e01-screens-admininvitations--link-shown-once) |
+| Link dismissed | [LinkDismissed](?path=/story/product-e01-screens-admininvitations--link-dismissed) |
+| Sending failed | [SendFailed](?path=/story/product-e01-screens-admininvitations--send-failed) |
+| Re-inviting a pending email – new link once, old row *Revoked* (Q6) | [ReinviteRevokesOld](?path=/story/product-e01-screens-admininvitations--reinvite-revokes-old) |
+| 320 px | [Narrow320](?path=/story/product-e01-screens-admininvitations--narrow-320) |
+
+## /mentor (Phases 2–4)
+
+| State | Story |
+|---|---|
+| New mentor (lazily created profile) | [NewMentor](?path=/story/product-e01-screens-mentorhome--new-mentor) |
+| Profile and prices, no times | [NoTimes](?path=/story/product-e01-screens-mentorhome--no-times) |
+| Times only inside 24 h | [SlotsTooSoon](?path=/story/product-e01-screens-mentorhome--slots-too-soon) |
+| Bookable and listed | [Listed](?path=/story/product-e01-screens-mentorhome--listed) |
+| With bookings waiting (E02) | [WithPending](?path=/story/product-e01-screens-mentorhome--with-pending) |
+| Loading | [Loading](?path=/story/product-e01-screens-mentorhome--loading) |
+| Load failed | [LoadError](?path=/story/product-e01-screens-mentorhome--load-error) |
+| 320 px | [Narrow320](?path=/story/product-e01-screens-mentorhome--narrow-320) |
+
+## /mentor/profile (Phase 2, list toggle from Phase 4)
+
+| State | Story |
+|---|---|
+| Complete profile | [Default](?path=/story/product-e01-screens-mentorprofile--default) |
+| New profile | [NewProfile](?path=/story/product-e01-screens-mentorprofile--new-profile) |
+| Loading | [Loading](?path=/story/product-e01-screens-mentorprofile--loading) |
+| Load failed | [LoadError](?path=/story/product-e01-screens-mentorprofile--load-error) |
+| Saved | [Saved](?path=/story/product-e01-screens-mentorprofile--saved) |
+| Not the owner (403) | [Forbidden](?path=/story/product-e01-screens-mentorprofile--forbidden) |
+| 320 px | [Narrow320](?path=/story/product-e01-screens-mentorprofile--narrow-320) |
+
+Field-level states of the form are in [MentorProfileForm](?path=/docs/product-e01-mentorprofileform--docs).
+
+## /mentor/slots (Phase 3)
+
+| State | Story |
+|---|---|
+| Slots by day: open, too soon, booked | [Default](?path=/story/product-e01-screens-mentorslots--default) |
+| No slots yet | [Empty](?path=/story/product-e01-screens-mentorslots--empty) |
+| Only times inside 24 h (not bookable) | [TooSoon](?path=/story/product-e01-screens-mentorslots--too-soon) |
+| Sixty slots | [Many](?path=/story/product-e01-screens-mentorslots--many) |
+| Server refuses the time (24 h, spacing) | [SlotRejected](?path=/story/product-e01-screens-mentorslots--slot-rejected) |
+| Slot added | [SlotAdded](?path=/story/product-e01-screens-mentorslots--slot-added) |
+| Delete asks first | [DeleteConfirm](?path=/story/product-e01-screens-mentorslots--delete-confirm) |
+| Deleted – row gone, focus on the heading | [Deleted](?path=/story/product-e01-screens-mentorslots--deleted) |
+| Slot booked meanwhile (conflict) | [DeleteBooked](?path=/story/product-e01-screens-mentorslots--delete-booked) |
+| Loading | [Loading](?path=/story/product-e01-screens-mentorslots--loading) |
+| Load failed | [LoadError](?path=/story/product-e01-screens-mentorslots--load-error) |
+| 320 px | [Narrow320](?path=/story/product-e01-screens-mentorslots--narrow-320) |
+
+## /mentors (Phase 4)
+
+| State | Story |
+|---|---|
+| List with count | [Default](?path=/story/product-e01-screens-publicmentors--default) |
+| Filtered by stack | [Filtered](?path=/story/product-e01-screens-publicmentors--filtered) |
+| No mentor matches the filter (*Clear filters*) | [NoResults](?path=/story/product-e01-screens-publicmentors--no-results) |
+| Nobody is listed yet | [NobodyListed](?path=/story/product-e01-screens-publicmentors--nobody-listed) |
+| Loading | [Loading](?path=/story/product-e01-screens-publicmentors--loading) |
+| Load failed | [LoadError](?path=/story/product-e01-screens-publicmentors--load-error) |
+| Twenty-five mentors, paged | [Many](?path=/story/product-e01-screens-publicmentors--many) |
+| Longest values and a partial profile | [LongText](?path=/story/product-e01-screens-publicmentors--long-text) |
+| 320 px | [Narrow320](?path=/story/product-e01-screens-publicmentors--narrow-320) |
+
+## /m/[slug] (Phase 4; *Book* arrives with E02)
+
+| State | Story |
+|---|---|
+| Profile, prices, bookable times | [Default](?path=/story/product-e01-screens-mentorpage--default) |
+| *Book* disabled, reason visible (C11, Q4) | [BookingNotYetAvailable](?path=/story/product-e01-screens-mentorpage--booking-not-yet-available) |
+| No bookable times | [NoTimes](?path=/story/product-e01-screens-mentorpage--no-times) |
+| Optional parts missing | [Partial](?path=/story/product-e01-screens-mentorpage--partial) |
+| Longest values, sixty slots | [LongText](?path=/story/product-e01-screens-mentorpage--long-text) |
+| Unknown link | [NotFound](?path=/story/product-e01-screens-mentorpage--not-found) |
+| Loading | [Loading](?path=/story/product-e01-screens-mentorpage--loading) |
+| Load failed | [LoadError](?path=/story/product-e01-screens-mentorpage--load-error) |
+| 320 px | [Narrow320](?path=/story/product-e01-screens-mentorpage--narrow-320) |

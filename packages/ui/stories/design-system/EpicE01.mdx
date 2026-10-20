@@ -1,0 +1,42 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design system/Epics/E01 Mentor offer" />
+
+# E01 – Mentor offer: slots, prices, share link
+
+Backlog #21 with stories #25–#28, specified in `2026-10-19-mentor-accounts-and-offer.md`. A senior engineer is invited by the founders, registers, sets prices for 25- and 50-minute text sessions, publishes slots, and shares a link – optionally also appearing on a public list.
+
+## Flow
+
+| Step | Screen | What the person does | Components | State map |
+|---|---|---|---|---|
+| 1 | `/admin/invitations` | An admin invites a mentor by email; the link is shown once | `CrudForm`, `InvitationLinkPanel`, `CopyField`, `InvitationStatusBadge`, `DataTable` | [Screens](?path=/docs/product-e01-screens-state-map--docs) |
+| 2 | `/register/mentor?token=` | The mentor registers from the invitation | `CrudForm`, `Alert` | same |
+| 3 | `/login`, `/register` | Anyone signs in or registers | `CrudForm`, `AccountMenu` | same |
+| 4 | `/mentor` | Sees what stands between them and being bookable | `OfferChecklist`, `PendingBookingsNotice` (E02) | same |
+| 5 | `/mentor/profile` | Writes the profile, sets both prices, opts in to the public list | `MentorProfileForm`, `PriceList` | same |
+| 6 | `/mentor/slots` | Adds slots in their own zone, deletes open ones | `AddSlotForm`, `SlotTimeField`, `SlotList`, `DeleteSlotDialog` | same |
+| 7 | `/mentors` | A visitor browses the public list, filters by stack | `MentorCard`, `ActiveFilters`, `ResultCount`, `Pagination` | same |
+| 8 | `/m/[slug]` | A visitor opens a mentor by link: profile, prices, bookable times | `MentorProfileHeader`, `PriceList`, `TagList`, `PublicWorkLinks`, `SlotList` | same |
+
+## Decisions that shape the screens
+
+| Decision | Effect |
+|---|---|
+| D13: a slot is bookable from 24 h ahead | `SlotList` says "Not bookable – starts too soon"; the server decides (`bookable`, Q9) |
+| R08, D03: public list is opt-in, the share link always works | `/mentor` checklist explains why a mentor is not listed |
+| N02: no ratings | `MentorCard` shows public-work links and stack tags instead |
+| C6: dense rows, no avatar wall | `MentorCard` is a list row |
+| Time zones | every time shows its zone; DST handled in `SlotTimeField` ([pattern](?path=/docs/patterns-time-with-zone-and-dst--docs)) |
+
+## Patterns used
+
+[Form](?path=/docs/patterns-form--docs) · [Link shown once](?path=/docs/patterns-link-shown-once--docs) · [Amount in PLN](?path=/docs/patterns-amount-in-pln--docs) · [Bookability checklist](?path=/docs/patterns-bookability-checklist--docs) · [Time with zone and DST](?path=/docs/patterns-time-with-zone-and-dst--docs) · [Delete confirmation](?path=/docs/patterns-delete-confirmation--docs) · [List with filters](?path=/docs/patterns-list-with-filters--docs)
+
+## Source files
+
+`packages/ui/src/components/{auth,mentors,availability}/`, `packages/ui/src/backend/{layout,forms,filters,tables}/`, `packages/ui/stories/product/E01/`, spec `.ai/specs/2026-10-19-mentor-accounts-and-offer.md`.
+
+## Work that remains in the product
+
+The pages in `packages/app` do not use these components yet (the specs' phases 1–4 wire them in). Until then the app's `/admin` and `/admin/users` keep the old look – see [What is missing](?path=/docs/design-system-what-is-missing--docs).

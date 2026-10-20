@@ -1,0 +1,100 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./AddSlotForm.stories";
+
+<Meta of={Stories} />
+
+# AddSlotForm
+
+`import { AddSlotForm } from "@devmentor/ui/components/availability/AddSlotForm"`
+
+Product component, concept `availability` (E01, #27). Instance of the patterns [Form](?path=/docs/patterns-form--docs) and [Time with zone and DST](?path=/docs/patterns-time-with-zone-and-dst--docs). A bespoke form: `CrudForm` has no date-time field that knows zones (AGENTS.md: say why).
+
+## 1. Purpose
+
+Lets a mentor publish one more time mentees can book.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Above the list on `/mentor/slots` | spec E01, Phase 3 |
+
+## 3. When not to use
+
+| Instead of `AddSlotForm`… | Use | Why |
+|---|---|---|
+| Adding many slots at once | not built | spec E01 has one slot per request |
+| Editing a slot | delete and add again | slots have no edit in spec E01 |
+
+## 4. Anatomy
+
+`SlotTimeField` (date, time, zone, preview, error), *Add slot*, a status line ("Slot added."), and an alert above for errors that belong to no field.
+
+## 5. Variants
+
+None.
+
+<Canvas of={Stories.Playground} />
+
+## 6. States
+
+| State | Story |
+|---|---|
+| Nothing chosen | [NothingChosen](?path=/story/product-e01-addslotform--nothing-chosen) |
+| Submitting (busy, second submit ignored) | [Submitting](?path=/story/product-e01-addslotform--submitting) |
+| Added (fields cleared, focus on the date) | [Added](?path=/story/product-e01-addslotform--added) |
+| Skipped local time | [NonexistentTime](?path=/story/product-e01-addslotform--nonexistent-time) |
+| Repeated local time | [AmbiguousTime](?path=/story/product-e01-addslotform--ambiguous-time) |
+| Too soon (server, 24 h) | [TooSoon](?path=/story/product-e01-addslotform--too-soon) |
+| Too close to another slot (server) | [SpacingRule](?path=/story/product-e01-addslotform--spacing-rule) |
+| Duplicate start (`conflict`) | [Duplicate](?path=/story/product-e01-addslotform--duplicate) |
+| No connection | [NetworkError](?path=/story/product-e01-addslotform--network-error) |
+
+<Canvas of={Stories.Playground} />
+
+The states after submitting come from MSW answers in the interaction tests; open the stories (C28).
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| "Added" only after the server confirms (201). | Form pattern |
+| Values are kept after an error; one submit at a time. | Form pattern |
+| Server rules (24 h, 60 days, 15-minute grid, 50-minute spacing) are shown at the field in the server's words; the form does not re-check them. | C55, spec E01 (Slot rules) |
+| Errors without a field (`conflict`, network) appear above the form. | Form pattern |
+| Focus goes to the date after an error and after success. | WCAG 2.4.3 |
+| The confirmation is in a polite status region, not a toast. | S10 |
+
+## 8. Content
+
+Button *Add slot*, busy *Adding…*, confirmation *Slot added.*, error title *Could not add the slot*. The word is *slot* in mentor screens, as in the navigation.
+
+## 9. Responsive
+
+<Canvas of={Stories.Narrow} />
+
+## 10. API
+
+| Prop | Type | Description |
+|---|---|---|
+| `timeZone` | `string` | the mentor's zone |
+| `onSubmit` | `(startsAt: string) => Promise<ApiResult<Slot>>` | `apiCall("/api/mentor/slots", { method: "POST", body: { startsAt } })` |
+| `onAdded` | `(slot: Slot) => void` | after the server confirmed |
+
+<Controls of={Stories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<AddSlotForm timeZone={browserTimeZone()} onSubmit={(startsAt) => apiCall("/api/mentor/slots", { method: "POST", body: { startsAt } })} onAdded={reload} />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| Show the server's own words ("Slots must start at least 24 hours from now."). | A second copy of the rule that drifts from the server. |
+| Keep what the mentor typed after a refusal. | Clear the form on error. |
+
+## 13. Related
+
+- **Confused with:** `CrudForm` (schema-driven forms).
+- **Used in:** `/mentor/slots` ([screen](?path=/story/product-e01-screens-mentorslots--default)).

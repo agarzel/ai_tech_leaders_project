@@ -1,0 +1,40 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as Stories from "../product/E01/DeleteSlotDialog.stories";
+
+<Meta title="Patterns/Delete confirmation" />
+
+# Delete confirmation
+
+Deleting asks once, names what goes, and says what the server answered. Instance: deleting a slot on `/mentor/slots` (`DeleteSlotDialog`, built on `AlertDialog`).
+
+<Canvas of={Stories.Open} />
+
+## Rules
+
+| Rule | Source |
+|---|---|
+| Use `AlertDialog`, not `Dialog`: the question needs an answer. | WAI-ARIA alertdialog |
+| The title names the object and the detail that tells it apart ("Delete the slot on Thu 22 Oct, 18:00?"). | prompt (stage 3) |
+| One sentence of consequence, including what can be undone ("You can add it again later."). | R01.5 |
+| Buttons are verbs with the object: *Keep slot* and *Delete slot*; the destructive one is `destructive`, never the accent. | B51, T10 |
+| Focus starts on the safe choice. | B51 |
+| While the request runs the buttons are disabled and the dialog cannot be dismissed. | one submit at a time |
+| A refusal (`conflict`) stays in the dialog, in the server's words, so the person sees why and can back out. | C58 |
+| After success the page moves focus to a stable place (the list heading) – the row that had it is gone. | WCAG 2.4.3 |
+| The trigger's accessible name includes the object, because rows repeat. | `AGENTS.md` |
+
+## States
+
+| State | Story |
+|---|---|
+| Closed | [Playground](?path=/story/product-e01-deleteslotdialog--playground) |
+| Open (focus on *Keep slot*) | [Open](?path=/story/product-e01-deleteslotdialog--open) |
+| Deleting | [Deleting](?path=/story/product-e01-deleteslotdialog--deleting) |
+| Booked meanwhile (conflict) | [ErrorBooked](?path=/story/product-e01-deleteslotdialog--error-booked) |
+| Done – row gone, focus moves | [Screen: Deleted](?path=/story/product-e01-screens-mentorslots--deleted) |
+
+<Canvas of={Stories.ErrorBooked} />
+
+## Related
+
+`DeleteSlotDialog`, `AlertDialog`, the `/mentor/slots` screen.

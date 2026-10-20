@@ -1,0 +1,96 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./ResultCount.stories";
+
+<Meta of={Stories} />
+
+# ResultCount
+
+`import { ResultCount } from "@devmentor/ui/backend/filters/ResultCount"`
+
+Panel block (C9), concept-agnostic. Used by [List with filters](?path=/docs/patterns-list-with-filters--docs).
+
+## 1. Purpose
+
+Says how many items a list holds, and announces the new number when a filter changes it.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Above the mentor list | spec E01 (`Page.total`) |
+| Above the bookings list (E02) | spec E02 |
+
+## 3. When not to use
+
+| Instead of `ResultCount`… | Use | Why |
+|---|---|---|
+| Counting things as a badge or a hype number | never | P10, A05 |
+| Pagination's range | `Pagination` | "11–20 of 25" is about the page |
+
+## 4. Anatomy
+
+One line of metadata text in a polite status region: "12 mentors".
+
+## 5. Variants
+
+None. `noun` and an optional `plural`.
+
+<Canvas of={Stories.Playground} />
+
+## 6. States
+
+| State | Story |
+|---|---|
+| Many | [Playground](?path=/story/primitives-panel-blocks-resultcount--playground) |
+| One | [One](?path=/story/primitives-panel-blocks-resultcount--one) |
+| Zero | [Zero](?path=/story/primitives-panel-blocks-resultcount--zero) |
+| Irregular plural | [IrregularPlural](?path=/story/primitives-panel-blocks-resultcount--irregular-plural) |
+| Loading (empty) | [Loading](?path=/story/primitives-panel-blocks-resultcount--loading) |
+| Large total | [LargeTotal](?path=/story/primitives-panel-blocks-resultcount--large-total) |
+
+No hover or focus: it is text.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| `role="status"`: the new count is read after a filter changes. | WAI-ARIA status |
+| Empty while loading, so an old number is never announced. | S10 |
+| Metadata size, tabular figures, muted. | P2, T12 |
+
+## 8. Content
+
+"1 mentor", "12 mentors", "0 mentors". Count and noun only; no "found", no exclamation.
+
+## 9. Responsive
+
+One line of text; it wraps with the page.
+
+<Canvas of={Stories.LargeTotal} />
+
+## 10. API
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `total` | `number` | – | matches across all pages (`Page.total`) |
+| `noun` | `string` | – | singular |
+| `plural` | `string` | `noun + "s"` | irregular plural |
+| `isLoading` | `boolean` | `false` | leaves the count empty |
+
+<Controls of={Stories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<ResultCount total={data.total} noun="mentor" isLoading={isLoading} />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| Keep it one quiet line. | A big number or a badge. |
+| Leave it empty while loading. | Show the previous count. |
+
+## 13. Related
+
+- **Confused with:** `Pagination` (range and page), `Badge`.
+- **Used in:** [/mentors](?path=/story/product-e01-screens-publicmentors--default).

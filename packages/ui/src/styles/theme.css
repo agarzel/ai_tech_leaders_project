@@ -6,7 +6,7 @@
  *   spacing   gap-in-group, gap-between-groups, p-panel, gap-section / mt-section,
  *             py-list-row, px-list-row, gap-message-group, gap-message, h-control / size-control, h-control-sm / size-control-sm
  *   colour    bg-secondary-hover (B14), bg-overlay (B47)
- *   grid      grid-cols-icon-content, grid-cols-content-action (B20)
+ *   grid      grid-cols-icon-content, grid-cols-content-action (B20), grid-cols-label-value (C63)
  *   link      link-text – links in running text (T11, B34)
  *   type      type-page-title, type-section-title, type-body, type-label, type-meta, type-code
  * Typography roles use the `type-` prefix (not `text-`) so `cn` never mistakes them for a colour (S17).
@@ -74,6 +74,7 @@
   /* Named grid templates instead of arbitrary grid column values (B20, rule 3) */
   --grid-template-columns-icon-content: auto 1fr; /* alert: icon + text */
   --grid-template-columns-content-action: 1fr auto; /* card header: title + action */
+  --grid-template-columns-label-value: auto 1fr; /* description list: term + value (booking summary) */
 }
 
 /* List-row padding (component tokens T9): py-list-row / px-list-row. */

@@ -1,0 +1,85 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./PublicWorkLinks.stories";
+
+<Meta of={Stories} />
+
+# PublicWorkLinks
+
+`import { PublicWorkLinks, PublicWorkLinksSkeleton, displayUrl } from "@devmentor/ui/components/mentors/PublicWorkLinks"`
+
+Product component, concept `mentors` (E01, #25).
+
+## 1. Purpose
+
+Lets a developer check what the mentor actually built before paying – the trust signal DevMentor uses instead of ratings.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Share page and public list card: the mentor's links (≤ 5, https) | spec E01, UI/UX; N02; A03, A05 |
+
+## 3. When not to use
+
+| Instead of `PublicWorkLinks`… | Use | Why |
+|---|---|---|
+| Star ratings, review counts, "Top rated" | nothing | N02, A03 |
+| Navigation inside DevMentor | `RoleNav`, `ItemLink` | different purpose |
+
+## 4. Anatomy
+
+A named list (`Public work`) of running-text links (`link-text`), each showing the address without `https://` and the trailing slash.
+
+## 5. Variants
+
+None.
+
+<Canvas of={Stories.Many} />
+
+## 6. States
+
+<Canvas of={Stories.States} />
+
+Links: default (underlined), hover (thicker underline), focus (3 px outline) – T11, B34. Data states: loading (`PublicWorkLinksSkeleton`), empty renders nothing (C42), many = five.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Underlined links – colour is not the cue. | T11, WCAG 1.4.1 |
+| Links open in the same tab, like every other link (C43, **proposal**). | WCAG 3.2.5 (no surprise context change) |
+| The visible text is the address, so the link name says where it goes. | WCAG 2.4.4 |
+
+<Canvas of={Stories.ShortText} />
+
+## 8. Content
+
+The address itself, shortened – no invented titles. Long addresses break inside the word.
+
+## 9. Responsive
+
+<Canvas of={Stories.LongNarrow} />
+
+## 10. API
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `links` | `string[]` | – | https URLs from the profile |
+| `label` | `string` | `"Public work"` | list name |
+
+<Controls of={Stories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<PublicWorkLinks links={mentor.links} />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| *github.com/marek-zielinski* | *My GitHub ★★★★★* |
+
+## 13. Related
+
+- **Confused with:** `link-text` (any link in text), `TagList`.
+- **Used in:** `MentorProfileHeader`, `MentorCard` (batch 4).

@@ -1,0 +1,41 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as Stories from "../product/E01/screens/PublicMentors.stories";
+
+<Meta title="Patterns/List with filters" />
+
+# List with filters
+
+A list the person narrows with a filter and still understands: how many results, which filter is in effect, how to undo it, and why the list might be empty. Instance: `/mentors` filtered by stack; `/bookings` by status joins in E02.
+
+<Canvas of={Stories.Default} />
+
+## Rules
+
+| Rule | Source |
+|---|---|
+| The control that sets a filter is a labelled field above the list (`Field` + `NativeSelect`). | Form pattern |
+| `ResultCount` says how many, in a polite status, empty while loading. | C59 |
+| `ActiveFilters` shows each filter in effect, removable, plus *Clear filters*; nothing when unfiltered. | C59 |
+| Two different empty states. No result for the filters: say so and offer *Clear filters*. Nobody there yet: say when this changes; no action when the visitor cannot create anything. | R01.5; prompt (stage 3) |
+| Changing a filter returns to page 1; `Pagination` appears only when the total exceeds a page. | `Pagination` |
+| Rows are the dense list row (`MentorCard`), not cards. | C6 |
+| Loading, error with *Try again*, and long text are states of the list, not of the page. | C3 |
+
+## States
+
+| State | Story |
+|---|---|
+| Default (count, no filter) | [Default](?path=/story/product-e01-screens-publicmentors--default) |
+| Filtered (filter shown, removable) | [Filtered](?path=/story/product-e01-screens-publicmentors--filtered) |
+| No results for the filter | [NoResults](?path=/story/product-e01-screens-publicmentors--no-results) |
+| Nobody listed yet | [NobodyListed](?path=/story/product-e01-screens-publicmentors--nobody-listed) |
+| Loading | [Loading](?path=/story/product-e01-screens-publicmentors--loading) |
+| Error | [LoadError](?path=/story/product-e01-screens-publicmentors--load-error) |
+| Many results (paged) | [Many](?path=/story/product-e01-screens-publicmentors--many) |
+| Long text | [LongText](?path=/story/product-e01-screens-publicmentors--long-text) |
+
+<Canvas of={Stories.NoResults} />
+
+## Related
+
+`ActiveFilters`, `ResultCount`, `Pagination`, `MentorCard`, `EmptyState`.

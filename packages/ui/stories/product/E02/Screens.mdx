@@ -1,0 +1,88 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Product/E02/Screens/State map" />
+
+# E02 screens – state map
+
+Each screen state has its own full-screen story (C14). This batch covers booking and payment: the E02 form of `/m/[slug]`, `/book/[slotId]` and `/bookings/[id]`. Batch 6 adds the lists and the mentor's decisions. The hosted card payment page and `/dev/fake-checkout` are outside the design system (C13).
+
+## /m/[slug] with booking (#29)
+
+| State | Story |
+|---|---|
+| Each slot offers *Book 25 min · price* and *Book 50 min · price*; no accent | [WithBooking](?path=/story/product-e01-screens-mentorpage--with-booking) |
+| A visitor who is not signed in is sent to `/login?next=…` and returns (app behaviour, no story) | – |
+
+## /book/[slotId]?length=… (#30)
+
+| State | Story |
+|---|---|
+| 25 minutes | [Default](?path=/story/product-e02-screens-bookslot--default) |
+| 50 minutes | [FiftyMinutes](?path=/story/product-e02-screens-bookslot--fifty-minutes) |
+| Question missing | [QuestionInvalid](?path=/story/product-e02-screens-bookslot--question-invalid) |
+| Question near the limit | [NearLimit](?path=/story/product-e02-screens-bookslot--near-limit) |
+| Submitting | [Submitting](?path=/story/product-e02-screens-bookslot--submitting) |
+| Opening the payment page | [RedirectingToCheckout](?path=/story/product-e02-screens-bookslot--redirecting-to-checkout) |
+| Time just taken | [SlotTaken](?path=/story/product-e02-screens-bookslot--slot-taken) |
+| Two unpaid bookings | [TooManyUnpaid](?path=/story/product-e02-screens-bookslot--too-many-unpaid) |
+| Payment unavailable (503) | [PaymentUnavailable](?path=/story/product-e02-screens-bookslot--payment-unavailable) |
+| No connection | [NetworkError](?path=/story/product-e02-screens-bookslot--network-error) |
+| 320 px | [Narrow320](?path=/story/product-e02-screens-bookslot--narrow-320) |
+
+## /bookings/[id] (#30, #32)
+
+| State | Story |
+|---|---|
+| Payment processing | [Checking](?path=/story/product-e02-screens-bookingdetail--checking) |
+| Payment lands while the page waits | [PaidWhilePolling](?path=/story/product-e02-screens-bookingdetail--paid-while-polling) |
+| After a minute: "This page will update shortly" | [Slow](?path=/story/product-e02-screens-bookingdetail--slow) |
+| Waiting for the mentor | [Waiting](?path=/story/product-e02-screens-bookingdetail--waiting) |
+| Confirmed | [Confirmed](?path=/story/product-e02-screens-bookingdetail--confirmed) |
+| Declined, with the mentor's reason | [Declined](?path=/story/product-e02-screens-bookingdetail--declined) |
+| Declined, no reason | [DeclinedNoReason](?path=/story/product-e02-screens-bookingdetail--declined-no-reason) |
+| Expired | [Expired](?path=/story/product-e02-screens-bookingdetail--expired) |
+| Refunded | [Refunded](?path=/story/product-e02-screens-bookingdetail--refunded) |
+| Refund delayed | [RefundDelayed](?path=/story/product-e02-screens-bookingdetail--refund-delayed) |
+| Payment not completed | [PaymentNotCompleted](?path=/story/product-e02-screens-bookingdetail--payment-not-completed) |
+| Payment arrived after the release | [LatePayment](?path=/story/product-e02-screens-bookingdetail--late-payment) |
+| No such booking or not yours | [NotFound](?path=/story/product-e02-screens-bookingdetail--not-found) |
+| Loading | [Loading](?path=/story/product-e02-screens-bookingdetail--loading) |
+| Load failed | [LoadError](?path=/story/product-e02-screens-bookingdetail--load-error) |
+| Question of 2,000 characters | [LongQuestion](?path=/story/product-e02-screens-bookingdetail--long-question) |
+| 320 px | [Narrow320](?path=/story/product-e02-screens-bookingdetail--narrow-320) |
+
+## /bookings (#30)
+
+| State | Story |
+|---|---|
+| Own bookings, count above | [Default](?path=/story/product-e02-screens-mybookings--default) |
+| Filtered by status | [Filtered](?path=/story/product-e02-screens-mybookings--filtered) |
+| No booking has this status (*Clear filters*) | [NoResults](?path=/story/product-e02-screens-mybookings--no-results) |
+| No booking yet (*Find a mentor*) | [NothingYet](?path=/story/product-e02-screens-mybookings--nothing-yet) |
+| Thirty bookings, paged | [Many](?path=/story/product-e02-screens-mybookings--many) |
+| Loading | [Loading](?path=/story/product-e02-screens-mybookings--loading) |
+| Load failed | [LoadError](?path=/story/product-e02-screens-mybookings--load-error) |
+| 320 px | [Narrow320](?path=/story/product-e02-screens-mybookings--narrow-320) |
+
+## /mentor/bookings (#32)
+
+| State | Story |
+|---|---|
+| Waiting first, nearest deadline first, accent on its *Accept* | [Default](?path=/story/product-e02-screens-mentorbookings--default) |
+| A deadline under two hours | [DeadlineSoon](?path=/story/product-e02-screens-mentorbookings--deadline-soon) |
+| Decline dialog (refund stated, optional reason) | [Declining](?path=/story/product-e02-screens-mentorbookings--declining) |
+| Declined | [Declined](?path=/story/product-e02-screens-mentorbookings--declined) |
+| Accepted | [Accepted](?path=/story/product-e02-screens-mentorbookings--accepted) |
+| Deadline passed (`conflict`) | [DeadlinePassed](?path=/story/product-e02-screens-mentorbookings--deadline-passed) |
+| Declining refused (already accepted) | [DeclineRefused](?path=/story/product-e02-screens-mentorbookings--decline-refused) |
+| No bookings | [Empty](?path=/story/product-e02-screens-mentorbookings--empty) |
+| Loading | [Loading](?path=/story/product-e02-screens-mentorbookings--loading) |
+| Load failed | [LoadError](?path=/story/product-e02-screens-mentorbookings--load-error) |
+| 320 px | [Narrow320](?path=/story/product-e02-screens-mentorbookings--narrow-320) |
+
+## /mentor with bookings waiting (#32)
+
+| State | Story |
+|---|---|
+| Count in a sentence, nearest deadline, one accent | [WithPending](?path=/story/product-e01-screens-mentorhome--with-pending) |
+| Offer unfinished: the checklist keeps the accent | [WithPendingIncompleteOffer](?path=/story/product-e01-screens-mentorhome--with-pending-incomplete-offer) |

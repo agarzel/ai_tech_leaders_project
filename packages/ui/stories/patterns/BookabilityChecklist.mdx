@@ -1,0 +1,37 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as Stories from "../product/E01/OfferChecklist.stories";
+
+<Meta title="Patterns/Bookability checklist" />
+
+# Bookability checklist
+
+A mentor is bookable only when several things are true at once – profile, prices, a time at least 24 hours ahead – and listed only after opting in (spec E01; D13, R08). The checklist turns those hidden rules into visible steps.
+
+<Canvas of={Stories.NewMentor} />
+
+## Rules
+
+| Rule | Source |
+|---|---|
+| One row per condition, in the order a mentor fixes them. | spec E01, UI/UX (`/mentor`) |
+| Each row: status in a word, one sentence of why, one action. | R01.5; WCAG 1.4.1 |
+| The next unfinished step is the screen's one accent. | P5/K3; C45 (**proposal**) |
+| Explain blocked states (times too soon, opted in but not bookable) instead of only marking them. | D13, R08; B17 |
+| No progress bar, percentage or celebration. | A02 |
+| The rules themselves are computed by core (bookable = open ∧ ≥ 24 h); the UI receives counts and booleans. | spec E01 (`SlotService.listBookable`) |
+
+## States
+
+| State | Story |
+|---|---|
+| New mentor | [NewMentor](?path=/story/product-e01-offerchecklist--new-mentor) |
+| No times | [NoTimes](?path=/story/product-e01-offerchecklist--no-times) |
+| Times too soon | [SlotsTooSoon](?path=/story/product-e01-offerchecklist--slots-too-soon) |
+| Opted in, not bookable | [ListedNotBookable](?path=/story/product-e01-offerchecklist--listed-not-bookable) |
+| Bookable, listed | [Listed](?path=/story/product-e01-offerchecklist--listed) |
+| Loading | [Loading](?path=/story/product-e01-offerchecklist--loading) |
+| With pending bookings | batch 6 (`PendingBookingsNotice`) |
+
+## Related
+
+`OfferChecklist`, `CopyField`, the `/mentor` screen.

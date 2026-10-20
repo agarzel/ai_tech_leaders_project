@@ -1,0 +1,87 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as PageLayoutStories from "./PageLayout.stories";
+
+<Meta of={PageLayoutStories} />
+
+# PageLayout
+
+`import { PageLayout } from "@devmentor/ui/backend/layout/PageLayout"`
+
+Panel block: header + `main` with the page title. (C31, **proposal**)
+
+## 1. Purpose
+
+Gives every page the same frame – header, title, content width and spacing – so screens look like one product.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Every page: `content` width for lists and panels, `narrow` for one form (sign-in, registration) | F2, T8 |
+
+## 3. When not to use
+
+| Instead of `PageLayout`… | Use | Why |
+|---|---|---|
+| A dialog's content | `Dialog` | an overlay, not a page |
+| The session view (conversation in the centre) | its own layout (E03 – not built) | K1, R02.1 |
+
+## 4. Anatomy
+
+Header (slot), `main`: title (`h1`, `type-page-title`), description (optional), content.
+
+## 5. Variants
+
+`width`: `content` (up to 1024 px) or `narrow` (384 px).
+
+<Canvas of={PageLayoutStories.Narrow} />
+
+## 6. States
+
+None – the content shows its own data states.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| One `main` and one `h1` per page. | WCAG 1.3.1, 2.4.6 |
+| Left-aligned title and text, no centred hero. | A01; prompt stage 4 ("everything centred") |
+
+<Canvas of={PageLayoutStories.Landmarks} />
+
+## 8. Content
+
+Title: the place (*Invitations*, *Log in*). Description: one sentence of what the page is for – no promises (audit: "Grow with a mentor…").
+
+## 9. Responsive
+
+16 px side gutter at every width; 32 px between sections (T8). Long titles wrap.
+
+<Canvas of={PageLayoutStories.LongTitleNarrowScreen} />
+
+## 10. API
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `header` | `ReactNode` | – | usually `AppHeader` |
+| `title` | `string` | – | `h1` |
+| `description` | `string` | – | one sentence |
+| `width` | `"content" \| "narrow"` | `"content"` | maximum width |
+| `children` | `ReactNode` | – | the page |
+
+<Controls of={PageLayoutStories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<PageLayout header={<AppHeader … />} title="Log in" width="narrow"><CrudForm … /></PageLayout>`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| Title left-aligned with one sentence under it. | A 60 px centred headline with a tagline label above it (audit, A01). |
+
+## 13. Related
+
+- **Confused with:** `AppHeader` (only the top), `Card` (a panel inside a page).
+- **Used in:** every screen story.

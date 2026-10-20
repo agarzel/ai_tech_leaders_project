@@ -1,0 +1,88 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./BookingStatusBadge.stories";
+
+<Meta of={Stories} />
+
+# BookingStatusBadge
+
+`import { BookingStatusBadge } from "@devmentor/ui/components/bookings/BookingStatusBadge"`
+
+Product component, concept `bookings` (E02, #30, #32).
+
+## 1. Purpose
+
+Names a booking's state in one short phrase in a row.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Rows of `/bookings` and `/mentor/bookings` (batch 6) | spec E02, UI/UX |
+
+## 3. When not to use
+
+| Instead of `BookingStatusBadge`… | Use | Why |
+|---|---|---|
+| The full status with the next action | `BookingStatusPanel` | a row needs a phrase, a page needs a sentence |
+
+## 4. Anatomy
+
+A `Badge`: *Awaiting payment*, *Awaiting mentor*, *Confirmed*, *Declined · refund on its way / refunded / refund delayed*, *Expired · …*, *Payment not completed*.
+
+## 5. Variants
+
+*Confirmed* is `secondary`; the rest `outline`. Never the accent (T10).
+
+<Canvas of={Stories.AllStatuses} />
+
+## 6. States
+
+| State | Story |
+|---|---|
+| All ten combinations | [AllStatuses](?path=/story/product-e02-bookingstatusbadge--all-statuses) |
+| Confirmed | [Confirmed](?path=/story/product-e02-bookingstatusbadge--confirmed) |
+| Declined | [Declined](?path=/story/product-e02-bookingstatusbadge--declined) |
+
+Not interactive; no loading or error state.
+
+<Canvas of={Stories.Declined} />
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| The state is words, not colour. | WCAG 1.4.1 |
+| The refund phase comes from the payment status, so a row never says "refunded" before the money is back. | spec E02 (Refund lifecycle) |
+
+## 8. Content
+
+Wording from `bookingStatusLabel`; the long form for a page is `describeBooking`.
+
+## 9. Responsive
+
+<Canvas of={Stories.Narrow} />
+
+## 10. API
+
+| Prop | Type | Description |
+|---|---|---|
+| `status` | `BookingStatus` | effective status |
+| `paymentStatus` | `PaymentStatus` | decides the refund wording |
+
+<Controls of={Stories.AllStatuses} />
+
+## 11. Code
+
+<Source dark code={`<BookingStatusBadge status={booking.status} paymentStatus={booking.paymentStatus} />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| Words for state. | A green dot. |
+| Wait for the payment to say "refunded". | Mark it refunded when it is only requested. |
+
+## 13. Related
+
+- **Confused with:** `InvitationStatusBadge`, `Badge`.
+- **Used in:** `BookingRow` (batch 6).

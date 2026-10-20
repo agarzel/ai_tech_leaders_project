@@ -1,0 +1,100 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./BookingForm.stories";
+
+<Meta of={Stories} />
+
+# BookingForm
+
+`import { BookingForm } from "@devmentor/ui/components/bookings/BookingForm"`
+
+Product component, concept `bookings` (E02, #30). Instance of the pattern [Form](?path=/docs/patterns-form--docs) and [Payment and waiting](?path=/docs/patterns-payment-and-waiting--docs). A bespoke form: `CrudForm` has no summary, no counter and no payment step (AGENTS.md: say why).
+
+## 1. Purpose
+
+Turns the chosen slot and a question into a booking and sends the mentee to pay.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| `/book/[slotId]` | spec E02, UI/UX |
+
+## 3. When not to use
+
+| Instead of `BookingForm`… | Use | Why |
+|---|---|---|
+| Paying | the hosted card payment page | no card data reaches DevMentor (D16) |
+| Changing a booking | not built | a mentee cannot cancel before acceptance (spec E02, R04 is #34) |
+
+## 4. Anatomy
+
+*Your booking* (`BookingSummary`), `QuestionField`, *Payment* (card payment, 35-minute hold, the mentor may decline – full refund), *Pay \{price\}* (the accent) with a status line.
+
+## 5. Variants
+
+None; length and price come from the summary.
+
+<Canvas of={Stories.Playground} />
+
+## 6. States
+
+| State | Story |
+|---|---|
+| Ready | [Playground](?path=/story/product-e02-bookingform--playground) |
+| 50 minutes | [FiftyMinutes](?path=/story/product-e02-bookingform--fifty-minutes) |
+| Question missing | [QuestionRequired](?path=/story/product-e02-bookingform--question-required) |
+| Submitting | [Submitting](?path=/story/product-e02-bookingform--submitting) |
+| Opening the payment page | [RedirectingToCheckout](?path=/story/product-e02-bookingform--redirecting-to-checkout) |
+| Slot just taken | [SlotTaken](?path=/story/product-e02-bookingform--slot-taken) |
+| Two unpaid bookings | [TooManyUnpaid](?path=/story/product-e02-bookingform--too-many-unpaid) |
+| Payment unavailable (503) | [PaymentUnavailable](?path=/story/product-e02-bookingform--payment-unavailable) |
+| No connection | [NetworkError](?path=/story/product-e02-bookingform--network-error) |
+| Server message at the field | [FieldErrorFromServer](?path=/story/product-e02-bookingform--field-error-from-server) |
+
+The states after pressing *Pay* are MSW answers in the interaction tests; open the stories (C28).
+
+<Canvas of={Stories.SlotTaken} />
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Values kept after an error; one submit at a time. | Form pattern |
+| After success the button stays busy until the browser leaves – no second booking by double click. | C65 |
+| Focus goes to the question on a field error and to the error message otherwise. | WCAG 2.4.3 |
+| The refusal is in words and says what to do (taken, finish the previous payment, nothing was charged). | spec E02 (Edge Cases) |
+| One accent: *Pay*. | R01.5, P5/K3 |
+
+## 8. Content
+
+Button *Pay PLN 180.00* – verb and amount. The note says the mentor may decline and the refund is full; the hold is 35 minutes; payment is by card.
+
+## 9. Responsive
+
+<Canvas of={Stories.Narrow320} />
+
+## 10. API
+
+| Prop | Type | Description |
+|---|---|---|
+| `summary` | `BookingSummaryProps` | what is being bought |
+| `onSubmit` | `({ question }) => Promise<ApiResult<{ bookingId, checkoutUrl }>>` | `apiCall("/api/bookings", { method: "POST", body })` |
+| `onStarted` | `({ bookingId, checkoutUrl }) => void` | the app leaves for `checkoutUrl` |
+
+<Controls of={Stories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<BookingForm summary={summary} onSubmit={({ question }) => apiCall("/api/bookings", { method: "POST", body: { slotId, lengthMinutes, question, entryPoint } })} onStarted={({ checkoutUrl }) => location.assign(checkoutUrl)} />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| Show the price on the button. | "Continue". |
+| Say what happens if the mentor declines. | Hide the refund rule. |
+
+## 13. Related
+
+- **Confused with:** `CrudForm`.
+- **Used in:** [/book/[slotId]](?path=/story/product-e02-screens-bookslot--default).

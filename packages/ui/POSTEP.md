@@ -8,15 +8,14 @@ Plik roboczy zadania z `lekcja-06/prompt-storybook.md`. Nowa sesja: przeczytaj p
 |---|---|
 | 0. Inwentaryzacja i plan | zakończony 2026-10-19 – decyzje właściciela zapisane niżej |
 | 1. Fundamenty | zakończony 2026-10-19 – F1 wdrożone, F2–F6 zapisane; czeka na „dalej” |
-| 2. Komponenty bazowe | **zakończony** 2026-10-19 – partie 1–5 (minimalny zestaw z etapu 0 gotowy); partia 5 niezacommitowana, czeka na „dalej” do etapu 3 |
-| 3. Komponenty produktu, wzorce, ekrany | nie rozpoczęty |
-| 4. Strony, które uczą | nie rozpoczęty |
+| 2. Komponenty bazowe | **zakończony** 2026-10-19 – partie 1–5, scalone w `main` (PR #41) |
+| 3. Komponenty produktu, wzorce, ekrany | **zakończony** 2026-10-20 – partie 1–5 zacommitowane; partia 6 (ostatnia) gotowa, czeka na decyzje C69–C72, Q13–Q14 i „dalej” do etapu 4 |
+| 4. Strony, które uczą | nie rozpoczęty – następny krok |
 | 5. Sprawdzenie i raport | nie rozpoczęty |
 
 ## Następny krok
 
-Partia 5 (ostatnia etapu 2) gotowa: Skeleton, Spinner i Table dopasowane, favicon Storybooka dodany, bloki `backend/` sprawdzone wizualnie na żywej aplikacji. Po „dalej” → **etap 3**: komponenty produktu, wzorce i ekrany dla epików E01 (mentors/availability/auth) i E02 (bookings), wyprowadzone z `.ai/specs/2026-10-19-mentor-accounts-and-offer.md` i `.ai/specs/2026-10-19-booking-and-prepayment.md` (plan komponentów produktu jest już w sekcji „Plan” etapu 0 wyżej).
-Nic z partii 5 nie jest zacommitowane – commit robi właściciel.
+Etap 4: strony, które uczą (po decyzjach C69–C72, Q13–Q14 i „dalej”): Start here, Components (katalog z podglądem), How to choose, Usage and accessibility, Content, What to avoid, Contributing; uzupełnienie „What is missing” (strona już jest – dodać do niej wnioski z tych stron) i stron epików (E01, E02 są); skrót dla agentów `.ai/docs/design-system.md` (S19); test agentem. Potem etap 5 (sprawdzenie i raport; S7 – CI Storybooka).
 
 ## Zatwierdzone decyzje (źródła: `lekcja-06/referencje.md`, `lekcja-06/tokeny.md`)
 
@@ -508,3 +507,553 @@ Uruchomiłem tymczasowo `next dev` na porcie 3101 (osobnym od serwera audytora n
 - Testy integracyjne aplikacji (`npm run test:integration`, Docker) – nie uruchomione w tej sesji; ręczne sprawdzenie w przeglądarce (wyżej) zastąpiło je dla `/admin`/`/admin/users`.
 - Ciemny motyw aplikacji (patrz wyżej – znana luka S16).
 - Prawdziwe urządzenie dotykowe.
+
+## Etap 3 – plan (2026-10-19, czeka na decyzje; bez kodu i bez instalacji)
+
+Gałąź `lesson-6-ds-stage-3` (z `main` po PR #41). Granice: E03 (#33–#36) tylko w „What is missing” (P3/S13); MSW dopiero po osobnej zgodzie (S3); komponenty produktu wg specyfikacji E01 (`2026-10-19-mentor-accounts-and-offer.md`, dalej „spec E01”) i E02 (`2026-10-19-booking-and-prepayment.md`, „spec E02”) oraz D01–D16; ui nie importuje core/db/app – kształty danych przepisane z DTO specyfikacji jako typy w ui (jak `backend/api/types.ts`). **Cn** = moja propozycja do osobnej zgody.
+
+### 3.1 Komponenty produktu
+
+Wspólny kontrakt stanów danych (C3): komponenty-kontenery (listy, panele) mają propsy `isLoading`, `error` + `onRetry`, stan pusty; komponenty-liście eksportują `<Name>Skeleton` (ładowanie), a „błąd” dla liścia = nie dotyczy (pokazuje go kontener – zapisane w dokumentacji); „częściowe dane” = pola `null` z DTO (brak cen, nagłówka, linków, slotu). Każdy komponent: stories Loading, Empty, Error, Partial, Many, LongText (lub opisane „nie dotyczy”). Czas zawsze przez propsy `timeZone` i `now` (deterministyczne stories i testy, odpowiednik `Clock` – C2).
+
+**Typy danych (w `src/components/<concept>/types.ts`, z DTO spec, kwoty w groszach):**
+- `SessionUser = { name: string; role: "mentor" | "mentee" | "admin" }` (SessionUserDto, spec E01 API).
+- `PublicMentor = { slug; name; headline: string | null; bio: string | null; tags: string[]; links: string[]; price25: number | null; price50: number | null; currency: "PLN"; soonestSlotAt: string | null }` (PublicMentorDto, bez e-maila).
+- `MentorProfileInput = { name; headline; bio; tags: string[]; links: string[]; price25: number | null; price50: number | null; listed: boolean }` + `tagOptions: string[]` (MENTOR_TAGS przez props).
+- `Slot = { id; startsAt: string /*ISO UTC*/; status: "open" | "booked"; bookable: boolean }` (SlotDto; `bookable` = ≥ 24 h, D13 – liczone w core).
+- `Invitation = { id; email; status: "pending" | "used" | "expired"; expiresAt; createdAt }` + `link` tylko w odpowiedzi POST.
+- `Booking = { id; mentor: { name; slug }; startsAt; lengthMinutes: 25 | 50; priceAmount; currency; status: "pending_payment" | "awaiting_acceptance" | "confirmed" | "declined" | "expired" | "payment_expired"; paymentStatus: "creating" | "open" | "paid" | "expired" | "refund_requested" | "refunded" | "refund_failed"; acceptBy: string | null; declineReason: string | null; question: string }` (BookingDto, status efektywny).
+- `MentorBooking = Booking` bez `mentor`, z `mentee: { name }` (bez e-maila – spec E02 API).
+
+**E01 (#25–#28):**
+
+| # | Komponent | Concept | Ekran / sekcja spec E01 | Propsy (skrót) | Stany szczególne |
+|---|---|---|---|---|---|
+| 1 | `AccountMenu` | auth | nagłówek: *Log in / Register* albo imię + *Log out* (UI/UX) | `user: SessionUser \| null`, `loginHref`, `registerHref`, `onLogout` | wylogowany, zalogowany, długie imię, wylogowywanie (pending) |
+| 2 | `OfferChecklist` | mentors | `/mentor` – checklista do rezerwowalności (UI/UX, fazy 2–4) | `profileComplete`, `pricesSet`, `bookableSlots: number`, `shareUrl \| null`, `listed`, `hrefs` | nowy mentor, częściowo, komplet, sloty tylko „too soon” (D13); bez paska postępu (A02) |
+| 3 | `MentorProfileForm` (+ wewn. `PriceField`) | mentors | `/mentor/profile` – profil, ceny, „Show me on the public list” | `initialValues: MentorProfileInput`, `tagOptions`, `currency`, `onSubmit → ApiResult` | wszystkie stany wzorca formularza; ceny `null`; 5 linków (limit); bio 2000 |
+| 4 | `MentorProfileHeader` | mentors | `/m/[slug]` – profil | `mentor: PublicMentor` | bez nagłówka/bio/linków, długie bio |
+| 5 | `PriceList` | mentors | `/m/[slug]`, `MentorCard` (obie ceny, R07, D12) | `price25`, `price50`, `currency` | jedna cena `null` („not set”), duże kwoty |
+| 6 | `TagList` | mentors | karta, profil (stack tags) | `tags: string[]` | 0 tagów, wszystkie 4 |
+| 7 | `PublicWorkLinks` | mentors | karta, profil (N02 zamiast ocen) | `links: string[]` (≤ 5 https) | 0, 5, bardzo długi URL |
+| 8 | `MentorCard` | mentors | `/mentors` (UI/UX: imię, nagłówek, tagi, linki, ceny, najbliższy slot; bez ocen) | `mentor: PublicMentor`, `href`, `timeZone` | brak najbliższego slotu, długi nagłówek; C6 |
+| 9 | `InvitationLinkPanel` | mentors | `/admin/invitations` – link pokazany raz + kopiuj (UI/UX) | `email`, `link`, `expiresAt`, `timeZone`, `onDone` | skopiowano, schowek odrzucony (fallback: zaznacz tekst) |
+| 10 | `InvitationStatusBadge` | mentors | `/admin/invitations` – pending / used / expired | `status` | 3 statusy (tekst, nie tylko kolor) |
+| 11 | `SlotTimeField` | availability | `/mentor/slots` – data + godzina, strefa, podgląd „Starts …” (Edge Cases: DST) | `value: string \| null`, `onChange`, `timeZone`, `error` | czas nieistniejący (zmiana na letni), dwuznaczny (podgląd UTC offset), < 24 h |
+| 12 | `SlotList` (+ `SlotRow`) | availability | `/mentor/slots` (właściciel), `/m/[slug]` (publiczny) – grupowanie po dniu, czas widza ze strefą | `slots: Slot[]`, `timeZone`, `rowActions?: (slot) => ReactNode`, `isLoading`, `error`, `emptyAction?` | „not bookable — starts too soon”, `booked`, 60 dni slotów, pusty („No times available right now”) |
+| 13 | `AddSlotForm` | availability | `/mentor/slots` – dodanie slotu | `timeZone`, `now`, `onSubmit → ApiResult<Slot>` | `validation_error` (24 h / 60 dni / siatka 15 min / odstęp 50 min), `conflict` (duplikat) |
+
+**E02 (#29–#32):**
+
+| # | Komponent | Concept | Ekran / sekcja spec E02 | Propsy (skrót) | Stany szczególne |
+|---|---|---|---|---|---|
+| 14 | `SlotBookActions` | bookings | `/m/[slug]` – *Book 25 min · {price}*, *Book 50 min · {price}* (UI/UX) | `slotId`, `price25`, `price50`, `currency`, `hrefFor(length)` | cena brak → bez przycisku; własny slot mentora (forbidden) |
+| 15 | `BookingSummary` | bookings | `/book/[slotId]` – mentor, data/godzina ze strefą, długość, cena | `mentorName`, `startsAt`, `lengthMinutes`, `priceAmount`, `currency`, `timeZone` | długie imię, 25 vs 50 |
+| 16 | `QuestionField` | bookings | `/book/[slotId]` – pytanie z licznikiem 2000 | `value`, `onChange`, `error`, `maxLength=2000` | 0, blisko limitu (ogłoszenie `aria-live`), przekroczony, wklejony kod |
+| 17 | `BookingForm` | bookings | `/book/[slotId]` – podsumowanie + pytanie + nota „mentor może odrzucić – pełny zwrot” + „Card payment” + *Pay* (D05, D16) | `summary`, `onSubmit({question}) → ApiResult<{bookingId, checkoutUrl}>`, `onSuccess` | `conflict` „This time was just taken”, `conflict` „Finish or abandon your previous payment first”, `payment_unavailable` (503), sieć |
+| 18 | `BookingStatusBadge` | bookings | `/bookings`, `/mentor/bookings` – krótki status w wierszu | `status`, `paymentStatus` | wszystkie stany maszyny + refund_*; nigdy akcent (T10) |
+| 19 | `BookingStatusPanel` | bookings | `/bookings/[id]` – status + następna akcja (*Payment processing…*, *Waiting for {mentor} — they decide by {acceptBy}*, *Confirmed*, *Declined — refund on its way*, *Expired — refund on its way*, *Refunded*, *Refund delayed — we are on it*, *Payment not completed — the time was released*) | `booking: Booking`, `audience: "mentee" \| "mentor"`, `timeZone`, `now` | powód odrzucenia (≤ 280) lub brak, długi powód |
+| 20 | `PaymentPending` | payments | `/bookings/[id]` po powrocie z Checkout – sprawdzanie do 1 min, potem „This page will update shortly” | `phase: "checking" \| "slow"` | oba etapy; bez spinnera po przejściu w „slow” |
+| 21 | `BookingQuestion` | bookings | `/bookings/[id]`, `/mentor/bookings` – pytanie (tekst, zachowane łamania) | `question`, `collapsed?` | 2000 znaków, kod (Q5), zwijanie w wierszu |
+| 22 | `BookingRow` | bookings | `/bookings` – „tytuł + linia metadanych” (R01.1) | `booking: Booking`, `href`, `timeZone` | każdy status, długie imię |
+| 23 | `MentorBookingRow` | bookings | `/mentor/bookings` – pytanie, slot, termin decyzji, *Accept* / *Decline* | `booking: MentorBooking`, `timeZone`, `now`, `onAccept → ApiResult`, `onDecline` | akceptowanie (pending), `conflict` „The acceptance deadline has passed”, po terminie (efektywnie expired) |
+| 24 | `AcceptDeadline` | bookings | `/mentor/bookings`, `/bookings/[id]` – termin `acceptBy` (R05, D07) | `acceptBy`, `now`, `timeZone` | > 12 h, < 2 h (C12), minął |
+| 25 | `DeclineBookingDialog` | bookings | `/mentor/bookings` – potwierdzenie „The mentee gets a full refund” + powód ≤ 280 | `menteeName`, `startsAt`, `timeZone`, `onConfirm({reason}) → ApiResult` | wysyłanie, `conflict` (już zaakceptowana / po terminie), błąd serwera |
+| 26 | `PendingBookingsNotice` | bookings | `/mentor` – pozycja *Pending* (jeden wskaźnik zdarzeń, D15, P10) | `count`, `earliestAcceptBy`, `href`, `timeZone` | 0 (nie renderuje się), 1, wiele (Q2) |
+
+Funkcje w `src/lib/` (100% testów): `format.ts` – `formatPrice(minor, currency)` (spec E01: w ui, waluta jako argument), `formatDateTime`, `formatZoneLabel`, `formatRelative(acceptBy, now)`; `time.ts` – `localToUtc(date, time, timeZone)` z testem „round-trip” (czas nieistniejący → błąd, dwuznaczny → pierwszy + offset do podglądu; spec E01 Edge Cases).
+
+Bloki ogólne (dwa i więcej użyć – reguła Contributing; C9): `backend/forms/CopyField` (link zaproszenia, link udostępniania), `backend/filters/ActiveFilters` + `ResultCount` (`/mentors`, `/bookings`), `backend/tables/Pagination` (wydzielony z `DataTable`, używany też przez listy produktu), `backend/layout/AppHeader` + `RoleNav` (znak słowny, krótka nawigacja roli R02.6/P12, `AccountMenu`).
+
+Poza design systemem (C13): `/dev/fake-checkout` (narzędzie dev) i strona Stripe Checkout (hostowana) – w ekranie tylko stan „przekierowanie do płatności”.
+
+### 3.2 Wzorce (`stories/patterns/`, każdy stan = osobna story; strona MDX z regułami i źródłami)
+
+| Wzorzec | Instancja z produktu | Stories |
+|---|---|---|
+| Formularz | `BookingForm` (MSW, `apiCall`) + `CrudForm` (tworzenie zaproszenia, admin) | Default, ValidationOnBlur, ValidationOnSubmit (fokus na pierwszym błędzie), Submitting (blokada podwójnego wysłania), FieldErrorFromServer (`fieldErrors`), Conflict (slot zajęty), ServerError (503 `payment_unavailable`), NetworkError, Success (dopiero po odpowiedzi serwera), ValuesKeptAfterError, Narrow320 |
+| Lista z filtrami | `/mentors` (filtr tagu, spec E01 API `?tag`) + `/bookings` (status) | Default (licznik wyników), Loading, FilterActive (usuwalne filtry), NoResultsForFilters (*Clear filters*), NothingYet (z akcją utwórz: `/mentor/slots` *Add slot*; `/mentors` bez akcji – gość nic nie tworzy, opisane), Error, ManyResults (paginacja), LongText |
+| Widok szczegółów | `/bookings/[id]` | Loaded (status + akcja nad zgięciem), Loading, NotFoundOrNoAccess (jeden komunikat – spec E02: `not_found` nie zdradza istnienia), Error, LongQuestion, Narrow320 |
+| Potwierdzenie usunięcia | usunięcie slotu (`AlertDialog`: „Delete the slot on Tue, 4 Nov, 18:00?”, *Keep slot* / *Delete slot*) | Closed, Open (fokus na rezygnacji, B51), Deleting, ErrorBooked (`conflict` „Cancel the booking instead”), Done (wiersz znika, fokus wraca) |
+| Status i następna akcja (R01.5, P5/K3) | `BookingStatusPanel` | po jednej story na stan × odbiorca (mentee/mentor) |
+| Termin z odliczaniem (R05, D07) | `AcceptDeadline` w `MentorBookingRow` | MoreThan12h, Under2h, Passed |
+| Czas ze strefą i DST | `SlotTimeField`, `SlotList` | Default, NonexistentTime, AmbiguousTime, ViewerInOtherZone, TooSoon |
+| Kwota PLN (D12, F6) | `formatPrice`, `PriceList` | Examples (tabela przykładów), MissingPrice |
+| Płatność i oczekiwanie (D16, R03) | `BookingForm` → `PaymentPending` → `BookingStatusPanel` | RedirectingToCheckout, Checking, Slow, Paid, NotCompleted |
+| Checklista „do rezerwowalności” | `OfferChecklist` + `PendingBookingsNotice` | NewMentor, Partial, SlotsTooSoon, Complete, WithPending |
+| Link pokazany raz (kopiuj) | `InvitationLinkPanel`, `CopyField` | Default, Copied (komunikat `aria-live`, S10), ClipboardDenied, Dismissed (linku już nie ma) |
+
+### 3.3 Kluczowe ekrany (stories `layout: "fullscreen"`, `stories/product/<E0x>/screens/`) i mapa stanów
+
+Ekran = kompozycja komponentów pakietu (+ `AppHeader`), dane z fikstur specyfikacji; mapa stanów jako tabela JSX na stronie epiku (C14).
+
+**E01:**
+| Ekran | Stan → story |
+|---|---|
+| `/login` | formularz → `Login/Default`; zły e-mail/hasło („Invalid email or password”) → `Login/InvalidCredentials`; 429 z czasem ponowienia → `Login/RateLimited`; sieć → `Login/NetworkError` |
+| `/register` | → `Register/Default`; e-mail zajęty (`conflict`) → `Register/EmailTaken`; hasło < 12 → `Register/PasswordTooShort` |
+| `/register/mentor?token=` | ważny → `RegisterMentor/Default`; nieważny/użyty/wygasły (bez formularza) → `RegisterMentor/InvitationInvalid` |
+| `/admin/invitations` | lista → `AdminInvitations/Default`; pusta → `/Empty`; po utworzeniu (link raz) → `/LinkShownOnce`; ładowanie/błąd → `/Loading`, `/Error` |
+| `/mentor` | nowy mentor → `MentorHome/NewMentor`; częściowo → `/Partial`; rezerwowalny + link → `/Bookable`; (E02) z oczekującymi → `/WithPending` |
+| `/mentor/profile` | edycja → `MentorProfile/Default`; puste ceny → `/NoPrices`; błędy pól → `/FieldErrors`; zapisywanie → `/Saving` |
+| `/mentor/slots` | lista → `MentorSlots/Default`; pusto → `/Empty`; slot „too soon” → `/TooSoon`; odrzucony slot (24 h/odstęp) → `/SlotRejected`; usuwanie → `/DeleteConfirm`; dużo → `/Many` |
+| `/mentors` | lista → `PublicMentors/Default`; filtr → `/Filtered`; brak wyników → `/NoResults`; nikt nie jest na liście → `/NobodyListed`; błąd → `/Error` |
+| `/m/[slug]` | profil + sloty → `MentorPage/Default`; brak terminów → `/NoTimes`; nieznany slug → `/NotFound`; E01: *Book* wyłączony z wyjaśnieniem → `/BookingNotYetAvailable` (Q4) |
+
+**E02:**
+| Ekran | Stan → story |
+|---|---|
+| `/m/[slug]` (#29) | przyciski *Book 25/50 · cena* → `MentorPage/WithBooking`; gość → przekierowanie `/login?next=` (opis) |
+| `/book/[slotId]` (#30) | → `BookSlot/Default`; walidacja pytania → `/QuestionInvalid`; wysyłanie → `/Submitting`; zajęty → `/SlotTaken`; 2 nieopłacone → `/TooManyUnpaid`; 503 → `/PaymentUnavailable`; sieć → `/NetworkError` |
+| `/bookings/[id]` (#30, #32) | `Checking`, `Slow`, `Waiting`, `Confirmed`, `Declined`, `Expired`, `Refunded`, `RefundDelayed`, `PaymentNotCompleted`, `NotFound`, `Loading` |
+| `/bookings` | → `MyBookings/Default`; filtr statusu → `/Filtered`; brak wyników → `/NoResults`; jeszcze żadnej (akcja *Find a mentor*) → `/NothingYet`; dużo → `/Many`; błąd → `/Error` |
+| `/mentor/bookings` (#32) | oczekujące (wg `acceptBy`) → `MentorBookings/Default`; termin < 2 h → `/DeadlineSoon`; odrzucanie (dialog + powód) → `/Declining`; po terminie (`conflict`) → `/DeadlinePassed`; pusto → `/Empty`; błąd → `/Error` |
+
+### 3.4 Partie (~6 pozycji, kolejność zależności)
+
+| Partia | Zawartość | Zależy od |
+|---|---|---|
+| 1. Podstawy etapu 3 + dług | (1) MSW: instalacja i podpięcie (po zgodzie, 3.5); (2) `lib/format.ts`; (3) `lib/time.ts`; (4) `CrudForm` → `Field` + walidacja po opuszczeniu pola + fokus na pierwszym błędzie + pole hasła (C8); (5) `DataTable` → tokeny (`gap-*`, `type-meta` w paginacji) + wydzielony `Pagination`; (6) `feedback/*` → tokeny (`gap-in-group`, `type-*`) i wzorzec **Formularz** (CrudForm + MSW) | – |
+| 2. E01 powłoka, auth, admin | `AppHeader` + `RoleNav` (dług: siatka kart „Coming soon”, fokus linków), `AccountMenu`, `CopyField`, `InvitationLinkPanel`, `InvitationStatusBadge`; wzorzec **Link pokazany raz**; ekrany `/login`, `/register`, `/register/mentor`, `/admin/invitations` | 1 |
+| 3. E01 profil i oferta | `TagList`, `PublicWorkLinks`, `PriceList`, `MentorProfileHeader`, `MentorProfileForm`, `OfferChecklist`; wzorce **Kwota PLN**, **Checklista**; ekrany `/mentor`, `/mentor/profile` | 1, 2 |
+| 4. E01 sloty i lista publiczna | `SlotTimeField`, `SlotList`, `AddSlotForm`, `MentorCard`, `ActiveFilters` + `ResultCount`; wzorce **Czas ze strefą**, **Potwierdzenie usunięcia**, **Lista z filtrami**; ekrany `/mentor/slots`, `/mentors`, `/m/[slug]`; strona epiku E01 (szkic mapy stanów) | 3 |
+| 5. E02 rezerwacja i płatność | `SlotBookActions`, `BookingSummary`, `QuestionField`, `BookingForm`, `PaymentPending`, `BookingStatusBadge`, `BookingStatusPanel`; wzorce **Formularz** (instancja BookingForm), **Płatność**, **Status i następna akcja**, **Widok szczegółów**; ekrany `/m/[slug]` (Book), `/book/[slotId]`, `/bookings/[id]` | 4 |
+| 6. E02 listy i decyzje mentora | `BookingQuestion`, `BookingRow`, `MentorBookingRow`, `AcceptDeadline`, `DeclineBookingDialog`, `PendingBookingsNotice`; wzorzec **Termin z odliczaniem**; ekrany `/bookings`, `/mentor/bookings`, `/mentor` (WithPending); strona epiku E02; kontrola kompletności map stanów | 5 |
+
+Po każdej partii: lint, typecheck, `test:coverage` (100% – komponenty produktu i `lib/` są w `src/`), build, `build-storybook` (sprawdzenie stron), `test:storybook` (oba motywy), `lint:tokens`; stop i raport. Szacunek etapu 3: 26 komponentów produktu + 7 bloków ogólnych, ~11 stron wzorców, ~14 ekranów, ok. 300–340 nowych stories (×2 motywy w testach), ~45 testów interakcji, ~40 nowych plików testów jednostkowych.
+
+### 3.5 MSW – do zatwierdzenia (S3)
+
+- Pakiety (devDependencies `@devmentor/ui`, wersje dokładne): `msw@3.0.3`, `msw-storybook-addon@3.0.3`. Komenda: `npm install -D -E -w @devmentor/ui msw@3.0.3 msw-storybook-addon@3.0.3`, potem `npx msw init packages/ui/.storybook/public` (bez `--save`; plik `mockServiceWorker.js` w repo, serwowany przez istniejące `staticDirs`).
+- Zgodność: msw 3 wymaga Node ≥ 22.12 (lokalnie 22.17, CI `node-version: 22` = najnowsza 22.x); opcjonalne peery TypeScript ≥ 5.9 (repo 6.0.3), Vite ≥ 6 (8.3.4), `graphql` – nieużywany, nie instalujemy. Addon: peer `storybook ^10`, `msw >=2`, bez własnych zależności. Uwaga: msw 3.0.3 opublikowany 2026-10-10 (9 dni), 3.0.0 to nowa wersja główna (2026-09-28) – alternatywy w Q1.
+- Podpięcie: `.storybook/preview.tsx` – `initialize({ onUnhandledRequest: "error" })` + `loaders: [mswLoader]`; handlery per story w `parameters.msw.handlers`; wspólne handlery i fikstury w `stories/mocks/` (dane ze specyfikacji, odpowiedzi w kopercie `{ ok, data }` / `{ ok: false, error }`). Stany: sukces, `delay("infinite")` (oczekiwanie), 422 z `fieldErrors`, 409/503/500, `HttpResponse.error()` (brak sieci) – przez prawdziwy `apiCall`.
+- Testy stories: `storybookTest` stosuje loadery z preview, więc MSW działa w Chromium w `test:storybook` (oba motywy); do `optimizeDeps.include` dochodzą `msw`, `msw/browser`, `msw-storybook-addon`. Do sprawdzenia w partii 1: czy plugin Vitest serwuje `staticDirs` (jeśli nie – `publicDir: ".storybook/public"` w `vitest.storybook.config.mts`).
+- Pokrycie jednostkowe bez zmian: msw tylko w `.storybook/` i `stories/` (poza `packages/ui/src/**`), `test:coverage` go nie ładuje, `coverage.exclude` bez zmian; testy `apiCall` dalej mockują `fetch`. C16: reguła ESLint zabraniająca importu `msw` w `packages/ui/src/**`. `lint:tokens` skanuje `.storybook` (także `.js`) – jeśli wygenerowany worker da trafienia, wykluczenie tego jednego pliku w skrypcie (z testem).
+
+### 3.6 Znany dług – gdzie trafia
+
+| Dług | Partia | Uwagi |
+|---|---|---|
+| `CrudForm` bez `Field` (brak podpowiedzi, `aria-describedby`, „(optional)”, ikony błędu) + `space-y-*` | 1 | razem z wymaganiami wzorca formularza (walidacja po opuszczeniu pola, fokus na pierwszym błędzie) |
+| `DataTable` – tokeny wiersza listy | 1 | komórki już mają `py/px-list-row` (B61); zostają `space-y-3`, `text-sm`, `gap-*` w kontenerze i paginacji → `gap-between-groups`, `type-meta`; paginacja wydzielona |
+| `feedback/*` (`EmptyState` `gap-2`/`px-6 py-10`, `text-sm`) | 1 | nazwy tokenów; `ErrorMessage` z surowym `error.message` – komunikat z kodu błędu („co się stało i co zrobić”) w partii 1 |
+| Siatka kart z „Coming soon” w `/admin` (A01, kontrast 2,88 : 1) | 2 | w DS: `RoleNav` tylko z istniejącymi pozycjami (R02.6/P12) i ekran admina w Storybooku; zmiana `packages/app/src/app/admin/page.tsx` poza DS (zasada 11) → „What is missing” + zgłoszenie (C17) |
+| Niespójny fokus linków (obrys przeglądarki / cyan) | 2 | `RoleNav`/`AppHeader` i link powrotu z pierścieniem `ring-3 ring-ring/50` i celem ≥ `control-sm`; linki w kodzie app → „What is missing” |
+| Strona główna (`page.tsx`: slate/cyan, hero, martwy CTA) | – | zostaje poza DS (S9, zasada 11) – „What is missing” |
+| Placeholdery „Ada Lovelace”, tekst pustego stanu w `users-admin.tsx` | – | kod app (zasada 11) – „What is missing”; reguła „bez placeholdera-nazwy” w Content (etap 4) |
+| Treść zależna od JS (`Loading…` bez końca) | – | architektura stron app (dane z serwera) – „What is missing” |
+
+### 3.7 Propozycje C1–C17 (do decyzji)
+
+| # | Propozycja | Źródło / dlaczego |
+|---|---|---|
+| C1 | Komponenty produktu w `src/components/<concept>/<Name>.tsx` (PascalCase jak `backend/`), typy w `types.ts`; nowe eksporty addytywne `./components/*` i `./lib/*` (wpis w `BACKWARD_COMPATIBILITY.md`) | AGENTS.md (miejsce nr 3), spec E01 (`ui/src/components/mentors/` itd.) |
+| C2 | Komponenty czysto prezentacyjne; dane i akcje przez propsy (`onSubmit → ApiResult`); czas przez `now` i `timeZone` | ui nie importuje core; deterministyczne testy (spec: `Clock`) |
+| C3 | Kontrakt stanów danych: kontener ma loading/empty/error, liść ma `<Name>Skeleton`, „błąd” liścia = nie dotyczy (z uzasadnieniem) | prompt etap 3.1, S11 |
+| C4 | `formatPrice` = `Intl.NumberFormat("en-US", { style: "currency", currency })` → „PLN 180.00”, `tabular-nums` | F6, D12, P2 |
+| C5 | Data i godzina: `en-GB`, 24 h, „Tue, 4 Nov, 18:00” + etykieta strefy („Europe/Warsaw, UTC+1”) przy każdej godzinie | spec E01 Edge Cases (strefa przy każdym wyświetleniu); decyzja ostateczna na stronie Content |
+| C6 | `MentorCard` = pozycja jednokolumnowej gęstej listy (`Item`: tytuł + linia metadanych, ceny po prawej), bez awatara, bez siatki kart; nazwa z spec zostaje | R01.1, R01.3, A01 (siatka 3 kart), A05 (ściana kart z awatarem) |
+| C7 | `MentorProfileForm` jako osobny formularz na `Field` (tagi = checkboxy, linki = lista ≤ 5, ceny = `InputGroup` z „PLN”, *Show me on the public list* = `Switch`), bo `CrudForm` nie obsługuje tych pól | AGENTS.md („bespoke tylko gdy UX nie pasuje – powiedz dlaczego”) |
+| C8 | `CrudForm`: przejście na `Field`, walidacja po opuszczeniu pola, fokus na pierwszym błędzie, `description`/`optional`, pole hasła z `z.string().meta({ input: "password" })` + `autocomplete` – zmiany addytywne w propsach | dług; prompt (wzorzec formularza); spec E01 UI/UX i Faza 1 krok 6 (pole hasła) |
+| C9 | Bloki ogólne w `backend/`: `forms/CopyField`, `filters/ActiveFilters` + `ResultCount`, `tables/Pagination` (z `DataTable`), `layout/AppHeader` + `RoleNav` | AGENTS.md (miejsce nr 2), reguła „≥ 2 użycia” |
+| C10 | Akcje powtarzane w wierszach (*Book*, *Accept*, *Delete*) bez akcentu (`outline`/`secondary`); akcent tylko na jednym elemencie ekranu wskazanym w mapie stanów | P5/K3, R01.5 – Q3 |
+| C11 | W partii 4 (E01) `/m/[slug]` z wyłączonym *Book* i widocznym zdaniem dlaczego; w partii 5 zastąpione `SlotBookActions` | spec E01 UI/UX („disabled placeholder until #30”), B17 – Q4 |
+| C12 | `AcceptDeadline`: data + czas względny („in 9 h”) liczony z `now`, odświeżany przez stronę co minutę (bez tykania sekund); < 2 h dodaje tekst „Decide soon” z ikoną, nie tylko kolor | R05/D07, P10 (spokój), WCAG 1.4.1 |
+| C13 | `/dev/fake-checkout` i Stripe Checkout poza DS; w ekranach tylko stan przekierowania | spec E02 (narzędzie dev, strona hostowana) |
+| C14 | Ekrany = stories kompozycyjne w `stories/product/<E0x>/screens/`, nieeksportowane z pakietu (strony to kod app); mapa stanów jako tabela JSX na stronie epiku | prompt etap 3.3, zasada 5, zasada 8 |
+| C15 | MSW tylko tam, gdzie komponent woła API przez `apiCall` (formularze, akcje w dialogach, ekrany); reszta stories dostaje dane przez `args`; fikstury w `stories/mocks/` z danych spec (tagi z MENTOR_TAGS, ceny PLN, bez ocen i liczb hype) | zasada 7, S3 |
+| C16 | ESLint: zakaz importu `msw` w `packages/ui/src/**` | pokrycie i granice pakietu |
+| C17 | Dług aplikacji (siatka kart, linki, strona główna, placeholdery, JS-only) – w DS tylko komponenty i ekrany w Storybooku; zmiany w `packages/app` jako osobne zgłoszenia po etapie 3 | zasada 11, S9 |
+
+### Pytania (etap 3)
+
+- **Q1** MSW: zgoda na `msw@3.0.3` + `msw-storybook-addon@3.0.3`? Alternatywy: `msw@3.0.2` (16 dni na rynku) albo linia 2.x (`msw@2.15.0`, lipiec 2026), jeśli wolisz nie brać świeżej wersji głównej.
+- **Q2** `PendingBookingsNotice` na `/mentor`: czy może pokazać liczbę oczekujących rezerwacji w zdaniu („2 bookings wait for your decision”), czy P10 („bez liczników”) wyklucza także liczbę w tekście (wtedy „Bookings wait for your decision — earliest by …”)?
+- **Q3** Akcent na `/mentor/bookings` i `/m/[slug]` (wiele równorzędnych akcji): brak akcentu na ekranie, czy akcent na akcji przy rezerwacji z najbliższym terminem / najbliższym slocie (C10)?
+- **Q4** Czy zostawić w Storybooku wersję E01 strony `/m/[slug]` z wyłączonym *Book* (C11), czy pokazać tylko docelową wersję z E02?
+- **Q5** Pytanie z rezerwacji (R01.2: mono dla kodu): czysty tekst z zachowanymi łamaniami w kroju proporcjonalnym, czy bloki w potrójnych backtickach renderowane monospace (prosty parser bez markdownu)?
+
+### Decyzje właściciela – plan etapu 3 (Arkadiusz, 2026-10-19)
+
+- **Q1** tak – `npm install -D -E -w @devmentor/ui msw@3.0.3 msw-storybook-addon@3.0.3`, potem `npx msw init packages/ui/.storybook/public` (bez `--save`). Plan awaryjny, gdyby 3.0.3 nie działał: `msw@3.0.2`. Po instalacji sprawdzić `package.json` i lockfile, usunąć wszystko spoza planu (zasada 6).
+- **Q2** tak – liczba może być w zdaniu („2 bookings waiting for your decision”); P10 zabrania tylko liczników-plakietek.
+- **Q3** `/mentor/bookings` → akcent na *Accept* rezerwacji z najbliższym terminem decyzji; `/m/[slug]` → bez akcentu (równorzędne wybory).
+- **Q4** tak – zostaje wersja E01 `/m/[slug]` z wyłączonym *Book* i widocznym powodem (C11).
+- **Q5** pytanie = czysty tekst z zachowanymi łamaniami, krój proporcjonalny (spec E02: „plain text”, bez Markdownu); „monospace dla bloków kodu w potrójnych backtickach” jako propozycja dla przyszłej specyfikacji sesji – wpis w „What is missing”.
+- **C1–C17** przyjęte w całości.
+- „dalej” → partia 1.
+
+## Etap 3 – partia 1, wynik (2026-10-19)
+
+MSW + podpięcie, `lib/format`, `lib/time`, `CrudForm` na `Field`, `DataTable` + wydzielony `Pagination` i bloki `feedback/` na tokenach, `ErrorMessage` bez surowego `error.message`, wzorzec **Formularz**. Nic nie jest zacommitowane.
+
+### Instalacja MSW (Q1) – odstępstwo od komendy, do wiadomości
+- `npm install -D -E -w @devmentor/ui msw@3.0.3 msw-storybook-addon@3.0.3` (także każdy pakiet osobno, także `msw@3.0.2` w dry-run) **wywraca npm 10.9.2** (`Cannot read properties of null (reading 'edgesOut')` w `#loadPeerSet` arborist – ten sam błąd co w etapie 1). Plan awaryjny 3.0.2 nie pomaga – błąd dotyczy npm, nie wersji msw.
+- Próba z `--legacy-peer-deps` usunęła z lockfile m.in. `vite`, `typescript`, `rolldown` (880 linii) – **cofnięta w całości** z kopii lockfile i `package.json` sprzed instalacji (kopia w scratchpadzie, bez `git stash`), `npm install` przywrócił drzewo 1:1 (`cmp` = identyczny lockfile).
+- Skuteczna droga: ta sama komenda przez `npx npm@11 install --package-lock-only --ignore-scripts …` na **kopii** `package.json`-ów i lockfile w scratchpadzie → porównanie: 33 nowe wpisy (wyłącznie drzewo msw: `@mswjs/interceptors`, `@inquirer/*`, `yargs`…), wpis workspace ui, żadna istniejąca wersja nie zmieniona, nic nie usunięte → skopiowane do repo + `npm install` (npm 10). Wynik: `package.json` ui +2 linie (`msw` 3.0.3, `msw-storybook-addon` 3.0.3, dokładne), lockfile **+453 linie, 0 usuniętych**. `npm audit`: te same 10 „high” co przed instalacją, nic z msw.
+- `npx msw init packages/ui/.storybook/public --no-save` → `mockServiceWorker.js` (bez wpisu w `package.json`). Plik wykluczony z ESLint (generowany); `lint:tokens` go skanuje – 0 trafień.
+- Różnice API względem planu 3.5: addon 3.x dla CSF 3 to `mswLoader(setup)` z `msw-storybook-addon/csf3` (nie `initialize()`), a msw 3 zamienił `onUnhandledRequest` na `onUnhandledFrame({ frame, defaults })`. Wbudowany setup addonu nadal używa starej opcji (ignorowanej przez msw 3) – dlatego własny `startMockApi` w `preview.tsx`: błąd tylko dla nieobsłużonych żądań `/api/*`, reszta przechodzi.
+- Vitest: `storybookTest` serwuje `staticDirs`, więc worker działa w `test:storybook` bez `publicDir`; `optimizeDeps` + `msw`, `msw/browser`, `msw-storybook-addon/csf3`, `zod`. Sprawdzone też w zbudowanym Storybooku (story `Patterns/Form/Success` dostaje odpowiedź z mocka).
+
+### Co powstało / zmieniło się
+- `src/lib/format.ts` (+ testy): `formatPrice` → „PLN 180.00” (twarda spacja), `formatDateTime` → „Wed 4 Nov, 18:00” (en-GB, 24 h – uwaga: Intl en-GB daje „Wed 4 Nov”, bez przecinka po dniu tygodnia, nie „Tue, 4 Nov” jak w C5), `formatUtcOffset`/`formatZoneLabel` → „Europe/Warsaw, UTC+1”, `formatRelative` → „in 9 h”, „in 45 min”, „in 3 days”, „20 min ago”, „now”.
+- `src/lib/time.ts` (+ testy): `localToUtc(date, time, zone)` – czas nieistniejący (29.03.2026 02:30 Warszawa) → `nonexistent`, dwuznaczny (25.10.2026 02:30) → pierwsze wystąpienie + `ambiguous: true`, błędne daty → `invalid`; `offsetAt`, `browserTimeZone`. Tylko Intl, bez biblioteki dat.
+- Eksport addytywny `./lib/*` (C1) + wpis w `BACKWARD_COMPATIBILITY.md`. `./components/*` dojdzie z pierwszym komponentem produktu (partia 2).
+- `backend/api/describeApiError.ts` (+ testy) i `ErrorMessage` z propsem `error: ApiError` (C18); `message` zostaje (zgodność z app).
+- `CrudForm`: `Field`/`FieldLabel`/`FieldDescription`/`FieldError` w `FieldGroup`, `description`, `optional`, `autoComplete`, pole hasła z `meta({ input: "password" })`, walidacja po opuszczeniu zmienionego pola i ponowna przy pisaniu, fokus na pierwszym błędzie (albo na komunikacie formularza), `aria-describedby`, przycisk *Saving…* ze spinnerem i `aria-busy`, `errorTitle`; odstępy `gap-between-groups` / `gap-in-group`.
+- `backend/tables/Pagination.tsx` (nowy, wydzielony; `nav` z `label`, `type-meta`, `tabular-nums`, zawija się na 320 px); `DataTable`: kontener `gap-in-group`, `error` przyjmuje też `ApiError`.
+- `EmptyState`, `LoadingMessage`: `gap-in-group`, `px-panel`, `py-section`, `type-label`/`type-body`.
+- ESLint (C16): zakaz `msw`/`msw-storybook-addon` w `packages/ui/src/**` (sprawdzone na próbce w `lib/` i `components/ui/`).
+- Storybook: `stories/mocks/api.ts` (`respondOk`, `respondError`, `respondNever`, `respondNetworkError`), `stories/mocks/fixtures.ts` (rejestracja wg spec E01, zaproszenie, lista użytkowników – dane zmyślone, bez ocen i liczb); wzorzec `Patterns/Form` (MDX z regułami i źródłami + 10 stories: Default, ValidationOnBlur, ValidationOnSubmit, Submitting, FieldErrorFromServer, RateLimited, ServerError, NetworkError, Success, Narrow320); strony 13-sekcyjne + stories dla `CrudForm`, `DataTable`, `Pagination`, `EmptyState`, `ErrorMessage`, `LoadingMessage` w `Primitives/Panel blocks/` (C23).
+- `packages/ui/AGENTS.md`: nowe pliki, MSW w stories, `ErrorMessage error=…`, pola `CrudForm`.
+
+### Propozycje C18–C28 (materiały milczą; wdrożone zachowawczo i odwracalnie – do decyzji)
+| # | Propozycja | Źródło / dlaczego |
+|---|---|---|
+| C18 | `describeApiError`: kody techniczne (`network_error`, `invalid_response`, `internal_error`) dostają tekst „co się stało i co zrobić” („No connection – We could not reach DevMentor. Check your connection and try again.”, „Something went wrong on our side – Try again in a moment.”); kody domenowe zachowują komunikat serwera pod tytułem akcji. `ErrorMessage error=…`, `DataTable error` przyjmuje `ApiError` (addytywnie) | audyt (surowy `error.message`), prompt etap 4 (Content: błędy) |
+| C19 | „(optional)” w `CrudForm` tylko z jawnego `optional: true`, nie wyliczane ze schematu – schematy edycji bywają w całości opcjonalne i każda etykieta dostałaby dopisek | odpowiedź 2.5 |
+| C20 | Walidacja po opuszczeniu pola tylko dla pól zmienionych względem wartości początkowej; pole z błędem sprawdzane ponownie przy każdej zmianie (komunikat znika od razu po poprawie) | prompt etap 3 (walidacja po opuszczeniu pola) |
+| C21 | `autocomplete`: hasło domyślnie `current-password` (rejestracja podaje `new-password`); inne pola tylko z konfiguracji – bez domyślnego `email`, bo w adminie wpisuje się cudzy adres | WCAG 1.3.5, spec E01 („autocomplete set”) |
+| C22 | Paginacja w roli metadanych (12 px, `type-meta`, `tabular-nums`) zamiast 14 px; landmark `nav` z nazwą; „0–0 of 0” zamiast „1–0 of 0” | P2, WAI-ARIA |
+| C23 | Strony bloków panelu w menu jako `Primitives/Panel blocks/<Name>` (drzewo z etapu 0 nie ma osobnej grupy) | drzewo menu S/etap 0 |
+| C24 | `CrudForm` – nowy prop `errorTitle` (domyślnie „Could not save”), żeby tytuł błędu nazywał akcję („Could not create the account”) | prompt etap 4 (Content: błędy) |
+| C25 | `EmptyState`: wewnętrzny odstęp 16/32 px (`px-panel`/`py-section`) zamiast 24/40 px; `LoadingMessage` 32 px w pionie zamiast 40 – zmiana wyglądu w `/admin/users` | T8 (tylko tokeny odstępów) |
+| C26 | Przycisk wysyłania `CrudForm` ze spinnerem (`aria-hidden`) obok „Saving…” – kompozycja B18 | B18 |
+| C27 | Gdy serwer odrzuca formularz bez pola, fokus idzie na kontener komunikatu (`tabIndex=-1`, bez obrysu – komunikat sam jest wyraźny) | prompt etap 3 (fokus na błędzie), WCAG 2.4.3 |
+| C28 | Na stronach Docs story z `play` pokazują stan początkowy (play działa tylko w widoku story) – zamiast podglądów stanów po interakcji linki do stories (Form, CrudForm) | zasada 8 („każdą stronę sprawdź”) – podgląd nie może udawać stanu |
+
+### Wyniki sprawdzeń
+| Komenda | Wynik |
+|---|---|
+| `npm run lint` | OK (0 ostrzeżeń) |
+| `npm run typecheck` | OK |
+| `npm run test:coverage` | OK – 213 testów (+43), 100% we wszystkich metrykach (500/327/130/447) |
+| `npm run build` | OK |
+| `npm run build-storybook` | OK; 7 nowych stron w zbudowanym Storybooku (Chromium, 1440 px): bloki po 13 sekcji, Form 5 sekcji wzorca, tabele renderują się jako tabele, bez błędów strony; worker MSW obecny w `storybook-static/` |
+| `npm run test:storybook` | OK – 382/382 (191 stories × 2 motywy; 39 nowych stories, 16 nowych testów interakcji), a11y bez naruszeń |
+| `npm run lint:tokens` | OK – 0 wartości spoza tokenów (133 pliki) |
+| `npm run test:integration` | OK – 11/11 (uruchomione dodatkowo, Docker) |
+
+Znalezione i naprawione po drodze: `{things}` w treści MDX (`LoadingMessage`) wywracał stronę Docs (MDX traktuje klamry jako JS) – sprawdzenie zbudowanych stron to złapało.
+
+### Sprawdzenie na żywej aplikacji (`next dev -p 3102`, `NEXT_DIST_DIR=.next-ds-check`, zatrzymany, katalog usunięty)
+- `/admin`, `/admin/users` (1440 i 320 px): `CrudForm` na `Field` – etykiety, ikona i tekst błędu, czerwona etykieta przy błędzie; po pustym wysłaniu fokus na *Name*, `aria-describedby` wskazuje błąd, błąd znika przy pisaniu; utworzenie użytkownika działa; `DataTable` z nową paginacją (`nav` obecny); przy 320 px brak przewijania strony w bok; bez błędów JS.
+- **Znalezisko poza DS (kod core/app, nie zmieniany):** duplikat e-maila w `POST /api/users` na tym serwerze dev zwraca **500 `internal_error`** zamiast 409 – w logu `ConflictError … "msg":"Unhandled API error"`, powtarzalne także `curl`-em. `test:integration` (świeży serwer na 3100, efemeryczna baza) ten sam przypadek przechodzi z 409. Prawdopodobnie dwie kopie klasy `AppError` w chunkach Turbopack (`instanceof` zawodzi) – pokrewne #16; przyczyna niesprawdzona. Skutek w UI: zamiast „Internal server error” widać teraz „Something went wrong on our side – Try again in a moment.” (C18), komunikatu przy polu nie ma, bo 500 nie niesie `fieldErrors`. Do osobnego zgłoszenia.
+- Utworzone w lokalnej bazie dev (dozwolone): 3 × „Ds Check User” (`ds-check-<znacznik>@devmentor.test`) i „Ds Check Dup” (`seeded.mentor@devmentor.test`, mentee – próbka `curl`); zostawione.
+- Ciemny motyw w aplikacji – nie sprawdzony (brak przełącznika, S16); w Storybooku oba motywy przechodzą testy.
+
+### Czego nie sprawdzono
+- Ręczna klawiatura w managerze Storybooka i czytnik ekranu na żywo (tylko testy play + axe).
+- `npm run storybook` (serwer dev) – tylko build statyczny i testy Vitest.
+- Prawdziwe urządzenie dotykowe.
+
+### Do „What is missing” (etap 4)
+- Q5: monospace dla bloków kodu w potrójnych backtickach w pytaniu – propozycja do przyszłej specyfikacji sesji.
+- App: `users-admin.tsx` przekazuje do `DataTable` `result.error.message` (string) – przejście na `error={result.error}` (C18) to zmiana w app.
+- ~~App/core: 409 → 500 przy duplikacie e-maila na serwerze dev~~ – koordynator: na świeżym serwerze dev jest 409; 500 tylko na długo działającym serwerze z HMR (zdublowana klasa `AppError` po przeładowaniach) – dopisane do #16, bez osobnego zgłoszenia i bez wpisu w „What is missing”.
+- App: placeholdery „Ada Lovelace”/„ada@example.com” i pusty stan „…with the button above” w `users-admin.tsx` (bez zmian – zasada 11).
+
+### Następny krok
+Decyzje C18–C28, potem partia 2 (E01 powłoka, auth, admin: `AppHeader` + `RoleNav`, `AccountMenu`, `CopyField`, `InvitationLinkPanel`, `InvitationStatusBadge`, wzorzec „Link pokazany raz”, ekrany `/login`, `/register`, `/register/mentor`, `/admin/invitations`).
+
+### Decyzje C18–C28
+
+Zatwierdzone przez Arkadiusza 2026-10-19, wszystkie w wersji wdrożonej w partii 1.
+
+## Etap 3 – partia 2, wynik (2026-10-19)
+
+Powłoka E01 (`AppHeader` + `RoleNav`, `PageLayout`, `AccountMenu`), logowanie i rejestracja (`/login`, `/register`, `/register/mentor` ze stanami zaproszenia), zaproszenia admina (`InvitationLinkPanel` z `CopyField`, `InvitationStatusBadge`), ekran `/admin` bez siatki kart, wzorzec „Link shown once”, mapa stanów ekranów E01. Nic nie jest zacommitowane. Brak nowych zależności i komend CLI.
+
+### Co powstało
+- `src/backend/layout/`: `links.tsx` (`navLinkClassName` – jeden styl linku nawigacji: `muted-foreground`, hover i bieżąca strona `bg-muted`, pierścień `ring-3 ring-ring/50` jak przyciski, 28/40 px; `RenderLink` + `renderAnchor`), `RoleNav.tsx` (`nav` z nazwą, `aria-current="page"`, pusta lista → nic), `AppHeader.tsx` (znak słowny, `RoleNav`, miejsce na konto, linia 1 px, `navLabel`), `PageLayout.tsx` (nagłówek + `main` z jednym `h1`, szerokość `content` 1024 px / `narrow` 384 px).
+- `src/backend/forms/CopyField.tsx`: wartość tylko do odczytu (mono), *Copy link*, potwierdzenie słowami w `role="status"` (bez toastu, S10), przy odmowie schowka zaznaczenie tekstu i instrukcja Ctrl+C/⌘C, zaznaczenie całości przy fokusie, `autoFocus`.
+- `src/components/auth/AccountMenu.tsx` (+ `AccountMenuSkeleton`, typ `SessionUser`): gość – *Log in* (link nawigacji) i *Register* (link w stylu przycisku outline); zalogowany – imię (ucięte przy długim, pełne w `title`) i *Log out* (busy, błąd słowami; 401 = już wylogowany).
+- `src/components/mentors/InvitationLinkPanel.tsx` (region z tytułem, opis „wyślij sam, pokazany raz, ważny do … (strefa)”, `CopyField` z fokusem, *Done*), `InvitationStatusBadge.tsx` (*Pending* `secondary`, *Used*/*Expired* `outline`), typy `Invitation`, `InvitationStatus` (re-eksport z komponentu).
+- Eksport addytywny `./components/*` (C1) + wpis w `BACKWARD_COMPATIBILITY.md`.
+- Stories: bloki `Primitives/Panel blocks/{RoleNav, AppHeader, PageLayout, CopyField}`; produkt `Product/E01/{AccountMenu, InvitationLinkPanel, InvitationStatusBadge}` – każdy ze stroną 13 sekcji; ekrany `Product/E01/Screens/{Login, Register, RegisterMentor, AdminHome, AdminInvitations}` (pełny ekran, MSW tam, gdzie ekran woła API) + `Product/E01/Screens/State map` (stan → story); wzorzec `Patterns/Link shown once`. Fikstury: logowanie, rejestracja mentora, nawigacja ról, zalogowani, lista i nowe zaproszenie.
+
+### Audyt admina w design systemie (zasada 11 – kod app bez zmian)
+- Siatka kart z „Coming soon” → ekran `AdminHome`: `RoleNav` tylko z istniejącymi pozycjami (*Users*, *Invitations*) + gęsta lista sekcji (`Item` + `ItemLink`), bez kart i bez „Coming soon” (test `KeyboardFocus` sprawdza brak tekstu).
+- Jeden styl fokusu linków: `navLinkClassName` (nawigacja, znak słowny, linki konta) = ten sam pierścień co przyciski i pola; linki w treści – `link-text`; wiersze – pierścień `Item`. Link powrotu „← Admin panel” (18 px) zastępuje nawigacja roli z celem 28/40 px.
+- W app: `/admin`, `/admin/users` nadal stare – „What is missing” + zgłoszenie po etapie 3 (C17).
+
+### Propozycje C29–C40 (materiały milczą; wdrożone zachowawczo i odwracalnie – do decyzji)
+| # | Propozycja | Źródło / dlaczego |
+|---|---|---|
+| C29 | Linki w blokach przez prop `renderLink` (app podaje `Link` z Next.js), domyślnie zwykłe `<a>` – ui nie importuje `next` | `AGENTS.md` (granice pakietów) |
+| C30 | `AccountMenu` bez menu rozwijanego: imię + *Log out* obok siebie (dwie akcje nie potrzebują menu) | spec E01 UI/UX („the user's name and Log out”), zasada 6 |
+| C31 | Nowy blok `PageLayout` (nagłówek, `main`, jeden `h1`, szerokość 1024/384 px, odstęp sekcji 32 px) – rama każdego ekranu | F2, T8, A01 (bez hero) |
+| C32 | Wartość w `CopyField` krojem mono (`type-code`) – link z tokenem czyta się znak po znaku | R01.2 (ścieżki, identyfikatory) |
+| C33 | Wylogowanie z odpowiedzią 401 (sesja już wygasła po 24 h) traktowane jak udane – bez komunikatu o błędzie | spec E01 (sesja 24 h bez odświeżania) |
+| C34 | Jeden styl linku nawigacji (`navLinkClassName`): tekst wyciszony, hover i bieżąca strona `bg-muted` + `aria-current`, pierścień jak przyciski | audyt (trzy style fokusu), T4, WCAG 1.4.1 |
+| C35 | `InvitationLinkPanel` zastępuje formularz do *Done*; *Done* w akcencie (jedyna główna akcja w tym momencie); fokus na linku; tekst „Copy the link now and send it to the mentor yourself. It is shown only once…” | spec E01 UI/UX, P5/K3, D15 |
+| C36 | `/register/mentor` pokazuje zaproszony e-mail („You were invited as …”) – wymaga, by strona odczytała zaproszenie po stronie serwera (spec mówi tylko, że nieważny link pokazuje komunikat bez formularza) | spec E01 UI/UX – Q7 |
+| C37 | Ekran `/admin` w DS: krótka nawigacja + gęsta lista sekcji z jednozdaniowym opisem zamiast kart | audyt, R01.1, R02.6/P12, A01 |
+| C38 | Komunikat nieważnego zaproszenia: tytuł „This invitation is no longer valid” + „Links work once and for 14 days. Ask the DevMentor founders for a new one.” (`Alert` z `role="status"` – obecny od wczytania strony) | spec E01 Edge Cases, B42 |
+| C39 | Pozycje nawigacji ról: gość *Mentors*; mentee *Mentors*, *My bookings*; mentor *Overview*, *Profile*, *Slots*, *Bookings*; admin *Users*, *Invitations* (tylko strony ze specyfikacji) | R02.6/P12, specyfikacje E01/E02 |
+| C40 | *Register* w nagłówku jako link w stylu przycisku `outline`, *Log in* jako link nawigacji – akcent zostaje dla głównej akcji strony | P5/K3 |
+
+### Pytania
+- **Q6** Ponowne zaproszenie e-maila, który ma już oczekujące zaproszenie: spec E01 tego nie określa. Story z odmową 409 usunąłem, żeby nie wymyślać reguły. Czy drugie zaproszenie ma być odrzucane, czy tworzyć nowe (stare dalej ważne / unieważnione)?
+- **Q7** (do C36) Czy `/register/mentor` może pokazać zaproszony e-mail? Wymaga to odczytu zaproszenia na serwerze (spec ma tylko `POST /api/auth/register/mentor`); bez tego strona mówi tylko „You were invited to join as a mentor”.
+
+### Wyniki sprawdzeń
+| Komenda | Wynik |
+|---|---|
+| `npm run lint` | OK |
+| `npm run typecheck` | OK |
+| `npm run test:coverage` | OK – 237 testów (+24), 100% we wszystkich metrykach (547/370/146/491) |
+| `npm run build` | OK |
+| `npm run build-storybook` | OK; 9 nowych stron w zbudowanym Storybooku (Chromium): komponenty po 13 sekcji, tabele jako tabele, bez błędów strony; wszystkie linki `?path=` ze stron MDX istnieją w indeksie stories |
+| `npm run test:storybook` | OK – 512/512 (256 stories × 2 motywy; 65 nowych stories, 28 nowych testów interakcji), a11y bez naruszeń |
+| `npm run lint:tokens` | OK – 0 wartości spoza tokenów (164 pliki) |
+
+Ekrany `AdminInvitations`, `AdminHome`, `Login`, `RegisterMentor/InvitationInvalid` obejrzane w zbudowanym Storybooku przy 1440 i 320 px: bez przewijania strony w bok (tabela zaproszeń przy 320 px przewija się w swojej ramce – jak `DataTable`). Poprawione po obejrzeniu: znak słowny wyrównany do lewej krawędzi treści (`-ml-2` względem paddingu linku); z opisu ekranu usunięty identyfikator decyzji „(D11)” – identyfikatory tylko w dokumentacji, nie w treści produktu.
+
+Znalezione i naprawione po drodze: `PerRole` w `AppHeader` (cztery nagłówki na jednej stronie) łamał axe `landmark-unique`/banner – każdy nagłówek w osobnej, nazwanej sekcji + nowy prop `navLabel`; story „wylogowanie przy wygasłej sesji” ujawniło, że 401 pokazywał błąd – stąd C33.
+
+### Czego nie sprawdzono
+- Aplikacja na żywo: nie uruchamiałem serwera dev – partia nie zmienia niczego, czego używa app (nowe bloki i komponenty nie są jeszcze podpięte; `CrudForm`/`DataTable` bez zmian od partii 1).
+- Ręczna klawiatura w managerze Storybooka, czytnik ekranu na żywo, urządzenie dotykowe.
+- Prawdziwy schowek w przeglądarce użytkownika (testy podmieniają `navigator.clipboard`).
+
+### Do „What is missing” (etap 4)
+- App: `/admin` (siatka kart, „Coming soon”, kontrast 2,88 : 1), link „← Admin panel”, fokus linków – do przepięcia na `AppHeader`/`RoleNav`/`PageLayout` (zasada 11, osobne zgłoszenie).
+- Spec E01: zachowanie przy ponownym zaproszeniu tego samego e-maila (Q6); odczyt zaproszenia na stronie `/register/mentor` (Q7).
+
+### Decyzje właściciela – partia 2 (Arkadiusz, 2026-10-20)
+- **C29–C40** przyjęte w całości.
+- **Q6** Ponowne zaproszenie e-maila z oczekującym zaproszeniem tworzy nowe i unieważnia stare (nowa kolumna `revokedAt`, nullable). Zapisane w spec E01 (model danych, tabela API, edge cases).
+- **Q7** `/register/mentor` pokazuje zaproszony e-mail przez nowy `GET /api/auth/invitations/[token]` → `{ email, expiresAt }`; każdy nieważny token (użyty, wygasły, unieważniony, nieznany) → ten sam ogólny `not_found`. Zapisane w spec E01.
+- Wpis „What is missing” o Q6/Q7 nieaktualny – rozstrzygnięte w specyfikacji.
+
+### Partia 2 – Q6/Q7 w design systemie (2026-10-20)
+- `InvitationStatus` + `revoked`; `InvitationStatusBadge` *Revoked* (`outline`), test i strona (status, treść, API).
+- Ekran `AdminInvitations/ReinviteRevokesOld` (MSW ze stanem: po POST lista zwraca nowe zaproszenie i stare jako *Revoked*); wiersz w mapie stanów i we wzorcu „Link shown once”.
+- Ekran `RegisterMentor` czyta zaproszenie przez `GET /api/auth/invitations/[token]` (MSW): `Loading` (szkielety, `role="status"`), `Default` (pokazany e-mail), `InvitationInvalid` (404 → komunikat bez formularza), `UsedMeanwhile`, `Success`, `Narrow320`; mapa stanów zaktualizowana.
+- Sprawdzenia: lint, typecheck, `test:coverage` (238 testów, 100%), build, `build-storybook` (linki `?path=` w MDX – wszystkie istnieją w indeksie), `test:storybook` (516/516 – 258 stories × 2 motywy, +2 stories), `lint:tokens` (0, 164 pliki) – wszystkie OK. Nic nie zacommitowane.
+
+## Etap 3 – partia 3, wynik (2026-10-20)
+
+Profil i oferta mentora (E01, #25–#28): `TagList`, `PublicWorkLinks`, `PriceList`, `MentorProfileHeader`, `OfferChecklist`, `MentorProfileForm` (pola cen wewnątrz), `parsePrice`/`formatPriceInput`; ekrany `/mentor` i `/mentor/profile` z MSW; wzorce „Amount in PLN” i „Bookability checklist”; mapa stanów E01 rozszerzona. Partia 2 (z Q6/Q7) zacommitowana przez koordynatora. Nic nie jest zacommitowane. Bez nowych zależności i CLI, bez serwera dev.
+
+### Co powstało
+- `src/lib/format.ts`: `parsePrice` („180”, „180.5”, „180,50”, „1 200” → grosze; puste → `null`; reszta → `NaN`), `formatPriceInput` (18000 → „180.00”) + testy.
+- `src/components/mentors/types.ts`: `MentorProfile` (GET), `MentorProfileInput` (PUT), `PublicMentor` (PublicMentorDto) – przepisane z spec E01, re-eksport z komponentów.
+- `TagList` (+ `TagListSkeleton`), `PublicWorkLinks` (+ `Skeleton`, `displayUrl`), `PriceList` (+ `Skeleton`; `dt`/`dd`, „Not set”), `MentorProfileHeader` (+ `Skeleton`; nagłówek, tagi, linki, bio z łamaniami), `OfferChecklist` (+ `Skeleton`; 5 kroków ze statusem słownym, zdaniem i akcją; `CopyField` z linkiem udostępniania), `MentorProfileForm` (imię, nagłówek, bio z licznikiem, tagi – checkboxy, do 5 linków z *Add link*/*Remove link n*, dwie ceny z „PLN”, przełącznik listy; zachowanie wzorca Form).
+- Stories (13-sekcyjne strony) dla 6 komponentów; ekrany `Product/E01/Screens/MentorHome` (NewMentor, NoTimes, SlotsTooSoon, Listed, Loading, LoadError, Narrow320) i `MentorProfile` (Default, NewProfile, Loading, LoadError, Saved, Forbidden, Narrow320); wzorce `Patterns/Amount in PLN` (story z prawdziwymi `formatPrice`/`parsePrice`) i `Patterns/Bookability checklist`; fikstury profilu, nowego profilu, 5 linków, długiego bio, slotów.
+
+### Propozycje C41–C53 (materiały milczą; wdrożone zachowawczo i odwracalnie – do decyzji)
+| # | Propozycja | Źródło / dlaczego |
+|---|---|---|
+| C41 | Pole ceny przyjmuje „180”, „180.5”, „180,50”, „1 200”; przecinek = separator dziesiętny (polski zwyczaj), nie tysięcy; >2 miejsca po przecinku lub litery → błąd z przykładem | D12, P2 |
+| C42 | Brak tagów / linków / bio → część się nie renderuje (bez tekstu „No tags”) | R01.1 (bez szumu), prompt (stan częściowy) |
+| C43 | Linki do publicznej pracy otwierają się w tej samej karcie (jak każdy link) | WCAG 3.2.5 |
+| C44 | „Profil kompletny” = imię + nagłówek; w formularzu nagłówek wymagany, bio, stack i linki „(optional)” | spec milczy – Q8 |
+| C45 | Akcja pierwszego niezrobionego kroku checklisty w akcencie, pozostałe `outline`; krok „Share link” zawsze *Done* (link działa od utworzenia profilu); „Public list” bez zgody = *Optional* | R01.5, P5/K3, R08 |
+| C46 | `/mentor` liczy sloty z `GET /api/mentor/slots` jako tablicy `SlotDto` z polem `bookable` liczonym przez core | spec E01 (SlotDto, `listForOwner`) – Q9 |
+| C47 | Ceny mogą zostać puste („Leave empty until you decide”); UI sprawdza granice 10–10 000 PLN wcześnie, serwer i tak rozstrzyga | spec E01 (ceny nullable, granice sanity) |
+| C48 | Licznik znaków bio w podpowiedzi („199 used”), bez osobnego regionu live | prompt (długie teksty), S10 |
+| C49 | Przy 5 linkach zdanie zamiast przycisku *Add link*; usunięcie linku czyści błędy linków (pozycje się przesuwają) | B17, spec E01 (≤ 5) |
+| C50 | „Profile saved.” obok przycisku (status), bez przekierowania | S10, wzorzec Form |
+| C51 | Tytuły stron: `/mentor` „Overview” (jak pozycja nawigacji), `/mentor/profile` „Profile and prices” | C39 |
+| C52 | Na `/m/[slug]` imię = tytuł strony (`PageLayout`), `MentorProfileHeader` zaczyna od nagłówka mentora w rozmiarze tytułu sekcji | P2, R01.5 |
+| C53 | 403 przy zapisie profilu pokazany jako błąd formularza z komunikatem serwera, fokus na nim | spec E01 (Phase 2, 403), wzorzec Form |
+
+### Pytania
+- **Q8** Co znaczy „profil kompletny” w checkliście `/mentor` (spec: pozycja *profile*)? Propozycja C44: imię + nagłówek; bio, stack, linki opcjonalne. Czy serwer ma wymagać nagłówka przy zapisie?
+- **Q9** Skąd `/mentor` bierze liczbę slotów rezerwowalnych i „za wcześnie”: czy `SlotDto` z `GET /api/mentor/slots` ma pole `bookable` (C46), czy core zwraca podsumowanie?
+
+### Wyniki sprawdzeń
+| Komenda | Wynik |
+|---|---|
+| `npm run lint` | OK (0 ostrzeżeń po usunięciu nieużytej stałej w teście) |
+| `npm run typecheck` | OK |
+| `npm run test:coverage` | OK – 274 testy (+36), 100% we wszystkich metrykach |
+| `npm run build` | OK |
+| `npm run build-storybook` | OK; 9 nowych/zmienionych stron w Chromium: komponenty po 13 sekcji, tabele jako tabele, bez błędów; wszystkie linki `?path=` w MDX istnieją |
+| `npm run test:storybook` | OK – 638/638 (319 stories × 2 motywy; +61 stories, +17 testów interakcji), a11y bez naruszeń |
+| `npm run lint:tokens` | OK – 0 (187 plików) |
+
+Ekrany `MentorHome` (NewMentor, Listed), `MentorProfile` i długi `MentorProfileHeader` obejrzane przy 1440 i 320 px: bez przewijania strony w bok. Poprawione po obejrzeniu: wiersze checklisty wyrównane do góry (ikona przy wierszu z polem linku stała pośrodku). Zastąpione po drodze: długie bio z powtórzonego zdania → realistyczny tekst w akapitach (zasada 7).
+
+### Czego nie sprawdzono
+- Aplikacja na żywo (komponenty nie są podpięte w app).
+- Klawiatura w managerze Storybooka, czytnik ekranu, urządzenie dotykowe.
+
+### Do „What is missing” (etap 4)
+- ~~Q8/Q9~~ – rozstrzygnięte 2026-10-20 (niżej), bez wpisu w „What is missing”.
+
+### Decyzje właściciela – partia 3 (Arkadiusz, 2026-10-20)
+- **C41–C53** przyjęte w całości.
+- **Q8** Zapis profilu wymaga imienia i nagłówka (1–120 znaków); bio, tagi i linki opcjonalne; obecność na liście zależy wyłącznie od cen i rezerwowalnego slotu. W spec E01 (tabela API).
+- **Q9** `SlotDto` z `GET /api/mentor/slots` = `{ id, startsAt, status, bookable }`, `bookable` liczy serwer (ta sama reguła co `listBookable`, D13). W spec E01 (tabela API).
+- Dopasowanie: walidacja `MentorProfileForm` już wymagała imienia i nagłówka (1–120) – bez zmian w kodzie; typ `SlotDto` w ekranie `MentorHome` już miał ten kształt. Zmienione tylko opisy: komentarze `OfferChecklist` i `MentorHome`, strony `MentorProfileForm` i `OfferChecklist` (źródło: spec E01, Q8/Q9 zamiast „propozycja C44/C46”).
+
+
+## Etap 3 – partia 4, wynik (2026-10-20)
+
+Sloty i lista publiczna (E01, #27–#28): `SlotTimeField`, `SlotList`/`SlotRow`, `AddSlotForm`, `DeleteSlotDialog`, `MentorCard`, bloki `ActiveFilters` i `ResultCount`; wzorce „Time with zone and DST”, „Delete confirmation”, „List with filters”; ekrany `/mentor/slots`, `/mentors`, `/m/[slug]` (E01, *Book* wyłączony z widocznym powodem). Nic nie jest zacommitowane. Bez nowych zależności i CLI, bez serwera dev. Użyte i zachowane `formatDay`, `formatTime`, `localDayKey` z poprzedniej sesji.
+
+### Co powstało
+- `src/components/availability/`: `types.ts` (`Slot` = `{ id, startsAt, status, bookable }`, Q9), `SlotTimeField` (data + godzina, strefa, podgląd „Starts … (zone, UTC+n)”, czas nieistniejący odrzucony, dwuznaczny z pierwszym wystąpieniem i zdaniem), `SlotList` (+ `SlotRow`, `SlotListSkeleton`; grupowanie po lokalnym dniu widza, stany ładowanie/błąd/pusty), `AddSlotForm`, `DeleteSlotDialog` (AlertDialog).
+- `src/components/mentors/MentorCard.tsx` (+ Skeleton): wiersz gęstej listy, bez awatara i siatki (C6). `PublicWorkLinks` dostał prop `inline`; `links.tsx` – `LinkProps` przyjmuje `data-slot`; `PageLayout` – `break-words` na `h1` (znalezione na 320 px: najdłuższe imię wychodziło poza ekran).
+- `src/backend/filters/`: `ActiveFilters`, `ResultCount` (C9).
+- Stories i strony 13-sekcyjne: `Product/E01/{SlotTimeField, SlotList, AddSlotForm, DeleteSlotDialog, MentorCard}`, `Primitives/Panel blocks/{ActiveFilters, ResultCount}`; wzorce `Patterns/{Time with zone and DST, Delete confirmation, List with filters}`; ekrany `Screens/MentorSlots` (12 stanów, MSW ze stanem), `PublicMentors` (9), `MentorPage` (9); mapa stanów E01 rozszerzona. Fikstury: `ownerSlots`, `manySlots`, `publicMentors`, `publicMentorLong`, `publicMentorPartial`, `manyMentors`.
+
+### Propozycje C54–C62 (materiały milczą; wdrożone zachowawczo i odwracalnie – do decyzji)
+| # | Propozycja | Źródło / dlaczego |
+|---|---|---|
+| C54 | `SlotTimeField`: natywne `date` + `time` (krok 15 min jako podpowiedź), własny szkic (czyszczenie przez `key`), zwraca ISO UTC lub `null`; błąd „nie istnieje” pojawia się od razu, gdy oba pola wypełnione, i ma pierwszeństwo przed komunikatem z formularza | spec E01 (DST), jeden błąd naraz |
+| C55 | UI nie sprawdza reguł 24 h / 60 dni / siatki / odstępu / duplikatu – pokazuje odpowiedź serwera przy polu (`fieldErrors.startsAt`) lub nad formularzem | spec E01 (reguły w `SlotService`), Q9 („UI nie powtarza reguł”) |
+| C56 | `SlotList`: nagłówki dni `h3` (prop `headingLevel`), czas 24 h + linia „status · strefa, UTC±n” w każdym wierszu, `showStatus` (właściciel: słowa; publicznie: tylko strefa), sortowanie po `startsAt` | C5, WCAG 1.4.1 |
+| C57 | `PublicWorkLinks inline` – linki obok siebie w wierszu `MentorCard` | gęstość (R01.1) |
+| C58 | `DeleteSlotDialog`: „Delete the slot on …?”, *Keep slot* / *Delete slot*, odmowa (`conflict`) zostaje w dialogu, w trakcie żądania nic nie zamyka dialogu; po usunięciu fokus przenosi ekran na nagłówek listy; przy slocie `booked` brak akcji *Delete* | spec E01 (Deleting a slot), B51 |
+| C59 | `ActiveFilters`: przycisk na filtr („Remove filter: Stack: React”) + *Clear filters*; `ResultCount`: „N mentors” w `role="status"`, pusty podczas ładowania | C9, S10 |
+| C60 | `MentorCard`: nazwa jako link rozciągnięty na wiersz, jedna linia nagłówka (ucięta, pełna w `title`), tagi, linki, „Next time: …”, ceny po prawej; brakujące części nie renderują się | C6, C42 |
+| C61 | `/m/[slug]` E01: jedno zdanie „Booking opens soon. For now you can see when {name} is free; times are shown in your time zone.” nad listą, każdy *Book* wyłączony (`outline`, `aria-describedby` na to zdanie, nazwa „Book {czas}”), bez akcentu (Q3) | C11, Q4, B17 |
+| C62 | `/mentors`: filtr stacku jako `NativeSelect` w `Field` nad listą, zmiana filtra wraca na stronę 1, paginacja tylko gdy total > 10; dwa puste stany: „No mentors match this filter” (+ *Clear filters*) i „No mentors here yet” (bez akcji – gość niczego nie tworzy) | plan 3.2, spec E01 |
+
+### Pytania
+- **Q10** Kształt odpowiedzi `GET /api/mentors/[slug]`: spec mówi „`PublicMentorDto` with bookable slots” bez nazwy pola. W ekranie założyłem `{ ...PublicMentorDto, slots: SlotDto[] }` (tylko rezerwowalne). Czy tak, czy osobne `GET /api/mentors/[slug]/slots`?
+
+### Wyniki sprawdzeń
+| Komenda | Wynik |
+|---|---|
+| `npm run lint` | OK |
+| `npm run typecheck` | OK |
+| `npm run test:coverage` | OK – 312 testów (+38), 100% we wszystkich metrykach (817/641/238/720) |
+| `npm run build` | OK |
+| `npm run build-storybook` | OK; wszystkie linki `?path=` w MDX istnieją w indeksie (473 wpisy) |
+| `npm run test:storybook` | OK – 810/810 (405 stories × 2 motywy; +86 stories), a11y bez naruszeń |
+| `npm run lint:tokens` | OK – 0 (215 plików) |
+
+Ekrany `MentorSlots`, `PublicMentors`, `MentorPage` obejrzane w zbudowanym Storybooku przy 1440 i 320 px: bez przewijania w bok (po poprawce `break-words` w `PageLayout`). Znalezione po drodze: aksjomat `aria-required-children` – `MentorCard` w `ItemGroup` ze szkieletem/tabelą (naprawione: osobny `render` zamiast dekoratora).
+
+### Czego nie sprawdzono
+- Aplikacja na żywo (komponenty niepodpięte w app); prawdziwy wybór daty i godziny w natywnych kontrolkach przeglądarki (testy ustawiają wartość zdarzeniem `change`).
+- Klawiatura w managerze Storybooka, czytnik ekranu, urządzenie dotykowe.
+- Przejście DST w przeglądarce w innej strefie niż Europe/Warsaw i America/New_York.
+
+### Do „What is missing” (etap 4)
+- Spec E01: nazwa pola ze slotami w `GET /api/mentors/[slug]` (Q10).
+- Strona `/mentors` w app potrzebuje listy tagów (MENTOR_TAGS) – z core przez app, bez endpointu.
+
+### Decyzje C54–C62 i Q10
+
+Zatwierdzone przez Arkadiusza 2026-10-20.
+
+- C54–C62: wszystkie w wersji wdrożonej w partii 4.
+- Q10: `GET /api/mentors/[slug]` zwraca `{ ...PublicMentorDto, slots: SlotDto[] }` (tylko sloty rezerwowalne). Wpisane do specyfikacji E01.
+
+
+### Decyzje właściciela – partia 4 (Arkadiusz, 2026-10-20)
+- **C54–C62** przyjęte w całości. **Q10**: `GET /api/mentors/[slug]` → `{ ...PublicMentorDto, slots: SlotDto[] }` (tylko rezerwowalne); zapisane w spec E01.
+
+## Etap 3 – partia 5, wynik (2026-10-20)
+
+Rezerwacja i płatność (E02, #29–#30, #32): `SlotBookActions`, `BookingSummary`, `QuestionField`, `BookingForm`, `BookingStatusBadge`, `BookingStatusPanel`, `PaymentPending`, `BookingQuestion` (wyprzedzone z partii 6 – `/bookings/[id]` pokazuje pytanie); `bookingStatus.ts` (`describeBooking`, `bookingStatusLabel` – całe słownictwo maszyny stanów w jednym miejscu); ekrany `/book/[slotId]`, `/bookings/[id]` i E02-owa wersja `/m/[slug]` (`MentorPage/WithBooking`); wzorce „Payment and waiting”, „Status and next action”, „Detail view”; BookingForm dopisany do wzorca Form. Nic nie jest zacommitowane. Bez nowych zależności i CLI, bez serwera dev. Poza DS zostają `/dev/fake-checkout` i strona Stripe (C13).
+
+### Co powstało
+- `src/components/bookings/`: `types.ts` (`Booking`, `BookingStatus`, `PaymentStatus`), `bookingStatus.ts`, `SlotBookActions`, `BookingSummary`, `QuestionField` (+ `QUESTION_MAX`), `BookingForm`, `BookingStatusBadge`, `BookingStatusPanel`, `PaymentPending`, `BookingQuestion`. Token `grid-cols-label-value` w `theme.css` (lista opisu: termin + wartość).
+- Stories i strony 13-sekcyjne w `stories/product/E02/` dla 8 komponentów (strony generowane z jednego szkieletu, treść per komponent); ekrany `E02/screens/{BookSlot (11 stanów), BookingDetail (17 stanów, z odpytywaniem)}`, `MentorPage/WithBooking`; mapa stanów `Product/E02/Screens/State map`; fikstury `bookings.*` (każdy stan maszyny), `bookingSummary`, `longQuestion`.
+- Zgodność ze spec E02: tylko karta (D16), wstrzymanie 35 min w treści, cena zapisana przy rezerwacji (UI jej nie liczy), limit 2 nieopłaconych (komunikat „Finish or abandon your previous payment first.” – tekst serwera w MSW), imię mentee tylko mentorowi (typ `Booking` nie ma mentee; widok mentora w partii 6), pytanie zwykłym tekstem ≤ 2000.
+
+### Propozycje C63–C68 (materiały milczą; wdrożone zachowawczo i odwracalnie – do decyzji)
+| # | Propozycja | Źródło / dlaczego |
+|---|---|---|
+| C63 | Nowy token siatki `grid-cols-label-value` (`auto 1fr`) dla `BookingSummary`; bez wartości arbitralnych | reguła tokenów |
+| C64 | `QuestionField`: limit 2000 nie obcina tekstu – wklejone pytanie zostaje całe, pole mówi „Shorten the question by N characters.”; licznik w podpowiedzi, ogłaszany (polite) dopiero przy ≤ 200 znaków do limitu; powód „nie ma Markdownu” w podpowiedzi: „Paste error messages and code as text.” | spec E02 (≤ 2000, plain text), Q5, S10 |
+| C65 | `BookingForm`: po odpowiedzi 201 przycisk zostaje zablokowany („Opening payment…”) do opuszczenia strony – nie da się zrobić drugiej rezerwacji podwójnym kliknięciem; pole pytania wymagane (puste → „Write your question for the mentor.”) | idempotentność, wzorzec Form – Q11 |
+| C66 | `PaymentPending`: faza `checking` (spinner) i `slow` (bez spinnera, „This page will update shortly”) po ok. minucie | spec E02 UI/UX, WCAG 2.2.2 |
+| C67 | Ekran `/bookings/[id]` po minucie sprawdza dalej, 10× wolniej, żeby zdanie „will update shortly” było prawdziwe | spójność komunikatu – decyzja dla implementacji app |
+| C68 | Dwa poziomy słownictwa stanu: krótki (`BookingStatusBadge`: „Declined · refund on its way”) w wierszach, zdanie (`BookingStatusPanel`) na stronie; „Refunded” dopiero gdy płatność = `refunded`; płatność, która doszła po zwolnieniu slotu: „Payment arrived too late — refund on its way”; dla mentora bez szczegółów zwrotu | spec E02 (Refund lifecycle, late paid webhook) |
+
+### Pytania
+- **Q11** Czy pytanie przy rezerwacji może być puste? Spec mówi tylko „≤ 2000 znaków”; wdrożyłem wymóg niepustego (C65). Jeśli puste ma być dozwolone, wystarczy zdjąć jedną regułę.
+- **Q12** `BookingDto`: czy zawiera `paymentStatus`, `mentor { name, slug }`, `startsAt`, `lengthMinutes`, `priceAmount`, `currency`, `acceptBy`, `declineReason` i `question`? Spec nazywa tylko „effective status” i „incl. question”. UI na tym polega (kształt w `types.ts`); `paymentStatus` jest potrzebny do rozróżnienia „refund on its way” / „Refunded” / „Refund delayed”.
+
+### Wyniki sprawdzeń
+| Komenda | Wynik |
+|---|---|
+| `npm run lint` | OK |
+| `npm run typecheck` | OK |
+| `npm run test:coverage` | OK – 362 testy (+50), 100% we wszystkich metrykach (930/750/256/818) |
+| `npm run build` | OK |
+| `npm run build-storybook` | OK; wszystkie linki `?path=` w MDX istnieją w indeksie |
+| `npm run test:storybook` | OK – 986/986 (493 stories × 2 motywy; +88 stories), a11y bez naruszeń |
+| `npm run lint:tokens` | OK – 0 (247 plików) |
+
+Ekrany `BookSlot`, `BookingDetail`, `MentorPage/WithBooking` i strony docs `BookingForm`, `BookingStatusPanel` obejrzane w zbudowanym Storybooku przy 1440 i 320 px: bez przewijania w bok, bez błędów strony. Znalezione po drodze: kwota ma twardą spację (testy nazwy dostępnej muszą ją mieć); fokus przy walidacji bez zmiany stanu wymagał bezpośredniego `focus()`.
+
+### Czego nie sprawdzono
+- Aplikacja na żywo, prawdziwa strona płatności (Stripe/fake) i webhook – komponenty niepodpięte; odpytywanie sprawdzone tylko z MSW (`PaidWhilePolling`), minuta oczekiwania symulowana przez `giveUpMs`.
+- Ścieżka gościa (`/login?next=…`) – zachowanie app, bez story.
+- Klawiatura w managerze Storybooka, czytnik ekranu, urządzenie dotykowe.
+
+### Do „What is missing” (etap 4)
+- Spec E02: czy pytanie może być puste (Q11); kształt `BookingDto` (Q12); co robi `/bookings/[id]` po minucie (C67).
+- App: strony `/book/[slotId]`, `/bookings/[id]` muszą przekazywać `from` (`entryPoint`) i zapamiętywać go przez logowanie.
+
+### Decyzje C63–C68, Q11 i Q12
+
+Zatwierdzone przez Arkadiusza 2026-10-20.
+
+- C63–C68: wszystkie w wersji wdrożonej w partii 5.
+- Q11: pytanie jest wymagane. Kryterium akceptacji w #30 („empty question → booking refused”) i D05 rozstrzygają to już wcześniej.
+- Q12: kształt `BookingDto` wpisany do specyfikacji E02.
+
+
+### Decyzje właściciela – partia 5 (Arkadiusz, 2026-10-20)
+- **C63–C68** przyjęte w całości. **Q11**: pytanie jest wymagane (kryterium akceptacji #30, D05). **Q12**: kształt `BookingDto` zapisany w spec E02.
+
+## Etap 3 – partia 6 (ostatnia), wynik (2026-10-20)
+
+Listy rezerwacji i decyzje mentora (E02, #30, #32): `BookingRow`, `MentorBookingRow`, `AcceptDeadline`, `DeclineBookingDialog`, `PendingBookingsNotice`, `BookingQuestion` z `collapsible`, hook `useNow`; ekrany `/bookings`, `/mentor/bookings` i pozycja „Pending” na `/mentor`; wzorzec „Deadline with a countdown”; strony epików E01 i E02; strona „What is missing”. Nic nie jest zacommitowane. Bez nowych zależności i CLI, bez serwera dev.
+
+### Co powstało
+- `src/components/bookings/`: `AcceptDeadline` (czas ze strefą + „in 8 h”; poniżej 2 h ikona i „Decide soon”; po terminie „Deadline passed”), `BookingRow`, `MentorBookingRow` (mentee tylko imieniem; *Accept* w akcencie tylko przy najbliższym terminie), `DeclineBookingDialog` (na `Dialog`; powód opcjonalny ≤ 280, zwrot nazwany), `PendingBookingsNotice` (liczba w zdaniu, najbliższy termin, link), `BookingQuestion collapsible` (podgląd 280 znaków + *Show full question*), typ `MentorBooking`. `src/lib/useNow.ts` – zegar strony odświeżany co minutę (z możliwością ustalenia pierwszego odczytu).
+- Stories i strony 13-sekcyjne: `Product/E02/{AcceptDeadline, BookingRow, MentorBookingRow, DeclineBookingDialog, PendingBookingsNotice}`; ekrany `Screens/MyBookings` (8 stanów), `Screens/MentorBookings` (11 stanów, MSW ze stanem), `MentorHome/WithPending` i `WithPendingIncompleteOffer`; wzorzec `Patterns/Deadline with a countdown`; mapa stanów E02 rozszerzona.
+- Strony `Design system/`: `Epics/E01 Mentor offer`, `Epics/E02 Booking and prepayment` (przepływ krok po kroku, komponenty, decyzje, wzorce, pliki, praca pozostała), `What is missing` (pokrycie backlogu #25–#36 i E04, dług aplikacji z `audyt-aplikacji.md`, propozycje dla przyszłych specyfikacji w tym Q5 monospace, ograniczenia dokumentacji).
+
+### Propozycje C69–C72 (materiały milczą; wdrożone zachowawczo i odwracalnie – do decyzji)
+| # | Propozycja | Źródło / dlaczego |
+|---|---|---|
+| C69 | `DeclineBookingDialog` i `MentorBookingRow`: odmowa serwera (termin minął, już zaakceptowana) zostaje w dialogu / pod wierszem słowami; w trakcie żądania nic nie zamyka dialogu; po decyzji ekran przenosi fokus na nagłówek listy | spec E02 (Edge Cases), wzorzec Delete confirmation |
+| C70 | `useNow(start?, intervalMs = 60 000)`: zegar strony odświeżany co minutę; `start` ustala pierwszy odczyt (deterministyczne stories i testy) | C12, P10 |
+| C71 | `PendingBookingsNotice`: prop `emphasis` – link jest akcentem tylko, gdy lista kroków oferty nie ma własnej następnej akcji (jeden akcent na ekranie); `/mentor` liczy oczekujące z pierwszej strony `GET /api/mentor/bookings` | P5/K3, Q3 – Q13 |
+| C72 | `/bookings`: filtr statusu (`?status=`) i pusty stan „No bookings yet” z akcją *Find a mentor* w akcencie (jest następny krok), „No bookings with this status” z *Clear filters* | wzorzec Lista z filtrami – Q13 |
+
+### Pytania
+- **Q13** Spec E02 nie ma parametru `status` w `GET /api/bookings` ani licznika oczekujących dla `/mentor`. Czy dodać `?status=` do listy mentee oraz zwracać w `GET /api/mentor/bookings` liczbę oczekujących (`pendingCount`) – bo `/mentor` liczy dziś oczekujące tylko z pierwszej strony?
+- **Q14** Czy `GET /api/mentor/bookings` ma zwracać w `MentorBookingDto` także `paymentStatus` (wiersz mentora pokazuje „Declined · refund on its way”)? Założyłem tak (kształt `MentorBooking` = `Booking` bez `mentor`, z `mentee { name }`).
+
+### Wyniki sprawdzeń
+| Komenda | Wynik |
+|---|---|
+| `npm run lint` | OK |
+| `npm run typecheck` | OK |
+| `npm run test:coverage` | OK – 393 testy (+31), 100% we wszystkich metrykach (1001/821/276/883) |
+| `npm run build` | OK |
+| `npm run build-storybook` | OK; wszystkie linki `?path=` w MDX istnieją w indeksie (637 wpisów) |
+| `npm run test:storybook` | OK – 1096/1096 (548 stories × 2 motywy; +55 stories), a11y bez naruszeń |
+| `npm run lint:tokens` | OK – 0 (269 plików) |
+
+Ekrany `MentorBookings`, `MyBookings`, `MentorHome/WithPending` i strony `What is missing`, epik E02 obejrzane w zbudowanym Storybooku przy 1440 i 320 px: bez przewijania w bok, bez błędów strony.
+
+### Etap 3 – podsumowanie
+Partie 1–6: komponenty produktu E01 i E02, bloki ogólne (`backend/`), wzorce, ekrany obu epików z mapami stanów, MSW; 393 testy jednostkowe (100%) i 1096 testów stories (oba motywy). E03 i E04 tylko w „What is missing” (P3).
+
+### Czego nie sprawdzono
+- Aplikacja na żywo (komponenty niepodpięte), prawdziwe strony, routing i dane z serwera.
+- Odświeżanie zegara co minutę w przeglądarce (sprawdzone tylko w teście jednostkowym z fałszywym zegarem).
+- Klawiatura w managerze Storybooka, czytnik ekranu, urządzenie dotykowe.
+
+### Do etapu 4
+- Strona „What is missing” istnieje i trzeba ją utrzymywać; brakuje: Start here, Components, How to choose, Usage and accessibility, Content, What to avoid, Contributing, skrótu `.ai/docs/design-system.md`, testu agentem.
+
+
+### Decyzje właściciela – partia 6 (Arkadiusz, 2026-10-20)
+- **C69–C72** przyjęte w całości.
+- **Q13** tak: `GET /api/bookings` dostaje opcjonalny filtr `?status=`, `GET /api/mentor/bookings` zwraca `pendingCount` (wszystkie oczekujące, nie tylko pierwsza strona). Zapisane w spec E02. `/mentor` używa teraz `pendingCount` (fikstury i MSW zwracają je w `Page`).
+- **Q14** nie: `MentorBookingDto` nie ma `paymentStatus` – mentor nie widzi szczegółów zwrotu (C68). Poprawione: typ `MentorBooking` bez `paymentStatus`, `MentorBookingRow` pokazuje etykietę mentora (`mentorStatusLabel`: Awaiting your decision, Confirmed, Declined, Expired …), fikstury, MSW i stories bez `paymentStatus`; test, że wiersz mentora nigdy nie renderuje słowa „refund”.

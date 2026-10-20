@@ -1,0 +1,99 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as EmptyStateStories from "./EmptyState.stories";
+
+<Meta of={EmptyStateStories} />
+
+# EmptyState
+
+`import { EmptyState } from "@devmentor/ui/backend/feedback/EmptyState"`
+
+Panel block (S11: used instead of shadcn `empty`).
+
+## 1. Purpose
+
+Tells a person why a list or panel is empty and what they can do next, so an empty screen never looks broken.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| A list with nothing yet: no slots (`/mentor/slots`), no bookings (`/bookings`), no invitations | spec E01, E02 UI/UX |
+| A mentor's share page without bookable times: "No times available right now" (an empty state, not an error) | spec E01, Edge Cases |
+| `DataTable` with no rows | `DataTable` source |
+
+## 3. When not to use
+
+| Instead of `EmptyState`… | Use | Why |
+|---|---|---|
+| A failed load | `ErrorMessage` | different cause, different next step |
+| A list still loading | `Skeleton` / `LoadingMessage` | "empty" before the data arrives is false |
+| No results for active filters | the filtered-list "no results" state with *Clear filters* (batch 4) | prompt stage 3 – a separate state from "nothing yet" |
+
+## 4. Anatomy
+
+Dashed frame (marks an empty place, not content), title, description (optional), action (optional).
+
+## 5. Variants
+
+None. Optional parts make three common shapes:
+
+<Canvas of={EmptyStateStories.Variants} />
+
+## 6. States
+
+One state: shown. The action button has its own states (see `Button`). Not focusable itself; not disabled; no error state (that is `ErrorMessage`).
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Plain text, not a live region: it is page content, read in order. | WAI-ARIA (status only for changes) |
+| The next step is a real `Button` or link with a verb + object. | prompt stage 4 (Content: buttons) |
+| The dashed border is decoration; the text carries the meaning. | T5, WCAG 1.4.1 |
+
+<Canvas of={EmptyStateStories.ActionClick} />
+
+## 8. Content
+
+Title: what is missing, in plain words (*No slots yet*). Description: why, and the next step (*Mentees can book you only at times you publish…*). Never "Coming soon" or a dead promise (audit: `/admin` cards). No emoji or illustrations (R02.5, A01).
+
+## 9. Responsive
+
+Same at every width; text wraps; the action stays under the text.
+
+<Canvas of={EmptyStateStories.LongContentNarrow} />
+
+## 10. API
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `title` | `string` | – | what is missing |
+| `description` | `string` | – | why and what next |
+| `action` | `ReactNode` | – | the next step (`Button`, link) |
+
+<Controls of={EmptyStateStories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<EmptyState title="No invitations yet" />`} />
+
+<Source
+  dark
+  code={`<EmptyState
+  title="No slots yet"
+  description="Mentees can book you only at times you publish. Add a time at least 24 hours from now."
+  action={<Button onClick={openAddSlot}>Add slot</Button>}
+/>`}
+/>
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| *No bookings yet* + why + *Find a mentor*. | *Nothing here* without a reason or next step. |
+| Point to the next step by name (*Add slot*). | Point to a position (*…with the button above*) – it breaks when the layout changes (audit). |
+
+## 13. Related
+
+- **Confused with:** `ErrorMessage` (failure), `LoadingMessage` (waiting), the filtered list's "no results".
+- **Used in:** `DataTable`, slot list, booking lists, mentor share page.

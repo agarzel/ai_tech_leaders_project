@@ -1,0 +1,97 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as ErrorMessageStories from "./ErrorMessage.stories";
+
+<Meta of={ErrorMessageStories} />
+
+# ErrorMessage
+
+`import { ErrorMessage } from "@devmentor/ui/backend/feedback/ErrorMessage"`
+
+Panel block on `Alert variant="destructive"`.
+
+## 1. Purpose
+
+Tells a person that something they need failed – a list did not load, a form was rejected – what happened and what to do next.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| A list or detail view could not load (with *Try again*) | `DataTable`; prompt stage 3 (data states) |
+| A form rejected by the server without a field to point at | `CrudForm`; Form pattern |
+| A booking that could not start: `payment_unavailable` | spec E02 |
+
+## 3. When not to use
+
+| Instead of `ErrorMessage`… | Use | Why |
+|---|---|---|
+| A problem with one field | `FieldError` under the field | answer 2.4, WCAG 3.3.1 |
+| An error the person must act on, shown as a toast | never a toast | S10; prompt stage 4 |
+| An empty list | `EmptyState` | not a failure |
+
+## 4. Anatomy
+
+`Alert` (icon optional through `Alert`), title, message, *Try again* (optional).
+
+## 5. Variants
+
+Two sources of text:
+
+- `error` (an `ApiError`): technical codes – `network_error`, `invalid_response`, `internal_error` – are replaced by a written explanation; other codes keep the server's message under `title` (C18, **proposal**).
+- `message`: text the caller already wrote for people.
+
+<Canvas of={ErrorMessageStories.Variants} />
+
+## 6. States
+
+One state: shown, with `role="alert"`. *Try again* has the `Button` states. Not disabled; there is no "loading" state – a retry replaces the message with the loading state of the view.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| `role="alert"`: announced when it appears. When the error is there on page load, prefer `role="status"` semantics in the view (B42). | WAI-ARIA, B42 |
+| Colour is not the only signal: title and text say it is an error. | WCAG 1.4.1, B41 |
+| *Try again* is a real button. | WCAG 4.1.2 |
+| After a failed form submit, `CrudForm` moves focus to the message when no field is at fault. | prompt stage 3 |
+
+<Canvas of={ErrorMessageStories.Retry} />
+
+## 8. Content
+
+Title: the action that failed (*Could not book*, *Could not load your bookings*). Message: what happened and what to do (*This time was just taken. Pick another time.*). Never a raw technical message (*Unexpected response from the server (502)*), a stack trace or an error code alone (audit). Money: say whether anything was charged (*Nothing was charged.*) when it applies.
+
+## 9. Responsive
+
+At 320 px text wraps and *Try again* moves under it.
+
+<Canvas of={ErrorMessageStories.LongContentNarrow} />
+
+## 10. API
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `error` | `ApiError` | – | from `apiCall`; mutually exclusive with `message` |
+| `message` | `string` | – | text written for people |
+| `title` | `string` | `"Something went wrong"` | the failed action; for technical codes the written title is used |
+| `onRetry` | `() => void` | – | shows *Try again* |
+
+<Controls of={ErrorMessageStories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<ErrorMessage error={result.error} />`} />
+
+<Source dark code={`<ErrorMessage title="Could not load your bookings" error={result.error} onRetry={load} />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| `error={result.error}` – technical failures are explained. | `message={result.error.message}` for any error – the person may read "Internal server error". |
+| *Could not book* + *This time was just taken. Pick another time.* | *Error* + *409*. |
+
+## 13. Related
+
+- **Confused with:** `Alert` (neutral information), `FieldError` (one field), `EmptyState`.
+- **Used in:** `DataTable`, `CrudForm`, booking and payment screens (batch 5).

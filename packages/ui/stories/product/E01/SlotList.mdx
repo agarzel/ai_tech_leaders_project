@@ -1,0 +1,109 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./SlotList.stories";
+
+<Meta of={Stories} />
+
+# SlotList
+
+`import { SlotList, SlotRow, SlotListSkeleton } from "@devmentor/ui/components/availability/SlotList"`
+
+Product component, concept `availability` (E01, #27, #28). Instance of the pattern [Time with zone and DST](?path=/docs/patterns-time-with-zone-and-dst--docs).
+
+## 1. Purpose
+
+Lists slots grouped by the viewer's local day, each with its time and zone, so a mentor sees their offer and a mentee sees when they can book.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| `/mentor/slots` – every slot with its status and a *Delete* | spec E01, UI/UX |
+| `/m/[slug]` – the bookable slots with *Book* | spec E01, UI/UX |
+| `/mentors/…` booking page later (E02) | spec E02 |
+
+## 3. When not to use
+
+| Instead of `SlotList`… | Use | Why |
+|---|---|---|
+| A calendar grid | not built | one column of days keeps lists dense (R01.1); recurrence is out of scope |
+| Bookings | `BookingRow` (batch 6) | a booking is not a slot |
+
+## 4. Anatomy
+
+For each day: a heading (*Wednesday 4 November*) and a dense list. A row: the time (24 h, tabular figures), one metadata line – status and zone label – and the row's actions on the right.
+
+## 5. Variants
+
+`showStatus`: the owner's view (status in words) or the public view (zone only). `headingLevel`: 2, 3 (default) or 4, one below the page's section heading.
+
+<Canvas of={Stories.Public} />
+
+## 6. States
+
+| State | Story |
+|---|---|
+| Owner: open, too soon, booked | [Playground](?path=/story/product-e01-slotlist--playground) |
+| Public: only bookable slots | [Public](?path=/story/product-e01-slotlist--public) |
+| With row actions | [WithRowActions](?path=/story/product-e01-slotlist--with-row-actions) |
+| Sixty slots | [Many](?path=/story/product-e01-slotlist--many) |
+| Viewer in another zone | [ViewerInOtherZone](?path=/story/product-e01-slotlist--viewer-in-other-zone) |
+| Late evening and after midnight | [AcrossMidnight](?path=/story/product-e01-slotlist--across-midnight) |
+| Too soon | [TooSoon](?path=/story/product-e01-slotlist--too-soon) |
+| Loading | [Loading](?path=/story/product-e01-slotlist--loading) |
+| Empty – public / owner | [Empty](?path=/story/product-e01-slotlist--empty), [EmptyOwner](?path=/story/product-e01-slotlist--empty-owner) |
+| Error | [Error](?path=/story/product-e01-slotlist--error) |
+
+<Canvas of={Stories.Playground} />
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Days are the viewer's local days; slots are sorted by start within them. | spec E01 (Edge Cases, DST), C56 |
+| Status is words ("Booked", "Not bookable – starts too soon"), never colour alone. | WCAG 1.4.1 |
+| Whether a slot is bookable comes from the server (`bookable`), never from the clock in the browser. | spec E01 (Q9), D13 |
+| Each day is a labelled list under a real heading. | WCAG 1.3.1, 2.4.6 |
+| `time` carries the UTC instant in `datetime`. | HTML |
+| Row actions name their slot (*Delete the slot on Thu 22 Oct, 18:00*), because rows repeat. | `AGENTS.md` (unique names) |
+| Empty is a normal state, not an error. | spec E01 (Edge Cases) |
+
+## 8. Content
+
+Empty (public): "No times available right now". Empty (owner): says what to do ("Add the first time mentees can book you with the form above."). The zone label is on every row (C5).
+
+## 9. Responsive
+
+<Canvas of={Stories.Narrow} />
+
+## 10. API
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `slots` | `Slot[] \| undefined` | – | `SlotDto`; `undefined` = loading |
+| `timeZone` | `string` | – | the viewer's zone |
+| `showStatus` | `boolean` | `true` | status words (owner) or only the zone (public) |
+| `rowActions` | `(slot) => ReactNode` | – | actions on each row |
+| `headingLevel` | `2 \| 3 \| 4` | `3` | level of the day headings |
+| `isLoading`, `error`, `onRetry` | | | container states (C3) |
+| `emptyTitle`, `emptyDescription`, `emptyAction` | | "No times available right now" | empty state |
+
+`Slot` = `{ id, startsAt, status, bookable }`. `SlotRow` renders one row on its own.
+
+<Controls of={Stories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<SlotList slots={slots} timeZone={zone} rowActions={(slot) => slot.status === "open" && <DeleteSlotDialog slot={slot} … />} />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| Group by the viewer's day and label the zone. | Show UTC or the server's time. |
+| Say why a slot is not bookable. | Hide it or grey it with no text. |
+| Give each row action a name with the time. | Ten buttons called "Delete". |
+
+## 13. Related
+
+- **Confused with:** `DataTable` (admin lists), `BookingRow` (bookings).
+- **Used in:** [/mentor/slots](?path=/story/product-e01-screens-mentorslots--default), [/m/[slug]](?path=/story/product-e01-screens-mentorpage--default).

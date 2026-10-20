@@ -30,7 +30,7 @@ Each package exposes only what its `package.json` `exports` map lists:
 
 - `@devmentor/db` – `.` (ORM config, `getOrm`, entities, `EntityManager`/`MikroORM` types, `UniqueConstraintViolationException`) and `./constants` (client-safe, e.g. `USER_ROLES`).
 - `@devmentor/core` – `.` (container, `createRequestScope`, `apiHandler`, `makeCrudRoute`, errors, logger, env, services, DTO types) and `./validators/*` (client-safe Zod schemas).
-- `@devmentor/ui` – `./components/ui/*`, `./backend/*`, `./backend/api/*`, `./lib/utils`, `./styles/*` (design tokens `tokens.css` and the Tailwind mapping `theme.css`, imported by the app's `globals.css`).
+- `@devmentor/ui` – `./components/ui/*`, `./components/*` (product components by concept, e.g. `./components/auth/AccountMenu`), `./backend/*`, `./backend/api/*`, `./lib/utils`, `./lib/*` (formatting and time helpers, e.g. `./lib/format`, `./lib/time`), `./styles/*` (design tokens `tokens.css` and the Tailwind mapping `theme.css`, imported by the app's `globals.css`).
 - **Breaking:** removing or renaming an export or subpath, changing a function signature or DTO shape, moving a client-safe entry point so that it pulls server code (MikroORM) into the browser.
 - **Required path:** update all importers in the same PR (the monorepo makes this checkable with `npm run typecheck`); keep client-safe entry points free of server imports.
 

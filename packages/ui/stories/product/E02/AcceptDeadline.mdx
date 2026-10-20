@@ -1,0 +1,97 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./AcceptDeadline.stories";
+
+<Meta of={Stories} />
+
+# AcceptDeadline
+
+`import { AcceptDeadline } from "@devmentor/ui/components/bookings/AcceptDeadline"`
+
+Product component, concept `bookings` (E02, #32). Instance of the pattern [Deadline with a countdown](?path=/docs/patterns-deadline-with-a-countdown--docs). The page's clock comes from `useNow` (`@devmentor/ui/lib/useNow`).
+
+## 1. Purpose
+
+Tells the mentor by when they must decide on a booking, and how soon that is.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| `MentorBookingRow` on `/mentor/bookings` | spec E02, UI/UX |
+| `PendingBookingsNotice` on `/mentor` (the earliest deadline) | spec E02, UI/UX |
+
+## 3. When not to use
+
+| Instead of `AcceptDeadline`… | Use | Why |
+|---|---|---|
+| A countdown that ticks by the second | never | calm interface (P10); the page refreshes `now` every minute |
+| The mentee's wait | `BookingStatusPanel` | the mentee reads a sentence with the same time |
+
+## 4. Anatomy
+
+One line of text: *Decide by* the time with its zone, then a relative phrase ("in 8 h"). Under two hours it starts with an icon and "Decide soon"; past the deadline it reads "Deadline passed".
+
+## 5. Variants
+
+Three phases by remaining time: more than two hours, under two hours, passed.
+
+<Canvas of={Stories.MoreThanTwoHours} />
+
+## 6. States
+
+| State | Story |
+|---|---|
+| More than two hours | [MoreThanTwoHours](?path=/story/product-e02-acceptdeadline--more-than-two-hours) |
+| Under two hours | [UnderTwoHours](?path=/story/product-e02-acceptdeadline--under-two-hours) |
+| In minutes | [InMinutes](?path=/story/product-e02-acceptdeadline--in-minutes) |
+| Passed | [Passed](?path=/story/product-e02-acceptdeadline--passed) |
+| Other time zone | [OtherTimeZone](?path=/story/product-e02-acceptdeadline--other-time-zone) |
+
+Not interactive. `now` is a prop so stories and tests are deterministic.
+
+<Canvas of={Stories.UnderTwoHours} />
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Urgency is words and an icon, never only colour or weight. | C12, WCAG 1.4.1 |
+| The icon is decorative. | WCAG 1.1.1 |
+| The deadline is a `time` element with the UTC instant. | HTML |
+| The zone is named. | spec E01 (Edge Cases) |
+| Refreshed by the page once a minute, not announced. | P10 |
+
+## 8. Content
+
+"Decide by Tue 27 Oct, 05:00 (Europe/Warsaw, UTC+1) · in 8 h". "Decide soon" is the only urgency word; no exclamation marks, no red.
+
+## 9. Responsive
+
+<Canvas of={Stories.Narrow} />
+
+## 10. API
+
+| Prop | Type | Description |
+|---|---|---|
+| `acceptBy` | `string` | ISO UTC, `startsAt − 12 h` |
+| `now` | `Date` | the page's clock, e.g. `useNow()` |
+| `timeZone` | `string` | the viewer's zone |
+
+<Controls of={Stories.MoreThanTwoHours} />
+
+## 11. Code
+
+<Source dark code={`const now = useNow();
+<AcceptDeadline acceptBy={booking.acceptBy} now={now} timeZone={zone} />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| Say "Decide soon" with an icon. | Turn the text red. |
+| Refresh once a minute. | Tick every second. |
+
+## 13. Related
+
+- **Confused with:** `formatRelative` (the function it uses).
+- **Used in:** `MentorBookingRow`, `PendingBookingsNotice`.

@@ -1,0 +1,39 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as Stories from "../product/E02/BookingStatusPanel.stories";
+
+<Meta title="Patterns/Status and next action" />
+
+# Status and next action
+
+At the top of a detail page the person reads where things stand and what, if anything, they do next. Instance: the booking state machine in `BookingStatusPanel`, for the mentee and the mentor.
+
+<Canvas of={Stories.DeclinedMentee} />
+
+## Rules
+
+| Rule | Source |
+|---|---|
+| The title is the state in words, with the time that matters ("they decide by Tue 27 Oct, 05:00 (Europe/Warsaw, UTC+1)"). | R01.5, spec E02 |
+| One sentence says what happens next; refund sentences say banks take a few days. | spec E02, UI/UX |
+| The next action, when there is one, is the screen's one accent: *Find another mentor*, *Choose a time again*. Waiting states have no action. | P5/K3 |
+| Refund wording follows the payment status: "on its way" while requested, "Refunded" only when done, "Refund delayed — we are on it" when it failed. | spec E02 (Refund lifecycle) |
+| The mentee sees the mentor's reason; the mentor never sees refund details. | spec E02 |
+| Rows use `BookingStatusBadge`, a phrase; pages use the panel, a sentence. | C68 |
+
+## States (each state × reader is a story)
+
+| State | Mentee | Mentor |
+|---|---|---|
+| Waiting | [WaitingMentee](?path=/story/product-e02-bookingstatuspanel--waiting-mentee) | [WaitingMentor](?path=/story/product-e02-bookingstatuspanel--waiting-mentor) |
+| Confirmed | [ConfirmedMentee](?path=/story/product-e02-bookingstatuspanel--confirmed-mentee) | [ConfirmedMentor](?path=/story/product-e02-bookingstatuspanel--confirmed-mentor) |
+| Declined | [DeclinedMentee](?path=/story/product-e02-bookingstatuspanel--declined-mentee) | [DeclinedMentor](?path=/story/product-e02-bookingstatuspanel--declined-mentor) |
+| Expired | [ExpiredMentee](?path=/story/product-e02-bookingstatuspanel--expired-mentee) | [ExpiredMentor](?path=/story/product-e02-bookingstatuspanel--expired-mentor) |
+| Refunded, refund delayed | [Refunded](?path=/story/product-e02-bookingstatuspanel--refunded), [RefundDelayed](?path=/story/product-e02-bookingstatuspanel--refund-delayed) | – |
+| Payment not completed, late payment | [PaymentNotCompleted](?path=/story/product-e02-bookingstatuspanel--payment-not-completed), [LatePayment](?path=/story/product-e02-bookingstatuspanel--late-payment) | – |
+| Awaiting payment | [PaymentChecking](?path=/story/product-e02-bookingstatuspanel--payment-checking), [PaymentSlow](?path=/story/product-e02-bookingstatuspanel--payment-slow) | – |
+
+<Canvas of={Stories.RefundDelayed} />
+
+## Related
+
+`BookingStatusPanel`, `BookingStatusBadge`, `PaymentPending`, the `/bookings/[id]` screen.

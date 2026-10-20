@@ -27,6 +27,27 @@ describe("DataTable", () => {
     expect(onRetry).toHaveBeenCalled();
   });
 
+  it("explains an API error instead of showing its technical message", () => {
+    render(
+      <DataTable
+        columns={columns}
+        rows={undefined}
+        getRowId={(r) => r.id}
+        error={{ code: "network_error", message: "Could not reach the server." }}
+      />,
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent("No connection");
+    expect(screen.getByRole("alert")).toHaveTextContent("Check your connection and try again.");
+  });
+
+  it("shows a domain API error under a list title", () => {
+    render(<DataTable columns={columns} rows={undefined} getRowId={(r) => r.id} error={{ code: "forbidden", message: "Admins only" }} />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Could not load the list");
+    expect(screen.getByRole("alert")).toHaveTextContent("Admins only");
+  });
+
   it("shows the loading state while the first page is loading", () => {
     render(<DataTable columns={columns} rows={undefined} getRowId={(r) => r.id} isLoading />);
 
@@ -122,6 +143,13 @@ describe("DataTable", () => {
       renderPage(1, 0);
 
       expect(screen.getByText("Page 1 of 1")).toBeInTheDocument();
+      expect(screen.getByText("0–0 of 0")).toBeInTheDocument();
+    });
+
+    it("is a navigation landmark", () => {
+      renderPage(1, 5);
+
+      expect(screen.getByRole("navigation", { name: "Pagination" })).toBeInTheDocument();
     });
   });
 });
