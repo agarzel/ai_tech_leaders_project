@@ -1,0 +1,87 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./TagList.stories";
+
+<Meta of={Stories} />
+
+# TagList
+
+`import { TagList, TagListSkeleton } from "@devmentor/ui/components/mentors/TagList"`
+
+Product component, concept `mentors` (E01, #25).
+
+## 1. Purpose
+
+Shows in a glance which stack a mentor helps with, so a developer can tell whether the mentor fits their problem.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Mentor's share page and the public list card | spec E01, UI/UX (stack tags on the card and the profile) |
+
+## 3. When not to use
+
+| Instead of `TagList`… | Use | Why |
+|---|---|---|
+| Choosing tags | checkboxes in `MentorProfileForm` | input, not display |
+| Statuses | `Badge` with a status word | T10 |
+| Skill levels, years, counts | nothing | A05 ("X years of experience"), A03 |
+
+## 4. Anatomy
+
+A named list (`Stack`) of neutral `Badge`s, one per tag.
+
+## 5. Variants
+
+None.
+
+<Canvas of={Stories.AllTags} />
+
+## 6. States
+
+Not interactive. Data states: loading (`TagListSkeleton`), empty (renders nothing – C42, **proposal**), partial = fewer tags, many = all four MENTOR_TAGS, error shown by the page. 
+
+<Canvas of={Stories.Loading} />
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| A list with a name, so "Stack, list, 2 items" is announced. | WCAG 1.3.1 |
+| Badges in `secondary`, never the accent. | T10, P5/K3 |
+
+<Canvas of={Stories.ReadAsList} />
+
+## 8. Content
+
+Tag names exactly as MENTOR_TAGS (*TypeScript*, *React*, *Python*, *AI agents*). No emoji or icons (R02.5).
+
+## 9. Responsive
+
+Wraps onto more lines at 320 px.
+
+<Canvas of={Stories.Narrow} />
+
+## 10. API
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `tags` | `string[]` | – | from the profile DTO |
+| `label` | `string` | `"Stack"` | list name |
+
+<Controls of={Stories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<TagList tags={mentor.tags} />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| *Python*, *AI agents* as neutral badges. | Coloured badges per language, or "Python · Expert". |
+
+## 13. Related
+
+- **Confused with:** `Badge` (statuses), filter chips on `/mentors` (batch 4).
+- **Used in:** `MentorProfileHeader`, `MentorCard` (batch 4).

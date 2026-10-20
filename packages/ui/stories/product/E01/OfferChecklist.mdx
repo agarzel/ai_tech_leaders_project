@@ -1,0 +1,102 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./OfferChecklist.stories";
+
+<Meta of={Stories} />
+
+# OfferChecklist
+
+`import { OfferChecklist, OfferChecklistSkeleton } from "@devmentor/ui/components/mentors/OfferChecklist"`
+
+Product component, concept `mentors` (E01, #25–#28). Instance of the pattern [Bookability checklist](?path=/docs/patterns-bookability-checklist--docs).
+
+## 1. Purpose
+
+Shows a mentor what still stands between them and their first booking, so they never wonder why nobody can book them.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| `/mentor` – one row per step: profile, prices, a bookable time, share link, public list | spec E01, UI/UX |
+
+## 3. When not to use
+
+| Instead of `OfferChecklist`… | Use | Why |
+|---|---|---|
+| A progress bar, percentage, "3 of 5" | never | A02 (course / journey look) |
+| Booking statuses | `BookingStatusPanel` (batch 5) | a booking, not the offer |
+
+## 4. Anatomy
+
+Dense list (`ItemGroup`), each row: icon (decorative), title + status word (*Done*, *To do*, *Optional*), one sentence (why / what next), action link. The share-link row holds a `CopyField`.
+
+## 5. Variants
+
+None; the rows follow the data.
+
+<Canvas of={Stories.NewMentor} />
+
+## 6. States
+
+<Canvas of={Stories.States} />
+
+| Situation | Story |
+|---|---|
+| New mentor – everything to do | `NewMentor` |
+| No times | `NoTimes` |
+| Times only inside 24 h (D13) | `SlotsTooSoon` |
+| Opted in but not bookable | `ListedNotBookable` |
+| Bookable, not listed (list optional, R08) | `Playground` |
+| Bookable and listed | `Listed` |
+| Loading | `Loading` |
+
+Errors and empty data are the page's (`ErrorMessage`). Actions: hover and focus as `Button`; the first unfinished step's action is the accent, others outline (C45, **proposal**).
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| The status is a word; the icon is decorative. | WCAG 1.4.1 |
+| Each action names its step (*Set prices: Prices*), because labels repeat. | WCAG 2.4.6; `AGENTS.md` (unique names) |
+| One accent on the screen: the next action. | R01.5, P5/K3 |
+
+<Canvas of={Stories.OneAccent} />
+
+## 8. Content
+
+Each sentence says why and what next (*Your times start within 24 hours, so nobody can book them…*). "Profile complete" = name and headline, the fields a save requires (spec E01, Q8; C44). No congratulations, no gamification (A02).
+
+## 9. Responsive
+
+<Canvas of={Stories.Narrow} />
+
+## 10. API
+
+| Prop | Type | Description |
+|---|---|---|
+| `profileComplete` | `boolean` | name + headline (spec E01, Q8) |
+| `pricesSet` | `boolean` | both prices |
+| `bookableSlots` | `number` | open slots with `bookable: true` (server, D13, Q9) |
+| `slotsTooSoon` | `number` | open, inside 24 h |
+| `shareUrl` | `string` | built from `shareSlug` |
+| `listed` | `boolean` | opt-in |
+| `hrefs` | `{ profile, slots }` | targets of the actions |
+| `renderLink` | `(props) => ReactNode` | Next.js `Link` in the app |
+
+<Controls of={Stories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<OfferChecklist profileComplete={…} pricesSet={…} bookableSlots={…} slotsTooSoon={…} shareUrl={shareUrl} listed={profile.listed} hrefs={{ profile: "/mentor/profile", slots: "/mentor/slots" }} />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| "Your times start within 24 hours, so nobody can book them." | A disabled "Go live" button without a reason (B17). |
+| Words for status. | A ring chart "60% complete" (A02). |
+
+## 13. Related
+
+- **Confused with:** `Tabs`, a stepper.
+- **Used in:** `/mentor` ([screen](?path=/story/product-e01-screens-mentorhome--new-mentor)); `PendingBookingsNotice` joins it in batch 6.

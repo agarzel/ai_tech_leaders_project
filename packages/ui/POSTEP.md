@@ -9,13 +9,13 @@ Plik roboczy zadania z `lekcja-06/prompt-storybook.md`. Nowa sesja: przeczytaj p
 | 0. Inwentaryzacja i plan | zakończony 2026-10-19 – decyzje właściciela zapisane niżej |
 | 1. Fundamenty | zakończony 2026-10-19 – F1 wdrożone, F2–F6 zapisane; czeka na „dalej” |
 | 2. Komponenty bazowe | **zakończony** 2026-10-19 – partie 1–5, scalone w `main` (PR #41) |
-| 3. Komponenty produktu, wzorce, ekrany | w toku – partia 1 zacommitowana, C18–C28 zatwierdzone |
+| 3. Komponenty produktu, wzorce, ekrany | w toku – partie 1–2 zacommitowane; partia 3 gotowa z Q8/Q9 (C41–C53 przyjęte), czeka na commit i „dalej” do partii 4 |
 | 4. Strony, które uczą | nie rozpoczęty |
 | 5. Sprawdzenie i raport | nie rozpoczęty |
 
 ## Następny krok
 
-Etap 3, partia 2 gotowa razem z Q6/Q7 (sekcje „Etap 3 – partia 2, wynik” i „…decyzje i Q6/Q7” na końcu pliku; commit robi koordynator). Po „dalej” partia 3: profil i oferta mentora (TagList, PublicWorkLinks, PriceList, MentorProfileHeader, MentorProfileForm, OfferChecklist; ekrany `/mentor`, `/mentor/profile`).
+Etap 3, partia 3 gotowa razem z Q8/Q9 (commit robi koordynator). Po „dalej” partia 4: sloty i lista publiczna (SlotTimeField, SlotList, AddSlotForm, MentorCard, ActiveFilters + ResultCount; ekrany `/mentor/slots`, `/mentors`, `/m/[slug]`).
 
 ## Zatwierdzone decyzje (źródła: `lekcja-06/referencje.md`, `lekcja-06/tokeny.md`)
 
@@ -832,3 +832,60 @@ Znalezione i naprawione po drodze: `PerRole` w `AppHeader` (cztery nagłówki na
 - Ekran `AdminInvitations/ReinviteRevokesOld` (MSW ze stanem: po POST lista zwraca nowe zaproszenie i stare jako *Revoked*); wiersz w mapie stanów i we wzorcu „Link shown once”.
 - Ekran `RegisterMentor` czyta zaproszenie przez `GET /api/auth/invitations/[token]` (MSW): `Loading` (szkielety, `role="status"`), `Default` (pokazany e-mail), `InvitationInvalid` (404 → komunikat bez formularza), `UsedMeanwhile`, `Success`, `Narrow320`; mapa stanów zaktualizowana.
 - Sprawdzenia: lint, typecheck, `test:coverage` (238 testów, 100%), build, `build-storybook` (linki `?path=` w MDX – wszystkie istnieją w indeksie), `test:storybook` (516/516 – 258 stories × 2 motywy, +2 stories), `lint:tokens` (0, 164 pliki) – wszystkie OK. Nic nie zacommitowane.
+
+## Etap 3 – partia 3, wynik (2026-10-20)
+
+Profil i oferta mentora (E01, #25–#28): `TagList`, `PublicWorkLinks`, `PriceList`, `MentorProfileHeader`, `OfferChecklist`, `MentorProfileForm` (pola cen wewnątrz), `parsePrice`/`formatPriceInput`; ekrany `/mentor` i `/mentor/profile` z MSW; wzorce „Amount in PLN” i „Bookability checklist”; mapa stanów E01 rozszerzona. Partia 2 (z Q6/Q7) zacommitowana przez koordynatora. Nic nie jest zacommitowane. Bez nowych zależności i CLI, bez serwera dev.
+
+### Co powstało
+- `src/lib/format.ts`: `parsePrice` („180”, „180.5”, „180,50”, „1 200” → grosze; puste → `null`; reszta → `NaN`), `formatPriceInput` (18000 → „180.00”) + testy.
+- `src/components/mentors/types.ts`: `MentorProfile` (GET), `MentorProfileInput` (PUT), `PublicMentor` (PublicMentorDto) – przepisane z spec E01, re-eksport z komponentów.
+- `TagList` (+ `TagListSkeleton`), `PublicWorkLinks` (+ `Skeleton`, `displayUrl`), `PriceList` (+ `Skeleton`; `dt`/`dd`, „Not set”), `MentorProfileHeader` (+ `Skeleton`; nagłówek, tagi, linki, bio z łamaniami), `OfferChecklist` (+ `Skeleton`; 5 kroków ze statusem słownym, zdaniem i akcją; `CopyField` z linkiem udostępniania), `MentorProfileForm` (imię, nagłówek, bio z licznikiem, tagi – checkboxy, do 5 linków z *Add link*/*Remove link n*, dwie ceny z „PLN”, przełącznik listy; zachowanie wzorca Form).
+- Stories (13-sekcyjne strony) dla 6 komponentów; ekrany `Product/E01/Screens/MentorHome` (NewMentor, NoTimes, SlotsTooSoon, Listed, Loading, LoadError, Narrow320) i `MentorProfile` (Default, NewProfile, Loading, LoadError, Saved, Forbidden, Narrow320); wzorce `Patterns/Amount in PLN` (story z prawdziwymi `formatPrice`/`parsePrice`) i `Patterns/Bookability checklist`; fikstury profilu, nowego profilu, 5 linków, długiego bio, slotów.
+
+### Propozycje C41–C53 (materiały milczą; wdrożone zachowawczo i odwracalnie – do decyzji)
+| # | Propozycja | Źródło / dlaczego |
+|---|---|---|
+| C41 | Pole ceny przyjmuje „180”, „180.5”, „180,50”, „1 200”; przecinek = separator dziesiętny (polski zwyczaj), nie tysięcy; >2 miejsca po przecinku lub litery → błąd z przykładem | D12, P2 |
+| C42 | Brak tagów / linków / bio → część się nie renderuje (bez tekstu „No tags”) | R01.1 (bez szumu), prompt (stan częściowy) |
+| C43 | Linki do publicznej pracy otwierają się w tej samej karcie (jak każdy link) | WCAG 3.2.5 |
+| C44 | „Profil kompletny” = imię + nagłówek; w formularzu nagłówek wymagany, bio, stack i linki „(optional)” | spec milczy – Q8 |
+| C45 | Akcja pierwszego niezrobionego kroku checklisty w akcencie, pozostałe `outline`; krok „Share link” zawsze *Done* (link działa od utworzenia profilu); „Public list” bez zgody = *Optional* | R01.5, P5/K3, R08 |
+| C46 | `/mentor` liczy sloty z `GET /api/mentor/slots` jako tablicy `SlotDto` z polem `bookable` liczonym przez core | spec E01 (SlotDto, `listForOwner`) – Q9 |
+| C47 | Ceny mogą zostać puste („Leave empty until you decide”); UI sprawdza granice 10–10 000 PLN wcześnie, serwer i tak rozstrzyga | spec E01 (ceny nullable, granice sanity) |
+| C48 | Licznik znaków bio w podpowiedzi („199 used”), bez osobnego regionu live | prompt (długie teksty), S10 |
+| C49 | Przy 5 linkach zdanie zamiast przycisku *Add link*; usunięcie linku czyści błędy linków (pozycje się przesuwają) | B17, spec E01 (≤ 5) |
+| C50 | „Profile saved.” obok przycisku (status), bez przekierowania | S10, wzorzec Form |
+| C51 | Tytuły stron: `/mentor` „Overview” (jak pozycja nawigacji), `/mentor/profile` „Profile and prices” | C39 |
+| C52 | Na `/m/[slug]` imię = tytuł strony (`PageLayout`), `MentorProfileHeader` zaczyna od nagłówka mentora w rozmiarze tytułu sekcji | P2, R01.5 |
+| C53 | 403 przy zapisie profilu pokazany jako błąd formularza z komunikatem serwera, fokus na nim | spec E01 (Phase 2, 403), wzorzec Form |
+
+### Pytania
+- **Q8** Co znaczy „profil kompletny” w checkliście `/mentor` (spec: pozycja *profile*)? Propozycja C44: imię + nagłówek; bio, stack, linki opcjonalne. Czy serwer ma wymagać nagłówka przy zapisie?
+- **Q9** Skąd `/mentor` bierze liczbę slotów rezerwowalnych i „za wcześnie”: czy `SlotDto` z `GET /api/mentor/slots` ma pole `bookable` (C46), czy core zwraca podsumowanie?
+
+### Wyniki sprawdzeń
+| Komenda | Wynik |
+|---|---|
+| `npm run lint` | OK (0 ostrzeżeń po usunięciu nieużytej stałej w teście) |
+| `npm run typecheck` | OK |
+| `npm run test:coverage` | OK – 274 testy (+36), 100% we wszystkich metrykach |
+| `npm run build` | OK |
+| `npm run build-storybook` | OK; 9 nowych/zmienionych stron w Chromium: komponenty po 13 sekcji, tabele jako tabele, bez błędów; wszystkie linki `?path=` w MDX istnieją |
+| `npm run test:storybook` | OK – 638/638 (319 stories × 2 motywy; +61 stories, +17 testów interakcji), a11y bez naruszeń |
+| `npm run lint:tokens` | OK – 0 (187 plików) |
+
+Ekrany `MentorHome` (NewMentor, Listed), `MentorProfile` i długi `MentorProfileHeader` obejrzane przy 1440 i 320 px: bez przewijania strony w bok. Poprawione po obejrzeniu: wiersze checklisty wyrównane do góry (ikona przy wierszu z polem linku stała pośrodku). Zastąpione po drodze: długie bio z powtórzonego zdania → realistyczny tekst w akapitach (zasada 7).
+
+### Czego nie sprawdzono
+- Aplikacja na żywo (komponenty nie są podpięte w app).
+- Klawiatura w managerze Storybooka, czytnik ekranu, urządzenie dotykowe.
+
+### Do „What is missing” (etap 4)
+- ~~Q8/Q9~~ – rozstrzygnięte 2026-10-20 (niżej), bez wpisu w „What is missing”.
+
+### Decyzje właściciela – partia 3 (Arkadiusz, 2026-10-20)
+- **C41–C53** przyjęte w całości.
+- **Q8** Zapis profilu wymaga imienia i nagłówka (1–120 znaków); bio, tagi i linki opcjonalne; obecność na liście zależy wyłącznie od cen i rezerwowalnego slotu. W spec E01 (tabela API).
+- **Q9** `SlotDto` z `GET /api/mentor/slots` = `{ id, startsAt, status, bookable }`, `bookable` liczy serwer (ta sama reguła co `listBookable`, D13). W spec E01 (tabela API).
+- Dopasowanie: walidacja `MentorProfileForm` już wymagała imienia i nagłówka (1–120) – bez zmian w kodzie; typ `SlotDto` w ekranie `MentorHome` już miał ten kształt. Zmienione tylko opisy: komentarze `OfferChecklist` i `MentorHome`, strony `MentorProfileForm` i `OfferChecklist` (źródło: spec E01, Q8/Q9 zamiast „propozycja C44/C46”).

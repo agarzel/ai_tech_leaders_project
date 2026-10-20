@@ -1,0 +1,38 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as AmountStories from "./AmountInPLN.stories";
+import * as PriceListStories from "../product/E01/PriceList.stories";
+
+<Meta of={AmountStories} />
+
+# Amount in PLN
+
+Money is stored and sent in grosze (integers) with its currency code (spec E01, D12). The interface only formats and reads it – it never computes a price; the server computes what is charged (spec E02).
+
+<Canvas of={AmountStories.Examples} />
+
+## Rules
+
+| Rule | Source |
+|---|---|
+| Show amounts with `formatPrice(minor, currency)`: "PLN 180.00" – code, no-break space, two decimals, thousands grouped. | C4, F6, D12 |
+| Amounts in tabular figures, right-aligned in lists. | P2 |
+| A price not set is "Not set" (mentor's own view) or a field left empty – never "PLN 0.00". | spec E01 (price nullable until set) |
+| Read typed prices with `parsePrice`: "180", "180.5", "180,50", "1 200"; more than two decimals or letters are refused with what to type. A comma is a decimal mark. | C41 (**proposal**) |
+| The currency sits next to the field (`InputGroup` addon), not inside the typed value. | B30, R01.5 |
+| The UI checks the sanity bounds (PLN 10–10,000) only to answer early; the server decides. | spec E01, API Contracts |
+| Prices are gross; no "from", no discounts, no invoices. | spec E02 (Risks: gross amounts) |
+
+## States
+
+| State | Story |
+|---|---|
+| Both prices | [PriceList / Playground](?path=/story/product-e01-pricelist--playground) |
+| Not set | [PriceList / NotSet](?path=/story/product-e01-pricelist--not-set) |
+| Large amounts | [PriceList / LargeAmounts](?path=/story/product-e01-pricelist--large-amounts) |
+| Price field refused | [MentorProfileForm / ValidationOnSubmit](?path=/story/product-e01-mentorprofileform--validation-on-submit) |
+
+<Canvas of={PriceListStories.NotSet} />
+
+## Related
+
+`PriceList`, `MentorProfileForm`, `BookingSummary` (batch 5).

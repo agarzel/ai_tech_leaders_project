@@ -4,7 +4,7 @@ import { Meta } from "@storybook/addon-docs/blocks";
 
 # E01 screens – state map
 
-Each screen state has its own full-screen story (C14). Screens are compositions of package components; the pages themselves are app code. Batch 2 covers sign-in and admin; the mentor screens follow in batches 3–4.
+Each screen state has its own full-screen story (C14). Screens are compositions of package components; the pages themselves are app code. Batches 2–3 cover sign-in, admin, the mentor overview and profile; slots and the public pages follow in batch 4.
 
 ## /login (spec E01, Phase 1)
 
@@ -59,3 +59,29 @@ Each screen state has its own full-screen story (C14). Screens are compositions 
 | Sending failed | [SendFailed](?path=/story/product-e01-screens-admininvitations--send-failed) |
 | Re-inviting a pending email – new link once, old row *Revoked* (Q6) | [ReinviteRevokesOld](?path=/story/product-e01-screens-admininvitations--reinvite-revokes-old) |
 | 320 px | [Narrow320](?path=/story/product-e01-screens-admininvitations--narrow-320) |
+
+## /mentor (Phases 2–4)
+
+| State | Story |
+|---|---|
+| New mentor (lazily created profile) | [NewMentor](?path=/story/product-e01-screens-mentorhome--new-mentor) |
+| Profile and prices, no times | [NoTimes](?path=/story/product-e01-screens-mentorhome--no-times) |
+| Times only inside 24 h | [SlotsTooSoon](?path=/story/product-e01-screens-mentorhome--slots-too-soon) |
+| Bookable and listed | [Listed](?path=/story/product-e01-screens-mentorhome--listed) |
+| Loading | [Loading](?path=/story/product-e01-screens-mentorhome--loading) |
+| Load failed | [LoadError](?path=/story/product-e01-screens-mentorhome--load-error) |
+| 320 px | [Narrow320](?path=/story/product-e01-screens-mentorhome--narrow-320) |
+
+## /mentor/profile (Phase 2, list toggle from Phase 4)
+
+| State | Story |
+|---|---|
+| Complete profile | [Default](?path=/story/product-e01-screens-mentorprofile--default) |
+| New profile | [NewProfile](?path=/story/product-e01-screens-mentorprofile--new-profile) |
+| Loading | [Loading](?path=/story/product-e01-screens-mentorprofile--loading) |
+| Load failed | [LoadError](?path=/story/product-e01-screens-mentorprofile--load-error) |
+| Saved | [Saved](?path=/story/product-e01-screens-mentorprofile--saved) |
+| Not the owner (403) | [Forbidden](?path=/story/product-e01-screens-mentorprofile--forbidden) |
+| 320 px | [Narrow320](?path=/story/product-e01-screens-mentorprofile--narrow-320) |
+
+Field-level states of the form are in [MentorProfileForm](?path=/docs/product-e01-mentorprofileform--docs).

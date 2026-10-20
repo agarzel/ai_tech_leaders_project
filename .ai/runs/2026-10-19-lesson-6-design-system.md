@@ -193,3 +193,19 @@ Handoff: owner decisions on C29–C40 and Q6–Q7, then batch 3 (mentor profile 
 ### Batch 2 follow-up – Q6/Q7 (2026-10-20)
 
 Owner accepted C29–C40; Q6 (re-inviting revokes the pending invitation, `revokedAt`) and Q7 (`GET /api/auth/invitations/[token]` → `{ email, expiresAt }`, generic `not_found` otherwise) were written into the E01 spec by the coordinator. Applied: `revoked` status and *Revoked* badge; `AdminInvitations/ReinviteRevokesOld` story (stateful MSW handlers); `RegisterMentor` reads the invitation via MSW (Loading, Default with email, InvitationInvalid on 404, UsedMeanwhile, Success); state map and "Link shown once" pattern updated. Gate: lint, typecheck, test:coverage (238, 100%), build, build-storybook (all MDX links resolve), test:storybook (516/516), lint:tokens (0) – all OK. Nothing committed; no dev server started.
+
+## Stage 3, batch 3 (2026-10-20)
+
+Goal: mentor profile and offer (E01 #25–#28): TagList, PublicWorkLinks, PriceList, MentorProfileHeader, OfferChecklist, MentorProfileForm (price fields inside), `parsePrice`/`formatPriceInput`; screens `/mentor` and `/mentor/profile` with MSW; patterns "Amount in PLN" and "Bookability checklist"; E01 state map extended. Batch 2 (with Q6/Q7) committed by the coordinator.
+
+Decisions: proposals C41–C53 in POSTEP.md (price input format, empty parts not rendered, same-tab links, profile-complete rule, checklist accent and statuses, slot counts from SlotDto.bookable, optional prices with early bounds check, bio counter in the hint, 5-link sentence, inline saved status, page titles, name as page title on /m/[slug], 403 as form error). Questions Q8 (what makes the profile complete) and Q9 (where /mentor gets bookable/too-soon counts) – not invented as rules, implemented as marked proposals.
+
+Verified: lint OK (one unused test constant removed), typecheck OK, test:coverage OK (274, 100%), build OK, build-storybook OK (9 pages checked in Chromium, all MDX links resolve), test:storybook OK (638/638, both themes; +61 stories, +17 interaction tests), lint:tokens OK (0, 187 files). Screens viewed at 1440/320 px, no page-level horizontal scroll; checklist rows top-aligned after review; a repeated-sentence long bio replaced with realistic text (rule 7).
+
+Nothing committed, no dev server, no new dependencies, no git stash.
+
+Handoff: owner decisions on C41–C53 and Q8–Q9, then batch 4 (slots and public list) per POSTEP.md 3.4.
+
+### Batch 3 follow-up – Q8/Q9 (2026-10-20)
+
+Owner accepted C41–C53; Q8 (save requires name + headline 1–120; listing depends only on prices + a bookable slot) and Q9 (`SlotDto` = `{ id, startsAt, status, bookable }`, `bookable` computed by the server) are in the E01 spec. Batch 3 already matched both (form validation, SlotDto shape); only comments and docs were re-sourced from "proposal C44/C46" to the spec. Re-run: lint, typecheck, test:coverage (274, 100%), test:storybook (638/638), lint:tokens (0) – all OK. Nothing committed.

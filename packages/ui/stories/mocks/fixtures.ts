@@ -122,3 +122,62 @@ export const newInvitation = {
   invitation: { id: "i4", email: "tomasz.kowalczyk@example.com", status: "pending" as const, createdAt: "2026-10-19T08:00:00Z", expiresAt: "2026-11-02T08:00:00Z" },
   link: "https://devmentor.example/register/mentor?token=q7Vt2mKx9LwR4sNp8ZcB1yHd6Jf3Ua0E",
 };
+
+/** MENTOR_TAGS from spec E01 – the UI receives them from the API. */
+export const tagOptions = ["TypeScript", "React", "Python", "AI agents"];
+
+/** `GET /api/mentor/profile` for an invited mentor who filled everything in. */
+export const mentorProfile = {
+  name: "Marek Zieliński",
+  headline: "Platform engineer – Kubernetes, Helm, CI pipelines",
+  bio:
+    "I run the platform team at a payments company: clusters, deploy pipelines and the incidents that come with them.\nBring the error message and what you already tried – we will get your rollout unstuck.",
+  tags: ["Python", "AI agents"],
+  links: ["https://github.com/marek-zielinski", "https://kubecon.example/talks/helm-rollbacks-without-tears"],
+  price25: 18000,
+  price50: 32000,
+  currency: "PLN",
+  shareSlug: "marek-zielinski-k3x9q2",
+  listed: true,
+};
+
+/** The profile created lazily on the first visit to `/mentor` (spec E01): name only. */
+export const newMentorProfile = {
+  ...mentorProfile,
+  headline: null,
+  bio: null,
+  tags: [],
+  links: [],
+  price25: null,
+  price50: null,
+  listed: false,
+};
+
+export const shareUrl = `https://devmentor.example/m/${mentorProfile.shareSlug}`;
+
+/** Five public-work links – the most a profile keeps (spec E01). */
+export const fiveLinks = [
+  "https://github.com/marek-zielinski",
+  "https://github.com/marek-zielinski/helm-charts",
+  "https://kubecon.example/talks/helm-rollbacks-without-tears",
+  "https://blog.example/marek/ingress-nginx-1-28-upgrade-notes",
+  "https://gitlab.example/platform/ci-templates",
+];
+
+/** `SlotDto` list for `/api/mentor/slots` (spec E01): open/booked, bookable = starts ≥ 24 h from now (D13). */
+export const slots = {
+  none: [],
+  tooSoon: [{ id: "s1", startsAt: "2026-10-20T16:00:00Z", status: "open", bookable: false }],
+  bookable: [
+    { id: "s2", startsAt: "2026-10-22T16:00:00Z", status: "open", bookable: true },
+    { id: "s3", startsAt: "2026-10-24T08:00:00Z", status: "open", bookable: true },
+  ],
+};
+
+/** A long bio with paragraphs, for long-content stories. */
+export const longBio = [
+  "I run the platform team at a payments company in Warsaw: twelve Kubernetes clusters, the deploy pipelines on top of them and the incidents that come with both.",
+  "Most of my week is spent on upgrades nobody wants to do – ingress-nginx, cert-manager, Helm charts that were copied from a blog post four years ago – and on making rollbacks boring.",
+  "Good sessions with me start with the exact error message, the command you ran and what you already tried. If it is a pipeline problem, paste the failing job definition; if it is a cluster problem, tell me the Kubernetes version and how it is hosted.",
+  "I will not write your service for you, but I will sit with you until you understand why it fails and what to change. Text works best for me: I can read your YAML carefully instead of squinting at a shared screen.",
+].join("\n\n");

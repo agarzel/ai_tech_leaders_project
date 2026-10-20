@@ -63,3 +63,21 @@ export function formatRelative(iso: string, now: Date): string {
         : `${Math.floor(distance / DAY)} days`;
   return diff > 0 ? `in ${amount}` : `${amount} ago`;
 }
+
+/**
+ * Reads a price typed in major units into minor units (grosze): "180" → 18000, "180.5" / "180,50" → 18050,
+ * "1 200" → 120000; "" → `null` (not set). Anything else – more than two decimals, letters, a minus – →
+ * `NaN`, so the form can say what to type. A comma is a decimal mark (Polish habit), not a thousands
+ * separator (C41).
+ */
+export function parsePrice(text: string): number | null {
+  const normalized = text.replace(/[\s ]/g, "").replace(",", ".");
+  if (normalized === "") return null;
+  if (!/^\d+(\.\d{1,2})?$/.test(normalized)) return Number.NaN;
+  return Math.round(Number(normalized) * 100);
+}
+
+/** A stored price back into the field: 18000 → "180.00", `null` → "". */
+export function formatPriceInput(minor: number | null): string {
+  return minor === null ? "" : (minor / 100).toFixed(2);
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDateTime, formatPrice, formatRelative, formatUtcOffset, formatZoneLabel } from "./format";
+import { formatDateTime, formatPrice, formatPriceInput, formatRelative, formatUtcOffset, formatZoneLabel, parsePrice } from "./format";
 
 const NBSP = " ";
 
@@ -65,5 +65,30 @@ describe("formatRelative", () => {
 
   it("describes the past", () => {
     expect(formatRelative("2026-11-04T07:40:00Z", now)).toBe("20 min ago");
+  });
+});
+
+describe("parsePrice and formatPriceInput", () => {
+  it.each([
+    ["180", 18000],
+    ["180.5", 18050],
+    ["180,50", 18050],
+    [" 1 200 ", 120000],
+    ["0.07", 7],
+  ])("reads %j as %i grosze", (text, minor) => {
+    expect(parsePrice(text)).toBe(minor);
+  });
+
+  it("reads an empty field as not set", () => {
+    expect(parsePrice("  ")).toBeNull();
+  });
+
+  it.each(["180.505", "-10", "PLN 180", "1.2.3"])("refuses %j", (text) => {
+    expect(parsePrice(text)).toBeNaN();
+  });
+
+  it("formats a stored price for editing", () => {
+    expect(formatPriceInput(18050)).toBe("180.50");
+    expect(formatPriceInput(null)).toBe("");
   });
 });

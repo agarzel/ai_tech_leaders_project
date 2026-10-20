@@ -1,0 +1,84 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./PriceList.stories";
+
+<Meta of={Stories} />
+
+# PriceList
+
+`import { PriceList, PriceListSkeleton } from "@devmentor/ui/components/mentors/PriceList"`
+
+Product component, concept `mentors` (E01, #25). Part of the pattern [Amount in PLN](?path=/docs/patterns-amount-in-pln--docs).
+
+## 1. Purpose
+
+Shows what a 25- and a 50-minute session cost before the developer writes anything.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Share page, public list card, the mentor's own overview | spec E01, UI/UX; R01.5 ("price visible before the question"), R07, D12 |
+
+## 3. When not to use
+
+| Instead of `PriceList`… | Use | Why |
+|---|---|---|
+| The price of one chosen booking | `BookingSummary` (batch 5) | one length, one amount |
+| Entering prices | price fields in `MentorProfileForm` | input |
+
+## 4. Anatomy
+
+Description list: length (*25 min*, *50 min*, muted) and amount (right-aligned, tabular figures).
+
+## 5. Variants
+
+None.
+
+<Canvas of={Stories.LargeAmounts} />
+
+## 6. States
+
+Not interactive. Data states: loading (`PriceListSkeleton`), partial (*Not set* – the mentor's own view only), error by the page.
+
+<Canvas of={Stories.NotSet} />
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Length and amount are a `dt`/`dd` pair, read together. | WCAG 1.3.1 |
+| Amounts in `tabular-nums`, aligned right. | P2 |
+
+<Canvas of={Stories.ReadAsPairs} />
+
+## 8. Content
+
+Amounts through `formatPrice`: "PLN 180.00", code and amount joined by a no-break space (C4, F6). Gross price, no "from", no discounts (spec E02: gross amounts).
+
+## 9. Responsive
+
+<Canvas of={Stories.Narrow} />
+
+## 10. API
+
+| Prop | Type | Description |
+|---|---|---|
+| `price25`, `price50` | `number \| null` | grosze; `null` = not set |
+| `currency` | `string` | from the DTO (`PLN`) |
+
+<Controls of={Stories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<PriceList price25={mentor.price25} price50={mentor.price50} currency={mentor.currency} />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| *PLN 180.00* | *180 zł*, *from 180*, a struck-through "old price" |
+
+## 13. Related
+
+- **Confused with:** `BookingSummary` (one booking).
+- **Used in:** share page, `MentorCard` (batch 4); pattern Amount in PLN.
