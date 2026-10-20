@@ -1,0 +1,56 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design system/What is missing" />
+
+# What is missing
+
+What is ready, what is not, and why. Priorities are proposals for the owner (High: blocks a launch step; Medium: needed soon after; Low: later).
+
+## Backlog coverage
+
+| Backlog | Component or screen | State | Priority |
+|---|---|---|---|
+| #26 accounts and sign-in (E01) | `AccountMenu`, `/login`, `/register`, `/register/mentor`, `/admin/invitations`, `InvitationLinkPanel` | Ready in Storybook; app pages not wired | High |
+| #25 prices and profile (E01) | `MentorProfileForm`, `PriceList`, `OfferChecklist`, `/mentor`, `/mentor/profile` | Ready in Storybook; app pages not built | High |
+| #27 slots (E01) | `SlotTimeField`, `SlotList`, `AddSlotForm`, `DeleteSlotDialog`, `/mentor/slots` | Ready in Storybook | High |
+| #28 share link and public list (E01) | `MentorCard`, `ActiveFilters`, `ResultCount`, `/mentors`, `/m/[slug]` | Ready in Storybook | High |
+| #29 open a mentor, see slots and prices (E02) | `SlotBookActions`, `/m/[slug]` with booking | Ready in Storybook | High |
+| #30 book and prepay (E02) | `BookingForm`, `QuestionField`, `BookingSummary`, `PaymentPending`, `BookingStatusPanel`, `/book/[slotId]`, `/bookings/[id]`, `/bookings` | Ready in Storybook | High |
+| #31 Stripe prepayment and refunds (E02) | no interface of its own; the card payment page is hosted by Stripe, `/dev/fake-checkout` is a dev tool | Outside the design system | – |
+| #32 accept or decline (E02) | `MentorBookingRow`, `AcceptDeadline`, `DeclineBookingDialog`, `PendingBookingsNotice`, `/mentor/bookings` | Ready in Storybook | High |
+| #33 hold the text session (E03) | session view: message stream, composer (R02: Enter sends, Shift+Enter new line, author and time per group) | **Not built** – no spec | Medium |
+| #34 cancel a booking and see the refund (E03) | a cancel action and its confirmation (pattern [Delete confirmation](?path=/docs/patterns-delete-confirmation--docs) applies) | **Not built** – no spec; R04 | Medium |
+| #35 settle no-shows (E03) | status wording for no-show on both sides | **Not built** – blocked by Q03 | Low |
+| #36 private note the mentee approves (E03) | note editor and an approval step | **Not built** – no spec | Low |
+| #24 later (E04, parked) | – | No page | – |
+
+## App code that still looks like the old interface
+
+From the audit of the running app (`lekcja-06/audyt-aplikacji.md`). The design system already contains the replacement; the pages in `packages/app` are not changed by this work.
+
+| Where | Problem | Replacement in the design system | Priority |
+|---|---|---|---|
+| `packages/app/src/app/page.tsx` | slate and cyan on a hero, a dead `#mentors` button, generic promise text | tokens only; content from the brief; link to `/mentors` | High |
+| `admin/page.tsx` | grid of four cards, three "Coming soon" at contrast 2.88 : 1 | [AdminHome](?path=/story/product-e01-screens-adminhome--default): role navigation and a dense list | Medium |
+| links in app code | three different focus styles | `navLinkClassName` and `ItemLink` | Medium |
+| `admin/users/page.tsx` back link | 18 px high target | `RoleNav` target of 28/40 px | Low |
+| `/admin/users`, `/admin` | content depends on JavaScript ("Loading…" forever) | first page of data from the server | Medium |
+| `users-admin.tsx` | placeholders "Ada Lovelace" and "ada@example.com", empty text pointing at a hidden button | no name placeholders; text independent of position | Low |
+| `users-admin.tsx` | passes `result.error.message` to `DataTable` | `error={result.error}` (technical codes get an explanation) | Low |
+| `DataTable` rows | default shadcn row height | fixed in the design system (batch 1); app picks it up with the package | Done |
+
+## For future specifications
+
+| Proposal | Why | Where it would go |
+|---|---|---|
+| Monospace for fenced code blocks in a question or message | R01.2 allows monospace for code; the booking question is plain text by decision (Q5) | the session spec (E03), with a safe renderer |
+| Theme switch in the product | dark values are designed and tested in Storybook, the app has no switch (T15, S16) | a separate decision |
+| BLIK and Przelewy24 | common in Poland, card-only may cost bookings (D16) | a payments spec; these confirm later, which needs new states |
+| Email for mentors | D15: in-app only; `PendingBookingsNotice` is the only signal | a notifications spec |
+| Ratings | excluded (N02) | – |
+
+## Known limits of this documentation
+
+- Interaction tests run in Chromium; native date and time pickers are exercised by setting a value, not by clicking the picker.
+- Screens are compositions in Storybook; real pages, routing, server data and `from=` entry points are app work.
+- The agent test and the remaining documentation pages (Start here, How to choose, Usage, Content, What to avoid, Contributing) belong to stage 4.

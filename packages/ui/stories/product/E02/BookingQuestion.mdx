@@ -32,7 +32,7 @@ One paragraph of body text with the line breaks kept.
 
 ## 5. Variants
 
-None; a collapsed form for rows may follow in batch 6.
+`collapsible`: a preview of 280 characters with a toggle (`aria-expanded`) for rows in the mentor's list.
 
 <Canvas of={Stories.Playground} />
 
@@ -42,6 +42,7 @@ None; a collapsed form for rows may follow in batch 6.
 |---|---|
 | Short | [Playground](?path=/story/product-e02-bookingquestion--playground) |
 | 2,000 characters with a log and a long URL | [LongQuestion](?path=/story/product-e02-bookingquestion--long-question) |
+| Collapsed (preview and toggle) | [Collapsed](?path=/story/product-e02-bookingquestion--collapsed) |
 | Markup as text | [MarkupIsText](?path=/story/product-e02-bookingquestion--markup-is-text) |
 
 Not interactive.
@@ -68,6 +69,7 @@ Exactly the mentee's words. Never in a title, an error or a log.
 | Prop | Type | Description |
 |---|---|---|
 | `question` | `string` | plain text |
+| `collapsible` | `boolean` | rows show the first 280 characters and *Show full question* |
 
 <Controls of={Stories.Playground} />
 

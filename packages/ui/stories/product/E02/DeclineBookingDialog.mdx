@@ -1,0 +1,99 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./DeclineBookingDialog.stories";
+
+<Meta of={Stories} />
+
+# DeclineBookingDialog
+
+`import { DeclineBookingDialog, REASON_MAX } from "@devmentor/ui/components/bookings/DeclineBookingDialog"`
+
+Product component, concept `bookings` (E02, #32), built on [Dialog](?path=/docs/primitives-dialog--docs) because it holds a field. Related to the pattern [Delete confirmation](?path=/docs/patterns-delete-confirmation--docs).
+
+## 1. Purpose
+
+Confirms a decline, states the refund and lets the mentor give an optional reason.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| *Decline* on a booking in `/mentor/bookings` | spec E02, UI/UX |
+
+## 3. When not to use
+
+| Instead of `DeclineBookingDialog`… | Use | Why |
+|---|---|---|
+| A destructive confirmation without input | `DeleteSlotDialog` / `AlertDialog` | no field to fill |
+
+## 4. Anatomy
+
+Trigger *Decline*, title naming the mentee, "The mentee gets a full refund and the slot is released.", *Reason for the mentee* (optional, ≤ 280, counter), an error alert, *Keep booking* and *Decline booking*.
+
+## 5. Variants
+
+None.
+
+<Canvas of={Stories.Open} />
+
+## 6. States
+
+| State | Story |
+|---|---|
+| Closed | [Playground](?path=/story/product-e02-declinebookingdialog--playground) |
+| Open | [Open](?path=/story/product-e02-declinebookingdialog--open) |
+| With a reason | [WithReason](?path=/story/product-e02-declinebookingdialog--with-reason) |
+| Reason too long | [ReasonTooLong](?path=/story/product-e02-declinebookingdialog--reason-too-long) |
+| Declining | [Declining](?path=/story/product-e02-declinebookingdialog--declining) |
+| Already decided (conflict) | [AlreadyDecided](?path=/story/product-e02-declinebookingdialog--already-decided) |
+| Kept | [Keep](?path=/story/product-e02-declinebookingdialog--keep) |
+
+The states after pressing *Decline booking* are MSW answers in the interaction tests.
+
+<Canvas of={Stories.ReasonTooLong} />
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| The reason is optional and says so; the mentee sees it. | WCAG 3.3.2 |
+| Over 280 characters the button is disabled and the field says by how much. | WCAG 3.3.1 |
+| While the request runs nothing can be changed or dismissed. | C69 |
+| A refusal stays in the dialog in words; the mentor can still back out. | spec E02 (Edge Cases) |
+| The trigger's name carries the mentee and the time. | `AGENTS.md` |
+
+## 8. Content
+
+Title: "Decline the booking from \{name\}?" Buttons: *Keep booking*, *Decline booking* (destructive). The refund sentence is always there.
+
+## 9. Responsive
+
+<Canvas of={Stories.Narrow} />
+
+## 10. API
+
+| Prop | Type | Description |
+|---|---|---|
+| `menteeName` | `string` |  |
+| `startsAt` | `string` | ISO UTC |
+| `timeZone` | `string` |  |
+| `onConfirm` | `({ reason? }) => Promise<ApiResult>` | reason left out when empty |
+| `onDeclined` | `() => void` | after the server confirmed |
+| `defaultOpen` | `boolean` | documentation and tests |
+
+<Controls of={Stories.Open} />
+
+## 11. Code
+
+<Source dark code={`<DeclineBookingDialog menteeName={name} startsAt={slot} timeZone={zone} onConfirm={(values) => apiCall(url, { method: "POST", body: values })} onDeclined={reload} />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| State the refund in the dialog. | Leave the mentor guessing what happens to the money. |
+| Keep the reason optional. | Force a reason. |
+
+## 13. Related
+
+- **Confused with:** `DeleteSlotDialog`, `Dialog`.
+- **Used in:** `MentorBookingRow`.

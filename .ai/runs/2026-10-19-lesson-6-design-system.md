@@ -239,3 +239,18 @@ Verified: lint, typecheck, test:coverage (362 tests, 100%), build, build-storybo
 Open: C63–C68, Q11, Q12 await the owner; nothing committed.
 
 Handoff: next is batch 6 (booking lists, mentor decisions, `AcceptDeadline`, `DeclineBookingDialog`, `PendingBookingsNotice`) per `packages/ui/POSTEP.md` "Następny krok". Gotcha: formatted amounts contain a no-break space – use `\u00a0` in accessible-name queries, a plain space in text matchers.
+
+
+## Stage 3, batch 6 — last of stage 3 (2026-10-20)
+
+Goal: booking lists and the mentor's decisions (E02 #30, #32), epic pages and "What is missing". Owner had accepted C63–C68; Q11 (question required) and Q12 (`BookingDto` shape) answered.
+
+Built: `BookingRow`, `MentorBookingRow`, `AcceptDeadline`, `DeclineBookingDialog`, `PendingBookingsNotice`, collapsible `BookingQuestion`, `useNow`; screens `/bookings`, `/mentor/bookings`, "Pending" on `/mentor`; pattern Deadline with a countdown; pages `Design system/Epics/E01`, `Epics/E02`, `What is missing` (backlog coverage, app debt from the audit, Q5 monospace and other future proposals). Proposals C69–C72, questions Q13–Q14 in `packages/ui/POSTEP.md`.
+
+Decisions: accent on `Accept` only for the nearest deadline (Q3); count in a sentence, no badge (Q2); E03/E04 only listed, not built (P3); `/mentor` counts pending bookings from the first page of the list (flagged in Q13).
+
+Verified: lint, typecheck, test:coverage (393 tests, 100%), build, build-storybook (all MDX links resolve), test:storybook (1096/1096), lint:tokens (0, 269 files). Visual check at 1440/320 px: no horizontal scroll.
+
+Open: C69–C72, Q13, Q14 await the owner; nothing committed.
+
+Handoff: stage 3 is complete. Next is stage 4 (documentation pages that teach: Start here, Components, How to choose, Usage and accessibility, Content, What to avoid, Contributing; `.ai/docs/design-system.md`; agent test) per `packages/ui/POSTEP.md` "Następny krok".

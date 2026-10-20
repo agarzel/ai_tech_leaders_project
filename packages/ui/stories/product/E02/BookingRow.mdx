@@ -1,0 +1,92 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./BookingRow.stories";
+
+<Meta of={Stories} />
+
+# BookingRow
+
+`import { BookingRow } from "@devmentor/ui/components/bookings/BookingRow"`
+
+Product component, concept `bookings` (E02, #30). A dense list row, like `MentorCard`.
+
+## 1. Purpose
+
+Shows one of the mentee's bookings in a list, with its status in words.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Each row of `/bookings` | spec E02, UI/UX |
+
+## 3. When not to use
+
+| Instead of `BookingRow`… | Use | Why |
+|---|---|---|
+| The mentor's list | `MentorBookingRow` | different data and actions |
+| The full status | `BookingStatusPanel` | a row needs a phrase |
+
+## 4. Anatomy
+
+Title: mentor name and length, as the row link. One metadata line: time, zone, price. The status badge on the right.
+
+## 5. Variants
+
+None.
+
+<Canvas of={Stories.AllStatuses} />
+
+## 6. States
+
+| State | Story |
+|---|---|
+| One booking | [Playground](?path=/story/product-e02-bookingrow--playground) |
+| Every state | [AllStatuses](?path=/story/product-e02-bookingrow--all-statuses) |
+| Long name | [LongName](?path=/story/product-e02-bookingrow--long-name) |
+
+Hover and focus follow `Item`. Loading, empty and error belong to the list (the screen).
+
+<Canvas of={Stories.LongName} />
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| The mentor's name is the one link and covers the row. | B36 |
+| The status is words from `bookingStatusLabel`. | WCAG 1.4.1 |
+| Amounts in tabular figures. | P2 |
+
+## 8. Content
+
+"Marek Zieliński · 25 min", "Tue 27 Oct, 17:00 (Europe/Warsaw, UTC+1) · PLN 180.00".
+
+## 9. Responsive
+
+<Canvas of={Stories.Narrow} />
+
+## 10. API
+
+| Prop | Type | Description |
+|---|---|---|
+| `booking` | `Booking` | `BookingDto` |
+| `href` | `string` | `/bookings/[id]` |
+| `timeZone` | `string` |  |
+| `renderLink` | `(props) => ReactNode` | Next.js `Link` in the app |
+
+<Controls of={Stories.AllStatuses} />
+
+## 11. Code
+
+<Source dark code={`<ItemGroup aria-label="Bookings">{bookings.map((b) => <BookingRow key={b.id} booking={b} href={\`/bookings/\${b.id}\`} timeZone={zone} />)}</ItemGroup>`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| One row, one link, one status. | A card per booking. |
+| Name the length in the title. | Hide the length in a tooltip. |
+
+## 13. Related
+
+- **Confused with:** `MentorBookingRow`, `MentorCard`.
+- **Used in:** [/bookings](?path=/story/product-e02-screens-mybookings--default).

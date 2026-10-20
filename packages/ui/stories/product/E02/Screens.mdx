@@ -4,7 +4,7 @@ import { Meta } from "@storybook/addon-docs/blocks";
 
 # E02 screens – state map
 
-Each screen state has its own full-screen story (C14). This batch covers booking and payment: the E02 form of `/m/[slug]`, `/book/[slotId]` and `/bookings/[id]`. The mentor's decisions, `/bookings` and `/mentor/bookings` follow in batch 6. The hosted card payment page and `/dev/fake-checkout` are outside the design system (C13).
+Each screen state has its own full-screen story (C14). This batch covers booking and payment: the E02 form of `/m/[slug]`, `/book/[slotId]` and `/bookings/[id]`. Batch 6 adds the lists and the mentor's decisions. The hosted card payment page and `/dev/fake-checkout` are outside the design system (C13).
 
 ## /m/[slug] with booking (#29)
 
@@ -50,3 +50,39 @@ Each screen state has its own full-screen story (C14). This batch covers booking
 | Load failed | [LoadError](?path=/story/product-e02-screens-bookingdetail--load-error) |
 | Question of 2,000 characters | [LongQuestion](?path=/story/product-e02-screens-bookingdetail--long-question) |
 | 320 px | [Narrow320](?path=/story/product-e02-screens-bookingdetail--narrow-320) |
+
+## /bookings (#30)
+
+| State | Story |
+|---|---|
+| Own bookings, count above | [Default](?path=/story/product-e02-screens-mybookings--default) |
+| Filtered by status | [Filtered](?path=/story/product-e02-screens-mybookings--filtered) |
+| No booking has this status (*Clear filters*) | [NoResults](?path=/story/product-e02-screens-mybookings--no-results) |
+| No booking yet (*Find a mentor*) | [NothingYet](?path=/story/product-e02-screens-mybookings--nothing-yet) |
+| Thirty bookings, paged | [Many](?path=/story/product-e02-screens-mybookings--many) |
+| Loading | [Loading](?path=/story/product-e02-screens-mybookings--loading) |
+| Load failed | [LoadError](?path=/story/product-e02-screens-mybookings--load-error) |
+| 320 px | [Narrow320](?path=/story/product-e02-screens-mybookings--narrow-320) |
+
+## /mentor/bookings (#32)
+
+| State | Story |
+|---|---|
+| Waiting first, nearest deadline first, accent on its *Accept* | [Default](?path=/story/product-e02-screens-mentorbookings--default) |
+| A deadline under two hours | [DeadlineSoon](?path=/story/product-e02-screens-mentorbookings--deadline-soon) |
+| Decline dialog (refund stated, optional reason) | [Declining](?path=/story/product-e02-screens-mentorbookings--declining) |
+| Declined | [Declined](?path=/story/product-e02-screens-mentorbookings--declined) |
+| Accepted | [Accepted](?path=/story/product-e02-screens-mentorbookings--accepted) |
+| Deadline passed (`conflict`) | [DeadlinePassed](?path=/story/product-e02-screens-mentorbookings--deadline-passed) |
+| Declining refused (already accepted) | [DeclineRefused](?path=/story/product-e02-screens-mentorbookings--decline-refused) |
+| No bookings | [Empty](?path=/story/product-e02-screens-mentorbookings--empty) |
+| Loading | [Loading](?path=/story/product-e02-screens-mentorbookings--loading) |
+| Load failed | [LoadError](?path=/story/product-e02-screens-mentorbookings--load-error) |
+| 320 px | [Narrow320](?path=/story/product-e02-screens-mentorbookings--narrow-320) |
+
+## /mentor with bookings waiting (#32)
+
+| State | Story |
+|---|---|
+| Count in a sentence, nearest deadline, one accent | [WithPending](?path=/story/product-e01-screens-mentorhome--with-pending) |
+| Offer unfinished: the checklist keeps the accent | [WithPendingIncompleteOffer](?path=/story/product-e01-screens-mentorhome--with-pending-incomplete-offer) |

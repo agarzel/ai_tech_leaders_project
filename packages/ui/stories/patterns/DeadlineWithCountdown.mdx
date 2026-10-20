@@ -1,0 +1,38 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as Stories from "../product/E02/AcceptDeadline.stories";
+
+<Meta title="Patterns/Deadline with a countdown" />
+
+# Deadline with a countdown
+
+A mentor has until 12 hours before the session to decide (R05, D07). The pattern says when, how soon, and when it becomes urgent – without a ticking clock.
+
+<Canvas of={Stories.UnderTwoHours} />
+
+## Rules
+
+| Rule | Source |
+|---|---|
+| Show the deadline as a time with its zone and a relative phrase: "Decide by Tue 27 Oct, 05:00 (Europe/Warsaw, UTC+1) · in 8 h". | spec E02, C12 |
+| The page holds the clock (`useNow`) and refreshes it once a minute; no second-by-second countdown. | C12, P10 |
+| Under two hours add the words "Decide soon" and an icon. Colour or weight alone never carries urgency. | C12, WCAG 1.4.1 |
+| Past the deadline the text says "Deadline passed"; the server refuses an acceptance (`conflict`) even before the sweep. | spec E02 (Edge Cases) |
+| The accent goes to *Accept* of the nearest deadline only. | Q3, P5/K3 |
+| `now` is a prop, so stories and tests are deterministic; `useNow(start)` fixes the first reading and runs on from it. | C2 |
+| No email or push: the in-app notice (`PendingBookingsNotice`) is the signal. | D15 |
+
+## States
+
+| State | Story |
+|---|---|
+| More than two hours | [MoreThanTwoHours](?path=/story/product-e02-acceptdeadline--more-than-two-hours) |
+| Under two hours | [UnderTwoHours](?path=/story/product-e02-acceptdeadline--under-two-hours) |
+| Passed | [Passed](?path=/story/product-e02-acceptdeadline--passed) |
+| In a row, nearest deadline | [MentorBookingRow / NextDeadline](?path=/story/product-e02-mentorbookingrow--next-deadline) |
+| On the screen | [MentorBookings / DeadlineSoon](?path=/story/product-e02-screens-mentorbookings--deadline-soon) |
+
+<Canvas of={Stories.Passed} />
+
+## Related
+
+`AcceptDeadline`, `MentorBookingRow`, `PendingBookingsNotice`, `useNow`, `formatRelative`.

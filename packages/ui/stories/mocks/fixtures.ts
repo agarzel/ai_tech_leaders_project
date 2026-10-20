@@ -4,7 +4,7 @@
 import { z } from "zod";
 
 import type { CrudFormField } from "../../src/backend/forms/CrudForm";
-import type { Booking } from "../../src/components/bookings/types";
+import type { Booking, MentorBooking } from "../../src/components/bookings/types";
 
 /** Mentee registration – spec E01, `POST /api/auth/register` `{ name, email, password }`, password 12–128 characters. */
 export const registerSchema = z.object({
@@ -336,3 +336,44 @@ export const longQuestion = [
 
 /** Default tails for the booking MSW routes. */
 export const startedBooking = { bookingId: "b1", checkoutUrl: "https://checkout.example/pay/cs_test_a1b2c3" };
+
+
+/** The page clock of the booking stories: Monday evening, so deadlines read "in 8 h", "in 1 h". */
+export const bookingsNow = new Date("2026-10-26T20:00:00Z");
+
+/** The mentee's list (`GET /api/bookings`): one booking per interesting state, newest slot first. */
+export const menteeBookings: Booking[] = [
+  { ...bookings.waiting, id: "b1" },
+  { ...bookings.confirmed, id: "b2", startsAt: "2026-10-29T09:00:00Z", acceptBy: "2026-10-28T21:00:00Z", lengthMinutes: 50, priceAmount: 32000 },
+  { ...bookings.declined, id: "b3", startsAt: "2026-11-02T15:30:00Z", mentor: { name: "Kasia Lewandowska", slug: "kasia-lewandowska-7fh2m4" } },
+  { ...bookings.expired, id: "b4", startsAt: "2026-11-04T17:00:00Z", mentor: { name: "Piotr Wójcik", slug: "piotr-wojcik-9d4n6b" } },
+  { ...bookings.refundDelayed, id: "b5", startsAt: "2026-11-05T17:00:00Z", mentor: { name: "Nina Kamińska", slug: "nina-kaminska-2c8v1x" } },
+  { ...bookings.paymentNotCompleted, id: "b6", startsAt: "2026-11-06T17:00:00Z" },
+];
+
+/** Thirty bookings for the paged list. */
+export const manyBookings: Booking[] = Array.from({ length: 30 }, (_, index) => ({ ...menteeBookings[index % menteeBookings.length], id: `m${index}` }));
+
+/** The mentor's list (`GET /api/mentor/bookings`): awaiting first, ordered by `acceptBy`; the mentee by name only. */
+const mentorBase: MentorBooking = {
+  id: "mb1",
+  mentee: { name: "Ola Wiśniewska" },
+  startsAt: "2026-10-27T16:00:00Z",
+  lengthMinutes: 25,
+  priceAmount: 18000,
+  currency: "PLN",
+  status: "awaiting_acceptance",
+  acceptBy: "2026-10-27T04:00:00Z",
+  declineReason: null,
+  question: bookings.waiting.question,
+};
+export const mentorBookings: MentorBooking[] = [
+  mentorBase,
+  { ...mentorBase, id: "mb2", mentee: { name: "Tomasz Kowalczyk" }, startsAt: "2026-10-28T18:00:00Z", acceptBy: "2026-10-28T06:00:00Z", lengthMinutes: 50, priceAmount: 32000, question: "How would you structure retries for a flaky webhook consumer?" },
+  { ...mentorBase, id: "mb3", mentee: { name: "Jan Nowak" }, startsAt: "2026-10-30T10:00:00Z", acceptBy: "2026-10-29T22:00:00Z", question: longQuestion },
+  { ...mentorBase, id: "mb4", mentee: { name: "Ewa Mazur" }, status: "confirmed", startsAt: "2026-10-31T10:00:00Z", acceptBy: "2026-10-30T22:00:00Z" },
+  { ...mentorBase, id: "mb5", mentee: { name: "Adam Lis" }, status: "declined", startsAt: "2026-11-01T10:00:00Z", acceptBy: "2026-10-31T22:00:00Z" },
+];
+
+/** A booking whose deadline is under two hours away (shown with "Decide soon"). */
+export const mentorBookingSoon: MentorBooking = { ...mentorBase, id: "mb0", mentee: { name: "Marta Dąbrowska" }, startsAt: "2026-10-27T09:30:00Z", acceptBy: "2026-10-26T21:30:00Z" };

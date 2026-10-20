@@ -1,0 +1,56 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design system/Epics/E02 Booking and prepayment" />
+
+# E02 – Booking and prepayment
+
+Backlog #22 with stories #29–#32, specified in `2026-10-19-booking-and-prepayment.md`. A signed-in developer picks a slot and a length, writes the question, pays by card, and waits for the mentor, who accepts or declines until 12 hours before the session. A decline or a missed deadline is a full refund.
+
+## Flow
+
+| Step | Screen | What happens | Components | State map |
+|---|---|---|---|---|
+| 1 | `/m/[slug]` | The mentee picks a slot and a length; the price is in the button | `SlotList`, `SlotBookActions` | [Screens](?path=/docs/product-e02-screens-state-map--docs) |
+| 2 | `/book/[slotId]` | Summary, question (≤ 2,000), note that the mentor may decline, *Pay* | `BookingForm`, `BookingSummary`, `QuestionField` | same |
+| 3 | hosted card payment page | Outside the design system (Stripe Checkout; `/dev/fake-checkout` locally) | – | – |
+| 4 | `/bookings/[id]` | Back from payment: *Payment processing…*, then the booking's status and next action | `PaymentPending`, `BookingStatusPanel`, `BookingSummary`, `BookingQuestion` | same |
+| 5 | `/mentor` | The mentor sees how many bookings wait and by when | `PendingBookingsNotice` | same |
+| 6 | `/mentor/bookings` | The mentor reads the question, accepts or declines (reason ≤ 280) | `MentorBookingRow`, `AcceptDeadline`, `DeclineBookingDialog`, `BookingQuestion` | same |
+| 7 | `/bookings` | The mentee sees all bookings by status | `BookingRow`, `BookingStatusBadge`, `ActiveFilters`, `ResultCount`, `Pagination` | same |
+
+## The booking state machine in the interface
+
+| Booking | Payment | Mentee reads | Mentor reads |
+|---|---|---|---|
+| `pending_payment` | `open` | Payment processing… | – (not shown) |
+| `awaiting_acceptance` | `paid` | Waiting for {mentor} — they decide by … | Waiting for your decision — decide by … |
+| `confirmed` | `paid` | Confirmed | Confirmed |
+| `declined` | `refund_requested` / `refunded` / `refund_failed` | Declined — refund on its way / Refunded / Refund delayed — we are on it | You declined this booking |
+| `expired` | same | Expired — refund on its way / Refunded / Refund delayed | This booking expired |
+| `payment_expired` | `expired` (or a late payment, refunded) | Payment not completed — the time was released | same |
+
+All wording lives in `describeBooking` and `bookingStatusLabel`.
+
+## Decisions that shape the screens
+
+| Decision | Effect |
+|---|---|
+| D16: card only | one payment method line, no method choice |
+| 35-minute hold | stated on the booking form; the page after payment waits for the webhook |
+| Price stored at booking | the UI shows the stored amount, never computes one |
+| D05: the mentor reads the question first | the question is on every mentor row; declining is a normal outcome |
+| D15: no email for mentors | `PendingBookingsNotice` is the signal |
+| Max 2 unpaid bookings | the refusal is explained on the form |
+| Mentee by name only | `MentorBooking` has no email |
+
+## Patterns used
+
+[Form](?path=/docs/patterns-form--docs) · [Payment and waiting](?path=/docs/patterns-payment-and-waiting--docs) · [Status and next action](?path=/docs/patterns-status-and-next-action--docs) · [Detail view](?path=/docs/patterns-detail-view--docs) · [Deadline with a countdown](?path=/docs/patterns-deadline-with-a-countdown--docs) · [List with filters](?path=/docs/patterns-list-with-filters--docs)
+
+## Source files
+
+`packages/ui/src/components/bookings/`, `packages/ui/src/lib/useNow.ts`, `packages/ui/stories/product/E02/`, spec `.ai/specs/2026-10-19-booking-and-prepayment.md`.
+
+## Work that remains in the product
+
+Everything in the spec's phase 2 – the pages in `packages/app` do not exist yet. Cancellation and no-show are E03 (#34, #35) and have no screens; see [What is missing](?path=/docs/design-system-what-is-missing--docs).

@@ -9,13 +9,13 @@ Plik roboczy zadania z `lekcja-06/prompt-storybook.md`. Nowa sesja: przeczytaj p
 | 0. Inwentaryzacja i plan | zakończony 2026-10-19 – decyzje właściciela zapisane niżej |
 | 1. Fundamenty | zakończony 2026-10-19 – F1 wdrożone, F2–F6 zapisane; czeka na „dalej” |
 | 2. Komponenty bazowe | **zakończony** 2026-10-19 – partie 1–5, scalone w `main` (PR #41) |
-| 3. Komponenty produktu, wzorce, ekrany | w toku – partie 1–3 zacommitowane; partia 4 zacommitowana (C54–C62, Q10 przyjęte); partia 5 (rezerwacja i płatność) gotowa, czeka na decyzje C63–C68, Q11–Q12 i „dalej” do partii 6 |
-| 4. Strony, które uczą | nie rozpoczęty |
+| 3. Komponenty produktu, wzorce, ekrany | **zakończony** 2026-10-20 – partie 1–5 zacommitowane; partia 6 (ostatnia) gotowa, czeka na decyzje C69–C72, Q13–Q14 i „dalej” do etapu 4 |
+| 4. Strony, które uczą | nie rozpoczęty – następny krok |
 | 5. Sprawdzenie i raport | nie rozpoczęty |
 
 ## Następny krok
 
-Etap 3, partia 5 gotowa (commit robi koordynator). Czeka na decyzje C63–C68 i odpowiedzi na Q11–Q12. Po „dalej” partia 6: E02 listy i decyzje mentora (`BookingRow`, `MentorBookingRow`, `AcceptDeadline`, `DeclineBookingDialog`, `PendingBookingsNotice`; wzorzec Termin z odliczaniem; ekrany `/bookings`, `/mentor/bookings`, `/mentor` z oczekującymi; strona epiku E02 już jest, do rozszerzenia; kontrola kompletności map stanów).
+Etap 4: strony, które uczą (po decyzjach C69–C72, Q13–Q14 i „dalej”): Start here, Components (katalog z podglądem), How to choose, Usage and accessibility, Content, What to avoid, Contributing; uzupełnienie „What is missing” (strona już jest – dodać do niej wnioski z tych stron) i stron epików (E01, E02 są); skrót dla agentów `.ai/docs/design-system.md` (S19); test agentem. Potem etap 5 (sprawdzenie i raport; S7 – CI Storybooka).
 
 ## Zatwierdzone decyzje (źródła: `lekcja-06/referencje.md`, `lekcja-06/tokeny.md`)
 
@@ -1002,3 +1002,58 @@ Zatwierdzone przez Arkadiusza 2026-10-20.
 - C63–C68: wszystkie w wersji wdrożonej w partii 5.
 - Q11: pytanie jest wymagane. Kryterium akceptacji w #30 („empty question → booking refused”) i D05 rozstrzygają to już wcześniej.
 - Q12: kształt `BookingDto` wpisany do specyfikacji E02.
+
+
+### Decyzje właściciela – partia 5 (Arkadiusz, 2026-10-20)
+- **C63–C68** przyjęte w całości. **Q11**: pytanie jest wymagane (kryterium akceptacji #30, D05). **Q12**: kształt `BookingDto` zapisany w spec E02.
+
+## Etap 3 – partia 6 (ostatnia), wynik (2026-10-20)
+
+Listy rezerwacji i decyzje mentora (E02, #30, #32): `BookingRow`, `MentorBookingRow`, `AcceptDeadline`, `DeclineBookingDialog`, `PendingBookingsNotice`, `BookingQuestion` z `collapsible`, hook `useNow`; ekrany `/bookings`, `/mentor/bookings` i pozycja „Pending” na `/mentor`; wzorzec „Deadline with a countdown”; strony epików E01 i E02; strona „What is missing”. Nic nie jest zacommitowane. Bez nowych zależności i CLI, bez serwera dev.
+
+### Co powstało
+- `src/components/bookings/`: `AcceptDeadline` (czas ze strefą + „in 8 h”; poniżej 2 h ikona i „Decide soon”; po terminie „Deadline passed”), `BookingRow`, `MentorBookingRow` (mentee tylko imieniem; *Accept* w akcencie tylko przy najbliższym terminie), `DeclineBookingDialog` (na `Dialog`; powód opcjonalny ≤ 280, zwrot nazwany), `PendingBookingsNotice` (liczba w zdaniu, najbliższy termin, link), `BookingQuestion collapsible` (podgląd 280 znaków + *Show full question*), typ `MentorBooking`. `src/lib/useNow.ts` – zegar strony odświeżany co minutę (z możliwością ustalenia pierwszego odczytu).
+- Stories i strony 13-sekcyjne: `Product/E02/{AcceptDeadline, BookingRow, MentorBookingRow, DeclineBookingDialog, PendingBookingsNotice}`; ekrany `Screens/MyBookings` (8 stanów), `Screens/MentorBookings` (11 stanów, MSW ze stanem), `MentorHome/WithPending` i `WithPendingIncompleteOffer`; wzorzec `Patterns/Deadline with a countdown`; mapa stanów E02 rozszerzona.
+- Strony `Design system/`: `Epics/E01 Mentor offer`, `Epics/E02 Booking and prepayment` (przepływ krok po kroku, komponenty, decyzje, wzorce, pliki, praca pozostała), `What is missing` (pokrycie backlogu #25–#36 i E04, dług aplikacji z `audyt-aplikacji.md`, propozycje dla przyszłych specyfikacji w tym Q5 monospace, ograniczenia dokumentacji).
+
+### Propozycje C69–C72 (materiały milczą; wdrożone zachowawczo i odwracalnie – do decyzji)
+| # | Propozycja | Źródło / dlaczego |
+|---|---|---|
+| C69 | `DeclineBookingDialog` i `MentorBookingRow`: odmowa serwera (termin minął, już zaakceptowana) zostaje w dialogu / pod wierszem słowami; w trakcie żądania nic nie zamyka dialogu; po decyzji ekran przenosi fokus na nagłówek listy | spec E02 (Edge Cases), wzorzec Delete confirmation |
+| C70 | `useNow(start?, intervalMs = 60 000)`: zegar strony odświeżany co minutę; `start` ustala pierwszy odczyt (deterministyczne stories i testy) | C12, P10 |
+| C71 | `PendingBookingsNotice`: prop `emphasis` – link jest akcentem tylko, gdy lista kroków oferty nie ma własnej następnej akcji (jeden akcent na ekranie); `/mentor` liczy oczekujące z pierwszej strony `GET /api/mentor/bookings` | P5/K3, Q3 – Q13 |
+| C72 | `/bookings`: filtr statusu (`?status=`) i pusty stan „No bookings yet” z akcją *Find a mentor* w akcencie (jest następny krok), „No bookings with this status” z *Clear filters* | wzorzec Lista z filtrami – Q13 |
+
+### Pytania
+- **Q13** Spec E02 nie ma parametru `status` w `GET /api/bookings` ani licznika oczekujących dla `/mentor`. Czy dodać `?status=` do listy mentee oraz zwracać w `GET /api/mentor/bookings` liczbę oczekujących (`pendingCount`) – bo `/mentor` liczy dziś oczekujące tylko z pierwszej strony?
+- **Q14** Czy `GET /api/mentor/bookings` ma zwracać w `MentorBookingDto` także `paymentStatus` (wiersz mentora pokazuje „Declined · refund on its way”)? Założyłem tak (kształt `MentorBooking` = `Booking` bez `mentor`, z `mentee { name }`).
+
+### Wyniki sprawdzeń
+| Komenda | Wynik |
+|---|---|
+| `npm run lint` | OK |
+| `npm run typecheck` | OK |
+| `npm run test:coverage` | OK – 393 testy (+31), 100% we wszystkich metrykach (1001/821/276/883) |
+| `npm run build` | OK |
+| `npm run build-storybook` | OK; wszystkie linki `?path=` w MDX istnieją w indeksie (637 wpisów) |
+| `npm run test:storybook` | OK – 1096/1096 (548 stories × 2 motywy; +55 stories), a11y bez naruszeń |
+| `npm run lint:tokens` | OK – 0 (269 plików) |
+
+Ekrany `MentorBookings`, `MyBookings`, `MentorHome/WithPending` i strony `What is missing`, epik E02 obejrzane w zbudowanym Storybooku przy 1440 i 320 px: bez przewijania w bok, bez błędów strony.
+
+### Etap 3 – podsumowanie
+Partie 1–6: komponenty produktu E01 i E02, bloki ogólne (`backend/`), wzorce, ekrany obu epików z mapami stanów, MSW; 393 testy jednostkowe (100%) i 1096 testów stories (oba motywy). E03 i E04 tylko w „What is missing” (P3).
+
+### Czego nie sprawdzono
+- Aplikacja na żywo (komponenty niepodpięte), prawdziwe strony, routing i dane z serwera.
+- Odświeżanie zegara co minutę w przeglądarce (sprawdzone tylko w teście jednostkowym z fałszywym zegarem).
+- Klawiatura w managerze Storybooka, czytnik ekranu, urządzenie dotykowe.
+
+### Do etapu 4
+- Strona „What is missing” istnieje i trzeba ją utrzymywać; brakuje: Start here, Components, How to choose, Usage and accessibility, Content, What to avoid, Contributing, skrótu `.ai/docs/design-system.md`, testu agentem.
+
+
+### Decyzje właściciela – partia 6 (Arkadiusz, 2026-10-20)
+- **C69–C72** przyjęte w całości.
+- **Q13** tak: `GET /api/bookings` dostaje opcjonalny filtr `?status=`, `GET /api/mentor/bookings` zwraca `pendingCount` (wszystkie oczekujące, nie tylko pierwsza strona). Zapisane w spec E02. `/mentor` używa teraz `pendingCount` (fikstury i MSW zwracają je w `Page`).
+- **Q14** nie: `MentorBookingDto` nie ma `paymentStatus` – mentor nie widzi szczegółów zwrotu (C68). Poprawione: typ `MentorBooking` bez `paymentStatus`, `MentorBookingRow` pokazuje etykietę mentora (`mentorStatusLabel`: Awaiting your decision, Confirmed, Declined, Expired …), fikstury, MSW i stories bez `paymentStatus`; test, że wiersz mentora nigdy nie renderuje słowa „refund”.

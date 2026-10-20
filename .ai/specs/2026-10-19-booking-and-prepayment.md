@@ -117,9 +117,9 @@ Envelope and CSRF as everywhere. Amounts in grosze.
 | Method + path | Access | Body → result | Notes |
 |---|---|---|---|
 | `POST /api/bookings` | any session | `{ slotId, lengthMinutes, question, entryPoint }` → `{ bookingId, checkoutUrl }` (201) | price from `priceFor`, never from the client; slot locked; booking one's own slot → `forbidden` |
-| `GET /api/bookings` | any session | `Page<BookingDto>` (own, as mentee) | effective status |
+| `GET /api/bookings` | any session | `Page<BookingDto>` (own, as mentee) | effective status; optional `?status=` filter (Q13, owner decision 2026-10-20) |
 | `GET /api/bookings/[id]` | the mentee or the mentor of that booking | `BookingDto` incl. question | otherwise `not_found` (does not reveal existence); `BookingDto` = `{ id, status (effective), paymentStatus, mentor: { name, slug }, startsAt, lengthMinutes, priceAmount, currency, acceptBy, declineReason, question }` — `paymentStatus` lets the page tell *refund on its way*, *Refunded* and *Refund delayed* apart (Q12, owner decision 2026-10-20); the mentee's own booking only |
-| `GET /api/mentor/bookings` | mentor session | `Page<MentorBookingDto>` | awaiting first, ordered by `acceptBy`; the mentee appears by name only (no email) |
+| `GET /api/mentor/bookings` | mentor session | `Page<MentorBookingDto>` | awaiting first, ordered by `acceptBy`; the mentee appears by name only (no email); the page also carries `pendingCount` (all awaiting bookings, not just the first page) for the notice on `/mentor` (Q13); `MentorBookingDto` has no `paymentStatus` — the mentor never sees refund details (C68, Q14) |
 | `POST /api/mentor/bookings/[id]/accept` · `/decline` | mentor (own) | decline: `{ reason? }` → `BookingDto` | after `acceptBy` → `conflict` "The acceptance deadline has passed" |
 | `POST /api/payments/webhook` | provider signature (`webhookHandler`) | raw event → `{ received: true }` | idempotent; Stripe or fake by provider |
 | `POST /api/system/sweep` | `x-sweep-token` | → `{ checkoutsRetried, holdsExpired, bookingsExpired, refundsReconciled, failed }` | idempotent, bounded |

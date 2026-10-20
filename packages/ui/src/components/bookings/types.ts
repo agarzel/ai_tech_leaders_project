@@ -28,3 +28,9 @@ export type Booking = {
   /** Plain text, up to 2,000 characters. */
   question: string;
 };
+
+/**
+ * `MentorBookingDto` (spec E02): the mentor's view – the mentee by name only, never an email, and no
+ * `paymentStatus`: the mentor never sees refund details (C68, owner decision Q14).
+ */
+export type MentorBooking = Omit<Booking, "mentor" | "paymentStatus"> & { mentee: { name: string } };

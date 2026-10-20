@@ -9,7 +9,7 @@ src/
   styles/tokens.css   design tokens – raw, semantic and component layers, light (:root) and dark (.dark); the ONLY file with colour values
   styles/theme.css    Tailwind 4 mapping (@theme inline), spacing utilities (gap-in-group, p-panel, py-list-row, h-control …), type roles (type-*)
   components/ui/      shadcn/ui primitives (Base UI, base-nova style) – added via the CLI, then adapted to tokens; never written from scratch
-  components/<concept>/  components tied to one concept's domain shape: auth/AccountMenu, mentors/{InvitationLinkPanel, InvitationStatusBadge, TagList, PublicWorkLinks, PriceList, MentorProfileHeader, OfferChecklist, MentorProfileForm, MentorCard}, availability/{SlotTimeField, SlotList, AddSlotForm, DeleteSlotDialog}, bookings/{SlotBookActions, BookingSummary, QuestionField, BookingForm, BookingStatusBadge, BookingStatusPanel, PaymentPending, BookingQuestion, bookingStatus.ts} …
+  components/<concept>/  components tied to one concept's domain shape: auth/AccountMenu, mentors/{InvitationLinkPanel, InvitationStatusBadge, TagList, PublicWorkLinks, PriceList, MentorProfileHeader, OfferChecklist, MentorProfileForm, MentorCard}, availability/{SlotTimeField, SlotList, AddSlotForm, DeleteSlotDialog}, bookings/{SlotBookActions, BookingSummary, QuestionField, BookingForm, BookingStatusBadge, BookingStatusPanel, PaymentPending, BookingQuestion, BookingRow, MentorBookingRow, AcceptDeadline, DeclineBookingDialog, PendingBookingsNotice, bookingStatus.ts} …
                          (data shapes restated from the spec DTOs in <concept>/types.ts and re-exported by the component)
   backend/
     api/apiCall.ts       apiCall / apiCallOrThrow – the only sanctioned fetch() to /api/*
@@ -24,6 +24,7 @@ src/
     layout/              AppHeader (word mark + RoleNav + account), RoleNav, PageLayout (header + main + h1), links.tsx (navLinkClassName, renderLink)
   lib/utils.ts        cn() helper, configured for the design-system utilities
   lib/format.ts       formatPrice (grosze → "PLN 180.00"), parsePrice / formatPriceInput (typed price ↔ grosze), formatDateTime, formatZoneLabel, formatRelative – time zone and "now" are arguments
+  lib/useNow.ts       useNow – the page's clock, refreshed every minute (AcceptDeadline); a start time keeps stories deterministic
   lib/time.ts         localToUtc (local date + time in a zone → ISO UTC, refuses DST gaps, flags repeated hours), browserTimeZone
 stories/              Storybook stories and MDX docs (outside src/ – not part of unit coverage)
   mocks/              Mock Service Worker response helpers (api.ts) and spec-based fixtures (fixtures.ts) – Storybook only

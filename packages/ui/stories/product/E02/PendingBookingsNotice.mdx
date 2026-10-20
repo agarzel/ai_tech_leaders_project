@@ -1,0 +1,96 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./PendingBookingsNotice.stories";
+
+<Meta of={Stories} />
+
+# PendingBookingsNotice
+
+`import { PendingBookingsNotice } from "@devmentor/ui/components/bookings/PendingBookingsNotice"`
+
+Product component, concept `bookings` (E02, #32).
+
+## 1. Purpose
+
+Tells the mentor on `/mentor` that bookings wait for a decision, and by when – the only in-app signal (D15).
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Above the checklist on `/mentor` | spec E02, UI/UX |
+
+## 3. When not to use
+
+| Instead of `PendingBookingsNotice`… | Use | Why |
+|---|---|---|
+| A counter badge in the navigation | never | P10 – the number lives in a sentence (Q2) |
+| Email | not built | D15: mentors learn in the app only |
+
+## 4. Anatomy
+
+One dense row: "2 bookings waiting for your decision", the nearest deadline (`AcceptDeadline`), *Review bookings*.
+
+## 5. Variants
+
+`emphasis`: the link is the accent, or outline when the page already has its next action.
+
+<Canvas of={Stories.Playground} />
+
+## 6. States
+
+| State | Story |
+|---|---|
+| Several | [Playground](?path=/story/product-e02-pendingbookingsnotice--playground) |
+| One | [One](?path=/story/product-e02-pendingbookingsnotice--one) |
+| None – nothing rendered | [None](?path=/story/product-e02-pendingbookingsnotice--none) |
+| Deadline soon | [DeadlineSoon](?path=/story/product-e02-pendingbookingsnotice--deadline-soon) |
+| Without accent | [WithoutAccent](?path=/story/product-e02-pendingbookingsnotice--without-accent) |
+
+Loading and error belong to the page that fetches the count.
+
+<Canvas of={Stories.DeadlineSoon} />
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| A labelled list with one row. | WCAG 1.3.1 |
+| The count is in words, not a badge. | Q2, P10 |
+| One accent per screen: `emphasis` off when the checklist has a next step. | P5/K3 |
+
+## 8. Content
+
+"1 booking waiting for your decision", "3 bookings waiting for your decision".
+
+## 9. Responsive
+
+<Canvas of={Stories.Narrow} />
+
+## 10. API
+
+| Prop | Type | Description |
+|---|---|---|
+| `count` | `number` | 0 renders nothing |
+| `earliestAcceptBy` | `string` | nearest deadline |
+| `href` | `string` | `/mentor/bookings` |
+| `now`, `timeZone` | `Date`, `string` |  |
+| `emphasis` | `boolean` | default `true` |
+| `renderLink` | `(props) => ReactNode` |  |
+
+<Controls of={Stories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<PendingBookingsNotice count={pending.length} earliestAcceptBy={pending[0].acceptBy} href="/mentor/bookings" now={now} timeZone={zone} />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| A sentence with the number. | A red bubble with a number. |
+| Show the nearest deadline. | Say only "you have bookings". |
+
+## 13. Related
+
+- **Confused with:** `OfferChecklist` (the offer's steps).
+- **Used in:** [/mentor with pending](?path=/story/product-e01-screens-mentorhome--with-pending).

@@ -1,0 +1,101 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./MentorBookingRow.stories";
+
+<Meta of={Stories} />
+
+# MentorBookingRow
+
+`import { MentorBookingRow } from "@devmentor/ui/components/bookings/MentorBookingRow"`
+
+Product component, concept `bookings` (E02, #32).
+
+## 1. Purpose
+
+Lets the mentor read a booking's question and accept or decline it before the deadline.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Each row of `/mentor/bookings` | spec E02, UI/UX |
+
+## 3. When not to use
+
+| Instead of `MentorBookingRow`… | Use | Why |
+|---|---|---|
+| Cancelling after acceptance | not built | R04 belongs to #34 |
+| The mentee's list | `BookingRow` | different data |
+
+## 4. Anatomy
+
+Title: the mentee's name (no email). Metadata: time, zone, length, price. The deadline (`AcceptDeadline`). The question (preview with *Show full question*). On the right *Accept* and `DeclineBookingDialog`, or the status when decided.
+
+## 5. Variants
+
+`isNext`: the booking with the nearest deadline gets the accent on *Accept*; all others are outline (Q3).
+
+<Canvas of={Stories.Playground} />
+
+## 6. States
+
+| State | Story |
+|---|---|
+| Awaiting a decision | [Playground](?path=/story/product-e02-mentorbookingrow--playground) |
+| Nearest deadline (accent) | [NextDeadline](?path=/story/product-e02-mentorbookingrow--next-deadline) |
+| Deadline under two hours | [DeadlineSoon](?path=/story/product-e02-mentorbookingrow--deadline-soon) |
+| Long question | [LongQuestion](?path=/story/product-e02-mentorbookingrow--long-question) |
+| Accepting | [Accepting](?path=/story/product-e02-mentorbookingrow--accepting) |
+| Deadline passed (conflict) | [DeadlinePassed](?path=/story/product-e02-mentorbookingrow--deadline-passed) |
+| Confirmed | [Confirmed](?path=/story/product-e02-mentorbookingrow--confirmed) |
+| Declined | [Declined](?path=/story/product-e02-mentorbookingrow--declined) |
+
+Accept and decline are asked through callbacks; the screen answers them with MSW.
+
+<Canvas of={Stories.DeadlinePassed} />
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Buttons name their booking (*Accept Ola Wiśniewska, Tue 27 Oct, 17:00*) because rows repeat; the visible text starts the name. | `AGENTS.md`, WCAG 2.5.3 |
+| One accent per screen: *Accept* of the nearest deadline. | Q3, P5/K3 |
+| A refused acceptance is explained under the row in words. | spec E02 (Edge Cases) |
+| The mentee appears by name only. | spec E02 (API) |
+| After a decision the page moves focus to the list heading. | WCAG 2.4.3 |
+
+## 8. Content
+
+*Accept*, *Decline*; busy state "Accepting…". Refusal: "The acceptance deadline has passed." (server wording).
+
+## 9. Responsive
+
+<Canvas of={Stories.Narrow} />
+
+## 10. API
+
+| Prop | Type | Description |
+|---|---|---|
+| `booking` | `MentorBooking` | `MentorBookingDto` |
+| `timeZone`, `now` | `string`, `Date` |  |
+| `isNext` | `boolean` | the accent |
+| `onAccept` | `(booking) => Promise<ApiResult>` | POST accept |
+| `onDecline` | `(booking, { reason? }) => Promise<ApiResult>` | POST decline |
+| `onDecided` | `(booking) => void` | after the server confirmed |
+
+<Controls of={Stories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<MentorBookingRow booking={b} timeZone={zone} now={now} isNext={b.id === nextId} onAccept={accept} onDecline={decline} onDecided={reload} />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| Show the question before the buttons. | Ask the mentor to decide blind. |
+| Give the accent to one booking. | Make every Accept the accent. |
+
+## 13. Related
+
+- **Confused with:** `BookingRow`.
+- **Used in:** [/mentor/bookings](?path=/story/product-e02-screens-mentorbookings--default).

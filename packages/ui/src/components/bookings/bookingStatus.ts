@@ -37,6 +37,24 @@ export function bookingStatusLabel(status: BookingStatus, payment: PaymentStatus
   }
 }
 
+/** The mentor's short status: no refund wording – the mentor never sees payment details (C68, Q14). */
+export function mentorStatusLabel(status: BookingStatus): string {
+  switch (status) {
+    case "pending_payment":
+      return "Awaiting payment";
+    case "awaiting_acceptance":
+      return "Awaiting your decision";
+    case "confirmed":
+      return "Confirmed";
+    case "declined":
+      return "Declined";
+    case "expired":
+      return "Expired";
+    case "payment_expired":
+      return "Payment not completed";
+  }
+}
+
 export type BookingDescription = { title: string; text: string };
 
 const BANKS = "Banks take a few days to show it.";
