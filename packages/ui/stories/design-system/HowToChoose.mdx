@@ -17,6 +17,9 @@ Read each table from the left: find the situation, take the component. When two 
 | a row has three or more secondary actions | `DropdownMenu` | *Change time*, *Copy share link*, *Delete slot* of a slot | R01.1; mentor spec |
 | a row has one or two actions | visible `Button size="sm"` | *Accept* and *Decline* on a booking row | R01.1, B2; hidden actions are found less often (**proposal**) |
 | the action is the main one | never in a menu | *Accept*, *Pay* | R01.5/P5 |
+| the trigger of a destructive action sits on a page | `Button variant="outline"`, default size; `destructive` only on the confirming button in the dialog | *Cancel booking* opens a dialog whose button *Yes, cancel booking* is `destructive` | agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 8 |
+| the only action on the screen is destructive | no accent on the screen at all | *Cancel booking* alone on a booking page | R01.5/P5; agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 9 |
+| a destructive action belongs to a whole page | a section: `h2`, one sentence of effect, the trigger ([pattern](?path=/docs/patterns-page-level-destructive-action--docs)) | *Cancel booking* below the booking details | agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 2 |
 
 ## Radio, select, field with search
 
@@ -48,6 +51,7 @@ Read each table from the left: find the situation, take the component. When two 
 | the person should keep the page visible while working on a side task | side panel – not built | none | What is missing |
 | a short explanation sits beside a thing and nothing is required | `Popover` | Why a slot time differs between mentor and mentee | mentor spec (time zones) |
 | an icon-only control needs a name | `Tooltip` | *Copy share link* | WCAG 2.5.3 |
+| a confirmation dialog repeats words | title names the object; description repeats the effect and the amount, not the whole summary | *Cancel the session on Thu 22 Oct, 18:00?* | agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 12 |
 | the information is needed to act (a limit, a price, why a button is off) | visible text on the page, never a popover or tooltip | the 2,000-character limit under the question | B17; prompt stage 4 |
 
 ## Field error, alert, toast
@@ -58,6 +62,9 @@ Read each table from the left: find the situation, take the component. When two 
 | the whole form or page failed, or the person must act | `Alert` (`destructive`) or `ErrorMessage`, in place, until fixed | *Payment could not start* with *Try again* | S10; prompt stage 4 |
 | information changes a decision | `Alert` (`default`) | The mentor may decline – full refund | booking spec, R05 |
 | a short confirmation that needs no action | text next to the action | *Profile saved.* beside the button | C50, S10 |
+| the outcome of an action replaces the action | one sentence in `role="status"` where the action was ([Action result](?path=/docs/patterns-action-result--docs)) | *Booking cancelled. Full refund: PLN 180.00 is on its way.* | agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 1 |
+| a financial consequence is known before the action | a sentence in `type-body` that starts with the outcome word, not an `Alert` | *Full refund:* … / *No refund:* … | agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 10 |
+| the information came from the server or changes while the page is open | `Alert` | a refusal: *The session has already started* | agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 10 |
 | you want a toast | not built; an error that needs action is never a toast | none | S10; prompt stage 4 |
 
 ## Skeleton and loading indicator

@@ -1122,3 +1122,20 @@ Zatwierdzone przez Arkadiusza 2026-10-20.
 - **E4:** heurystyki przyjęte.
 - **E5:** generator tabeli używa `module.stripTypeScriptTypes`. Do sprawdzenia przy aktualizacji do Node 24 (#19).
 - **Q17:** „Storybook tests” zostaje jednym jobem CI.
+
+
+## Etap 5 – test agentem i zamknięcie luk (2026-10-20, gałąź `lesson-6-agent-test-gaps`)
+
+Test agentem wykonany (`lekcja-06/test-agentem.md`): ekran „Cancel booking” (#34, R04) zbudowany w świeżej sesji wyłącznie z dokumentacji. 57 decyzji: 28 reguł (49%), 11 przykładów (19%), 18 zgadywań (32%; w kursie 45%). `lint:tokens` i `typecheck` przeszły.
+
+Luki zamknięte (właściciel zatwierdził wszystkie propozycje z sekcji B, 2026-10-20), tylko dokumentacja, bez zmian w kodzie komponentów:
+- **1, 2** – nowe strony wzorców `Patterns/Action result` i `Patterns/Page-level destructive action`; linki w Start here i w `.ai/docs/design-system.md`.
+- **8, 9, 10** – How to choose (przyciski, alert kontra zdanie), strona wzorca; **11** – Content, Delete confirmation; **12** – Delete confirmation, How to choose.
+- **13** – ogólny wzorzec terminu na stronie Deadline with a countdown; notatka na stronie `AcceptDeadline` (wersja ogólna planowana w E03, kod bez zmian).
+- **15** – strona AlertDialog (320 px); **18** – strony Alert i Usage and accessibility; **19, 20** – `packages/ui/AGENTS.md` i Contributing (+ Usage and accessibility dla 20).
+- Skrócona wersja każdej reguły w `.ai/docs/design-system.md`.
+- Luki produktowe 3, 4, 5, 6, 7, 14, 16, 17 – sekcja „Input for the E03 specification” na stronie What is missing; status #34 ujednolicony („Not built – no E03 spec”) w What is missing, Epic E02 i w pliku dla agentów.
+
+Otwarte (wymaga kodu, poza zakresem): ogólny komponent terminu z czasownikiem jako parametrem (E03). Rozbieżność z regułą 15 usunięta przez sesję główną 2026-10-20: stopka `Dialog` i `AlertDialog` ma `flex-col` zamiast `flex-col-reverse`, więc na wąskim ekranie bezpieczny wybór (pierwszy w DOM, B51) stoi na górze.
+
+**Zadanie domowe z design systemu: ukończone** (etapy 1–5, test agentem, luki zamknięte). Pozostaje raport końcowy etapu 5 (liczenie stron, komponentów, stories; szerokości 320/768/1440; klawiatura).

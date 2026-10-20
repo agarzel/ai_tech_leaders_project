@@ -1,0 +1,31 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Patterns/Action result" />
+
+# Action result
+
+What the page shows after a person's action succeeded and the action is no longer available. Instance (to be built with E03): cancelling a booking on `/bookings/[id]`. Rules from the agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 1.
+
+## Rules
+
+| Rule | Source |
+|---|---|
+| After success the section that held the action is replaced by one sentence of outcome (*Booking cancelled. Full refund: PLN 180.00 is on its way.*). The action does not come back. | agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 1 |
+| The sentence is in an element with `role="status"` and starts with the outcome, so it does not depend on colour. | agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 1; WCAG 1.4.1 |
+| Focus moves to the heading of that section (`tabIndex={-1}`): the control that had focus is gone. | WCAG 2.4.3; same reason as in [Delete confirmation](?path=/docs/patterns-delete-confirmation--docs) |
+| When the page holds data from the server (status, amounts), it fetches it again after success, so the rest of the page agrees with the sentence. | agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 1 |
+| There is no toast: the confirmation is text where the action was. | S10 |
+| A refusal stays where the person acted, in the server's words, and the action stays available when it can still work. | C58 |
+
+## States
+
+| State | Shown as |
+|---|---|
+| Before | The action section: heading, one sentence of effect, the trigger |
+| Working | Buttons disabled, *Cancelling…* (B18) |
+| Refused | The server's message in the dialog or beside the action |
+| Done | The outcome sentence in `role="status"`; focus on the section heading |
+
+## Related
+
+[Page-level destructive action](?path=/docs/patterns-page-level-destructive-action--docs), [Delete confirmation](?path=/docs/patterns-delete-confirmation--docs), [Status and next action](?path=/docs/patterns-status-and-next-action--docs).

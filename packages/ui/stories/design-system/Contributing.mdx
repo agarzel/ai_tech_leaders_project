@@ -28,6 +28,8 @@ Where a new component lives: a shadcn primitive in `components/ui/`; a concept-a
 | Accessibility | every story passes axe in both themes; roles, names and keyboard behaviour written on the page | prompt stage 1 |
 | Tokens only | no colour values, palette classes or arbitrary values; `npm run lint:tokens` stays at 0 | prompt rule 3 |
 | Unit tests | Vitest and Testing Library, 100% coverage (no `v8 ignore`, no wider exclude) | root `AGENTS.md` |
+| Where the stories live | a component and its stories: `stories/product/<Epic>/<Name>.stories.tsx`; a full-page screen: `stories/product/<Epic>/screens/` | agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 19 |
+| Open dialogs in stories | a story that shows an open `Dialog` or `AlertDialog` sets `parameters.a11y = { context: "body" }` (the portal is outside the story root) | agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 20 |
 | Real data | examples from the briefs and specs; no lorem ipsum, no invented counts, ratings or reviews | prompt rule 7 |
 | Registers | a row in `.storybook/blocks/components-data.ts` (Start here and Components pages), a row in `.ai/docs/design-system.md`, a line in `packages/ui/AGENTS.md` layout; an entry in `BACKWARD_COMPATIBILITY.md` when the export surface changes | S19; `BACKWARD_COMPATIBILITY.md` |
 | Source of every rule | a reference, anti-reference, decision, WCAG or WAI-ARIA – or the word **proposal** | prompt rule 4 |
