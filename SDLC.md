@@ -123,6 +123,10 @@ Every PR passes the full validation gate before review sign-off, in this order:
 - `npm run typecheck`
 - `npm run test:coverage`
 - `npm run build`
+- `npm run lint:tokens`
+- `npm run docs:design-system:check`
+- `npm run build-storybook`
+- `npm run test:storybook`
 - `npm run test:integration`
 
 Any non-zero exit fails the gate and blocks the PR. The implementing skills run the gate before opening a PR, and `om-check-and-commit` runs it before pushing a hand-worked branch. The command list lives in `.ai/agentic.config.json`; when it changes, update it there and in this section together.

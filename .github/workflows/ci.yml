@@ -115,6 +115,44 @@ jobs:
       # ...and fail if entities changed without a matching migration.
       - run: npm run db:migration:check
 
+  design-tokens:
+    name: Design tokens
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      # No values outside tokens, no gradients, blur, shadows, round shapes, emoji or Sparkles (0 hits).
+      - run: npm run lint:tokens
+      # The component tables in .ai/docs/design-system.md match components-data.ts.
+      - run: npm run docs:design-system:check
+
+  storybook:
+    name: Storybook tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Chromium + Linux libraries for the browser that runs the stories.
+      - run: npx playwright install --with-deps chromium
+
+      # The documentation builds (MDX, tables, links)...
+      - run: npm run build-storybook
+      # ...and every story passes as a browser test in both themes; accessibility violations fail.
+      - run: npm run test:storybook
+
   docker:
     name: Docker image
     runs-on: ubuntu-latest

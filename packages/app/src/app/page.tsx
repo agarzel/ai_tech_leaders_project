@@ -1,24 +1,23 @@
+import { AppHeader } from "@devmentor/ui/backend/layout/AppHeader";
+import { PageLayout } from "@devmentor/ui/backend/layout/PageLayout";
+
 export default function HomePage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-slate-950 px-6 text-center text-white">
-      <div className="max-w-2xl space-y-6">
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">
-          DevMentor
+    <PageLayout
+      header={<AppHeader />}
+      title="Book a senior engineer for one problem"
+      description="A paid text session of 25 or 50 minutes with an experienced developer, about one specific problem."
+    >
+      <section className="flex max-w-prose flex-col gap-in-group">
+        <h2 className="type-section-title">How it works</h2>
+        <p className="type-body text-muted-foreground">
+          You write your question when you book. You pay for the session up front. The mentor&apos;s price for 25 and
+          for 50 minutes is shown before you write the question.
         </p>
-        <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
-          Grow with a mentor who knows the way.
-        </h1>
-        <p className="mx-auto max-w-xl text-lg leading-8 text-slate-300">
-          Find an experienced mentor who will help you take the next step in
-          your tech career.
+        <p className="type-body text-muted-foreground">
+          The mentor list is not open yet.
         </p>
-        <a
-          href="#mentors"
-          className="inline-flex items-center justify-center rounded-lg bg-cyan-400 px-6 py-3 font-semibold text-slate-950 transition-colors hover:bg-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-300"
-        >
-          Find a mentor
-        </a>
-      </div>
-    </main>
+      </section>
+    </PageLayout>
   );
 }

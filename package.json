@@ -14,6 +14,8 @@
     "start": "npm run start -w @devmentor/app",
     "lint": "eslint",
     "lint:tokens": "node scripts/check-tokens.mjs",
+    "docs:design-system": "node --disable-warning=ExperimentalWarning scripts/design-system-doc.mjs",
+    "docs:design-system:check": "node --disable-warning=ExperimentalWarning scripts/design-system-doc.mjs --check",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "db:migrate": "npm run db:migrate -w @devmentor/db",
     "db:migration:create": "npm run db:migration:create -w @devmentor/db",

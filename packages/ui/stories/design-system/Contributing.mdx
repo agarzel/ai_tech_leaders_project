@@ -56,7 +56,8 @@ All from the repository root.
 | `npm run storybook` | Storybook on http://localhost:6006 |
 | `npm run build-storybook` | Static build in `packages/ui/storybook-static`; open it to check MDX tables and links |
 | `npm run test:storybook` | Every story as a test in Chromium, light and dark, with axe |
-| `npm run lint:tokens` | Finds colour values, palette classes and arbitrary values |
+| `npm run lint:tokens` | Finds colour values, palette classes, arbitrary values, gradients, backdrop blur, shadows, `rounded-full` outside the allow-list, emoji and the sparkles icon, in the design system and the app |
+| `npm run docs:design-system` | Regenerates the component tables in `.ai/docs/design-system.md` from `components-data.ts` (`:check` fails when they are stale) |
 | `npm run lint`, `npm run typecheck` | ESLint (incl. dependency boundaries) and TypeScript |
 | `npm run test:coverage` | Unit tests with the 100% gate |
 | `npm run build` | Production build of the app |
