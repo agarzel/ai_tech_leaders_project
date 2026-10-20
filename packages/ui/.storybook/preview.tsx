@@ -72,7 +72,10 @@ const preview: Preview = {
     },
     options: {
       storySort: {
-        order: ["Design system", "Foundations", ["Color", "Typography", "Spacing and layout", "Shape and depth", "Motion", "Icons", "Themes"], "Primitives", "Product", "Patterns"],
+        order: [
+          "Design system",
+          ["Start here", "Components", "How to choose", "Usage and accessibility", "Content", "What to avoid", "What is missing", "Contributing", "Epics"],
+          "Foundations", ["Color", "Typography", "Spacing and layout", "Shape and depth", "Motion", "Icons", "Themes"], "Primitives", "Product", "Patterns"],
       },
     },
   },

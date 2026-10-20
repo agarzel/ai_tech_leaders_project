@@ -1,0 +1,65 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design system/Contributing" />
+
+# Contributing
+
+How to change the design system without breaking it. The owner of every decision is Arkadiusz; nothing in this system changes by a pull request alone (prompt rule 12: existing themes, palettes, tokens, components and pages are not removed or rewritten without his approval).
+
+## Add a component, add a variant, or add nothing
+
+| If… | then… | Source |
+|---|---|---|
+| the same need appears in at least two places and no component covers it | add a component | the two-uses rule (C9, prompt stage 4); root `AGENTS.md` (reusable layers) |
+| it is needed in one place only | compose existing components and keep the markup next to that page's `page.tsx` | root `AGENTS.md`, designated homes (rule 4) |
+| an existing component needs another look or behaviour for a documented screen | add a variant or a prop, with a story and a docs row, after the owner approves it | prompt rule 6 |
+| the difference is only spacing, text or one screen's layout | add nothing: use spacing tokens, props and composition | prompt rule 6 |
+| the need is for a thing the system lists as "not built" (toast, combobox, side panel…) | write it on [What is missing](?path=/docs/design-system-what-is-missing--docs) with the screen that needs it; build only after a decision | prompt rule 6 |
+| a shadcn primitive is missing | run the CLI, then adapt to tokens; never write one by hand | `packages/ui/AGENTS.md`, S8 |
+
+Where a new component lives: a shadcn primitive in `components/ui/`; a concept-agnostic panel block in `backend/<category>/`; a component tied to one concept in `components/<concept>/` (same folder name as in `db` and `core`); used by one page – next to that page.
+
+## What a new component must come with
+
+| Item | Detail | Source |
+|---|---|---|
+| Documentation page | `<Name>.mdx` in `stories/primitives`, `stories/blocks` or `stories/product/<Epic>` with the 13 sections: purpose, when, when not, anatomy, variants, states, behaviour and accessibility, content, responsiveness, API, code, do and don't, related | prompt stage 2 |
+| Stories | Playground with controls, every variant and size, the state matrix (hover and focus frozen with `data-preview-state`), long content at 320 px, a play-function test; data states for product components (loading, empty, error, partial, many, long) | prompt stages 2–3, C3 |
+| Accessibility | every story passes axe in both themes; roles, names and keyboard behaviour written on the page | prompt stage 1 |
+| Tokens only | no colour values, palette classes or arbitrary values; `npm run lint:tokens` stays at 0 | prompt rule 3 |
+| Unit tests | Vitest and Testing Library, 100% coverage (no `v8 ignore`, no wider exclude) | root `AGENTS.md` |
+| Real data | examples from the briefs and specs; no lorem ipsum, no invented counts, ratings or reviews | prompt rule 7 |
+| Registers | a row in `.storybook/blocks/components-data.ts` (Start here and Components pages), a row in `.ai/docs/design-system.md`, a line in `packages/ui/AGENTS.md` layout; an entry in `BACKWARD_COMPATIBILITY.md` when the export surface changes | S19; `BACKWARD_COMPATIBILITY.md` |
+| Source of every rule | a reference, anti-reference, decision, WCAG or WAI-ARIA – or the word **proposal** | prompt rule 4 |
+
+## Changing a token
+
+| Step | Why |
+|---|---|
+| 1. Find every use: search the class (`gap-in-group`) and the variable (`--primary`) in `packages/ui/src`, `packages/ui/stories`, `packages/app/src` | A token is a promise to every screen |
+| 2. Recompute the contrast of every text and background pair in **both** themes (the [Color](?path=/docs/foundations-color--docs) page measures them from the real variables) – text 4.5 : 1, interface elements 3 : 1; if a pair falls below, stop and ask | WCAG 1.4.3, 1.4.11; prompt stage 1 |
+| 3. Edit only `src/styles/tokens.css` (values) and `theme.css` (names); keep the source comment on the token | `tokens.css` is the only file with colour values |
+| 4. Run `npm run lint:tokens`, `npm run test:storybook` (light and dark, with axe) and look at the pages that show the token | prompt rule 3, P1 |
+| 5. Update the Foundations page and `.ai/docs/design-system.md` when a name or purpose changed; a renamed token or class is a breaking change – `BACKWARD_COMPATIBILITY.md` (`./styles/*` is a protected export) | S1 |
+| 6. Ask the owner before merging | prompt rule 12 |
+
+## Who approves
+
+Arkadiusz decides every change to the system: new components, variants, tokens, wording rules and anything marked **proposal**. The working method used so far: the change is made reversibly, listed with a number and its reason (B, C, D-S…), and the owner accepts or rejects each item. A question to the owner gets a number (Q…). Decisions are recorded in `packages/ui/POSTEP.md` and never reopened without him.
+
+## Commands
+
+All from the repository root.
+
+| Command | What it does |
+|---|---|
+| `npm run storybook` | Storybook on http://localhost:6006 |
+| `npm run build-storybook` | Static build in `packages/ui/storybook-static`; open it to check MDX tables and links |
+| `npm run test:storybook` | Every story as a test in Chromium, light and dark, with axe |
+| `npm run lint:tokens` | Finds colour values, palette classes and arbitrary values |
+| `npm run lint`, `npm run typecheck` | ESLint (incl. dependency boundaries) and TypeScript |
+| `npm run test:coverage` | Unit tests with the 100% gate |
+| `npm run build` | Production build of the app |
+| `npx shadcn@latest add <name>` (in `packages/ui`) | Add a primitive; then adapt it and check `package.json` for dependencies outside the plan |
+
+Work on a feature branch and open a pull request against `main`; never commit to `main` (root `AGENTS.md`). Never use `git stash` or anything that discards local work (review rule R3).

@@ -254,3 +254,16 @@ Verified: lint, typecheck, test:coverage (393 tests, 100%), build, build-storybo
 Open: C69–C72, Q13, Q14 await the owner; nothing committed.
 
 Handoff: stage 3 is complete. Next is stage 4 (documentation pages that teach: Start here, Components, How to choose, Usage and accessibility, Content, What to avoid, Contributing; `.ai/docs/design-system.md`; agent test) per `packages/ui/POSTEP.md` "Następny krok".
+
+
+## Stage 4 (2026-10-20)
+
+Goal: the pages that teach, plus the agent file (S19).
+
+Built: Design system pages Start here, Components (66 components, previews are the real stories via `composeStories`), How to choose, Usage and accessibility, Content (F6 written down), What to avoid, Contributing; What is missing extended; `.storybook/blocks/{components-data.ts,Catalogue.tsx}`; `storySort` order; `.ai/docs/design-system.md` generated partly from the data (scratchpad script) and linked from `AGENTS.md` and `packages/ui/AGENTS.md`. Fixed a stage-3 bug: `{mentor}` in `EpicE02.mdx` crashed the page.
+
+Decisions: proposals D-S1–D-S4 and question Q15 in `packages/ui/POSTEP.md`. No new dependencies, nothing committed, no git stash.
+
+Verified: lint, typecheck, test:coverage (399), build, build-storybook (pages viewed, links and docs ids checked against index.json, link click navigates), test:storybook (1096/1096), lint:tokens (0, 278 files).
+
+Handoff: stage 5 (check and report, prepare the agent test, S7 CI job) after the owner answers D-S1–D-S4 and Q15.

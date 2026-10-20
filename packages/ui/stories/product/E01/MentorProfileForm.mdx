@@ -23,12 +23,12 @@ Lets a mentor say who they are, what they charge and whether they want to be lis
 
 | Instead of `MentorProfileForm`… | Use | Why |
 |---|---|---|
-| Simple admin forms | `CrudForm` | this form exists because `CrudForm` cannot infer tags, a link list, prices or a switch (C7) |
+| Simple admin forms | `CrudForm` | this form exists because `CrudForm` cannot infer tags, a link list, prices or a list of links (C7) |
 | Publishing times | `AddSlotForm` (batch 4) | different resource |
 
 ## 4. Anatomy
 
-Form-level error (after a failed save); **Profile**: name, headline, bio (optional, character count), stack (checkboxes, optional), public work (up to 5 link fields, *Add link*, *Remove link n*); **Prices**: 25- and 50-minute fields with the currency, both may stay empty; **Visibility**: *Show me on the public list* (switch); *Save profile* + saved status.
+Form-level error (after a failed save); **Profile**: name, headline, bio (optional, character count), stack (checkboxes, optional), public work (up to 5 link fields, *Add link*, *Remove link n*); **Prices**: 25- and 50-minute fields with the currency, both may stay empty; **Visibility**: *Show me on the public list* (checkbox); *Save profile* + saved status.
 
 ## 5. Variants
 
@@ -47,7 +47,7 @@ None.
 | No network | [NetworkError](?path=/story/product-e01-mentorprofileform--network-error) |
 | Saved | [Save](?path=/story/product-e01-mentorprofileform--save) |
 
-The interaction states appear after typing or submitting; open the stories. Field-level hover/focus/disabled: see `Input`, `Checkbox`, `Switch`, `InputGroup`.
+The interaction states appear after typing or submitting; open the stories. Field-level hover/focus/disabled: see `Input`, `Checkbox`, `InputGroup`.
 
 <Canvas of={Stories.NewProfile} />
 

@@ -39,6 +39,23 @@ From the audit of the running app (`lekcja-06/audyt-aplikacji.md`). The design s
 | `users-admin.tsx` | passes `result.error.message` to `DataTable` | `error={result.error}` (technical codes get an explanation) | Low |
 | `DataTable` rows | default shadcn row height | fixed in the design system (batch 1); app picks it up with the package | Done |
 
+## Revealed by the teaching pages (stage 4)
+
+Writing "How to choose", "Content" and "What to avoid" showed these gaps.
+
+| Gap | Where it shows | State | Priority |
+|---|---|---|---|
+| Toast: not built on purpose (S10); a short confirmation is text next to the action | [How to choose](?path=/docs/design-system-how-to-choose--docs) | Decision, no work | – |
+| Combobox (a long list that needs search) and a search field | How to choose; S12 | Not built; no screen needs it yet | Low |
+| Side panel (a task next to the page) | How to choose | Not built; no screen needs it yet | Low |
+| Docs pages (not components or screens) scroll sideways at 320 px because of wide MDX tables; pre-existing, also on the component pages | any Docs page at 320 px | Known; components and screens are fine | Low |
+| No automatic check for gradients, blur, shadows, `rounded-full`, emoji and sparkles; `lint:tokens` finds only colours, palette classes and arbitrary values | [What to avoid](?path=/docs/design-system-what-to-avoid--docs) | Proposal D-S3: extend `scripts/check-tokens.mjs` (with tests) | Medium |
+| Motion durations are still proposals (F3), so there are no `--duration-*` tokens | Usage and accessibility; Motion page | Waits for the owner | Low |
+| No copy deck: interface text sits in each component; English only; nobody has tried a longer language | [Content](?path=/docs/design-system-content--docs) | Known; translation is out of scope for 1.0 | Low |
+| The session length reads "25 min" in buttons and rows and "25 minutes" in a summary | Content; proposal D-S2 | Observed, not decided | Low |
+| The component table exists in three places (`components-data.ts`, the agent file, each page) and is kept in step by hand | [Contributing](?path=/docs/design-system-contributing--docs) | Proposal D-S4: generate the agent file table from the data | Low |
+| Catalogue previews that call the API (submit buttons) have no mock server on the Components page | [Components](?path=/docs/design-system-components--docs) | Known; open the story to try them | Low |
+
 ## For future specifications
 
 | Proposal | Why | Where it would go |
@@ -53,4 +70,4 @@ From the audit of the running app (`lekcja-06/audyt-aplikacji.md`). The design s
 
 - Interaction tests run in Chromium; native date and time pickers are exercised by setting a value, not by clicking the picker.
 - Screens are compositions in Storybook; real pages, routing, server data and `from=` entry points are app work.
-- The agent test and the remaining documentation pages (Start here, How to choose, Usage, Content, What to avoid, Contributing) belong to stage 4.
+- The agent test (a new screen built from this documentation in a fresh session) is prepared in stage 5; every place where that agent guesses goes into this page.

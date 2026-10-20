@@ -36,7 +36,7 @@ describe("MentorProfileForm", () => {
     expect(screen.getByLabelText("25-minute session")).toHaveAccessibleDescription(/From PLN.10\.00 to PLN.10,000\.00/);
     expect(screen.getByRole("checkbox", { name: "Python" })).toBeChecked();
     expect(screen.getByLabelText("Link 1")).toHaveValue("https://github.com/marek");
-    expect(screen.getByRole("switch", { name: "Show me on the public list" })).not.toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Show me on the public list" })).not.toBeChecked();
     expect(screen.getByText(/32 used/)).toBeInTheDocument();
   });
 
@@ -56,7 +56,7 @@ describe("MentorProfileForm", () => {
     await userEvent.click(screen.getByRole("checkbox", { name: "AI agents" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "React" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "React" }));
-    await userEvent.click(screen.getByRole("switch", { name: "Show me on the public list" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "Show me on the public list" }));
 
     await save();
 

@@ -2,6 +2,8 @@
 
 General rules and the dependency direction are in the root `AGENTS.md`; full standards in `.ai/docs/engineering-standards.md`.
 
+**Building a screen? Read `.ai/docs/design-system.md` first** (character, components, tokens, "if … then use …", what to avoid). The Storybook "Design system" pages are the full version; keep `.storybook/blocks/components-data.ts` and that file in step when a component is added.
+
 ## Layout
 
 ```

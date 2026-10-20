@@ -19,7 +19,6 @@ import {
 import { Input } from "@devmentor/ui/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@devmentor/ui/components/ui/input-group";
 import { Spinner } from "@devmentor/ui/components/ui/spinner";
-import { Switch } from "@devmentor/ui/components/ui/switch";
 import { Textarea } from "@devmentor/ui/components/ui/textarea";
 import { formatPrice, formatPriceInput, parsePrice } from "@devmentor/ui/lib/format";
 import type { MentorProfileInput } from "./types";
@@ -360,6 +359,13 @@ export function MentorProfileForm({ initialValues, tagOptions, currency, onSubmi
       <FieldSet>
         <FieldLegend className="type-section-title">Visibility</FieldLegend>
         <Field orientation="horizontal" data-invalid={invalid("listed")}>
+          <Checkbox
+            id={fid("listed")}
+            checked={draft.listed}
+            disabled={isSaving}
+            aria-describedby={describe("listed", true)}
+            onCheckedChange={(checked) => update({ ...draft, listed: checked }, "listed")}
+          />
           <FieldContent>
             <FieldLabel htmlFor={fid("listed")}>Show me on the public list</FieldLabel>
             <FieldDescription id={fid("listed-hint")}>
@@ -367,13 +373,6 @@ export function MentorProfileForm({ initialValues, tagOptions, currency, onSubmi
             </FieldDescription>
             {errors.listed && <FieldError id={fid("listed-error")}>{errors.listed}</FieldError>}
           </FieldContent>
-          <Switch
-            id={fid("listed")}
-            checked={draft.listed}
-            disabled={isSaving}
-            aria-describedby={describe("listed", true)}
-            onCheckedChange={(checked) => update({ ...draft, listed: checked }, "listed")}
-          />
         </Field>
       </FieldSet>
 
