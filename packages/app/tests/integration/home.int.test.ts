@@ -12,17 +12,17 @@ describe("home page", () => {
     await browser.close();
   });
 
-  it("renders the DevMentor welcome screen", async () => {
+  it("renders the DevMentor home page with the real offer", async () => {
     expect(await browser.title()).toBe("DevMentor");
-    expect(await browser.textOf("heading", "Grow with a mentor who knows the way.")).toBe(
-      "Grow with a mentor who knows the way.",
+    expect(await browser.textOf("heading", "Book a senior engineer for one problem")).toBe(
+      "Book a senior engineer for one problem",
     );
-    await browser.waitForText("Find an experienced mentor");
+    await browser.waitForText("You pay for the session up front");
     await browser.screenshot("home");
   });
 
-  it("has a call to action to find a mentor", async () => {
-    expect(await browser.textOf("link", "Find a mentor")).toBe("Find a mentor");
+  it("links the word mark to the home page and has no link to a missing page", async () => {
+    expect(await browser.textOf("link", "DevMentor")).toBe("DevMentor");
   });
 });
 

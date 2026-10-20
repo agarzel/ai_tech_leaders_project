@@ -88,7 +88,7 @@ Key naming rules: packages `@devmentor/<name>`; tables plural snake_case (`users
 
 - **Runner:** Vitest (`vitest.config.mts`, one project per package: `core` and `db` in Node, `ui` in jsdom with Testing Library).
 - **Location:** colocated `<file>.test.ts(x)` next to the code it tests.
-- **Storybook story tests** are separate from unit coverage: stories live in `packages/ui/stories/` (outside the coverage glob) and run in Chromium through `npm run test:storybook` (`packages/ui/vitest.storybook.config.mts`, light and dark theme, accessibility violations fail). Not in CI yet (planned with the design-system work, stage 5).
+- **Storybook story tests** are separate from unit coverage: stories live in `packages/ui/stories/` (outside the coverage glob) and run in Chromium through `npm run test:storybook` (`packages/ui/vitest.storybook.config.mts`, light and dark theme, accessibility violations fail). Run in CI by the "Storybook tests" job (`build-storybook` + `test:storybook`).
 - **Excluded from unit coverage (by design):** barrels (`src/index.ts`), type-only modules, generated shadcn primitives (`ui/src/components/ui/`), migrations (checked by the CI migrations job), and the Next.js app (`packages/app` – pages and route wiring are covered by integration tests).
 - **Style:** test behaviour through the public API; mock only boundaries (database `EntityManager`, `fetch`, the container, env). Arrange / act / assert, one behaviour per test, descriptive names.
 - A bug fix ships with a regression test that fails without the fix.
@@ -112,7 +112,7 @@ The `om-*` skills run this repository's process from `.ai/agentic.config.json` (
 - `BACKWARD_COMPATIBILITY.md` – protected contract surfaces (API envelope, migrations, package exports, env, npm scripts) and the required path for changing them. Warn the user when a change violates it.
 - `.ai/trackers/github.md`, `.ai/browsers/agent-browser.md` – how skills talk to GitHub and the browser; edit these to change that behaviour.
 
-The validation gate in the config (`lint`, `typecheck`, `test:coverage`, `build`, `test:integration`) and the one in `SDLC.md` must stay in sync with CI; change them together and re-run `om-setup-agent-pipeline` when the toolchain or labels change.
+The validation gate in the config (`lint`, `typecheck`, `test:coverage`, `build`, `lint:tokens`, `docs:design-system:check`, `build-storybook`, `test:storybook`, `test:integration`) and the one in `SDLC.md` must stay in sync with CI; change them together and re-run `om-setup-agent-pipeline` when the toolchain or labels change.
 
 ## AI skills
 
@@ -162,7 +162,9 @@ npm run test:integration       # integration tests (needs Docker; first run: npm
 npm run storybook              # design-system Storybook on http://localhost:6006
 npm run build-storybook        # static Storybook build (packages/ui/storybook-static)
 npm run test:storybook         # every story as a browser test, both themes, a11y errors fail (first run: npx playwright install chromium)
-npm run lint:tokens            # fails on colour literals outside packages/ui/src/styles/tokens.css, Tailwind palette classes and arbitrary values
+npm run lint:tokens            # design-system and app code: fails on colour literals outside packages/ui/src/styles/tokens.css, Tailwind palette classes, arbitrary values, gradients, backdrop blur, shadows, rounded-full (allow-list in scripts/check-tokens.mjs), emoji and the Sparkles icon
+npm run docs:design-system     # regenerate the component tables in .ai/docs/design-system.md from packages/ui/.storybook/blocks/components-data.ts
+npm run docs:design-system:check  # fail when those tables are stale (CI "Design tokens" job)
 npm run db:migrate             # apply pending migrations
 npm run db:migration:create    # generate a migration from entity changes
 npm run db:migration:check     # fail if entities and migrations are out of sync
@@ -173,7 +175,7 @@ docker compose up --build      # app + PostgreSQL in containers
 ## Workflow rules
 
 - Work on a feature branch and open a pull request against `main`; never commit directly to `main`.
-- Every PR must pass CI (lint, typecheck, build, unit tests with 100% coverage, integration tests, database migrations, Docker image) before merge.
+- Every PR must pass CI (lint, typecheck, build, unit tests with 100% coverage, design tokens, Storybook tests, integration tests, database migrations, Docker image) before merge.
 - Before finishing, run `npm run lint`, `npm run typecheck`, `npm run test:coverage` and `npm run build` locally and report the results honestly.
 - Plan before coding anything non-trivial; if the plan turns out wrong, stop and re-plan instead of pushing on.
 - Prefer the simplest change that solves the problem; touch only what the task needs.

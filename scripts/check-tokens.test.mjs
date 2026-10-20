@@ -1,6 +1,7 @@
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import {
+  ALLOWED,
   DEFAULT_PATHS,
   ROOT,
   TOKENS_FILE,
@@ -93,6 +94,75 @@ describe("findViolations", () => {
     expect(findViolations("Never `bg-zinc-900`, use `bg-muted`.", "page.mdx")).toEqual([]);
   });
 
+  it("reports gradient utilities (also from/via/to stops) and gradient functions", () => {
+    const text = '"bg-gradient-to-r from-primary via-muted to-muted bg-linear-to-b bg-radial"\n.x { background: linear-gradient(red, blue); }';
+    expect(findViolations(text, "a.tsx").map((v) => [v.kind, v.match])).toEqual([
+      ["gradient", "bg-gradient-to-r"],
+      ["gradient", "from-primary"],
+      ["gradient", "via-muted"],
+      ["gradient", "to-muted"],
+      ["gradient", "bg-linear-to-b"],
+      ["gradient", "bg-radial"],
+      ["gradient", "linear-gradient("],
+    ]);
+  });
+
+  it("does not take hyphenated words such as to-do for gradient stops", () => {
+    expect(findViolations("a to-do list", "a.tsx")).toEqual([]);
+  });
+
+  it("reports backdrop blur and filter", () => {
+    expect(findViolations('"backdrop-blur-md" and backdrop-filter: blur(4px)', "a.tsx").map((v) => v.kind)).toEqual([
+      "backdrop blur",
+      "backdrop blur",
+    ]);
+  });
+
+  it("reports shadow utilities but allows shadow-none and prose that merely says shadow", () => {
+    expect(findViolations('<p className="shadow-md inset-shadow-sm shadow-none rounded-lg" />', "a.tsx").map((v) => v.match)).toEqual([
+      "shadow-md",
+      "inset-shadow-sm",
+    ]);
+    expect(findViolations('<p className="shadow" />', "a.tsx").map((v) => v.match)).toEqual(["shadow"]);
+    expect(findViolations("// a line, not a shadow, separates it", "a.tsx")).toEqual([]);
+  });
+
+  it("reports box-shadow in CSS, except in the tokens file", () => {
+    const css = ".a { box-shadow: 0 0 0 1px red; }";
+    expect(findViolations(css, "packages/ui/src/styles/theme.css").map((v) => v.kind)).toEqual(["shadow"]);
+    expect(findViolations(css, TOKENS_FILE)).toEqual([]);
+  });
+
+  it("reports rounded-full (also per corner) except in the allow-listed files", () => {
+    expect(findViolations('"rounded-full rounded-t-full rounded-lg"', "a.tsx").map((v) => v.match)).toEqual([
+      "rounded-full",
+      "rounded-t-full",
+    ]);
+    expect(findViolations('"rounded-full"', "packages/ui/src/components/ui/switch.tsx")).toEqual([]);
+  });
+
+  it("reports emoji in tsx and mdx text, not plain symbols or other file types", () => {
+    expect(findViolations("<p>Done ✨ 😅 \u2713 \u00a9</p>", "a.tsx").map((v) => v.match)).toEqual(["✨", "😅"]);
+    expect(findViolations("Done ✨", "page.mdx")).toHaveLength(1);
+    expect(findViolations("// done ✨", "a.ts")).toEqual([]);
+  });
+
+  it("reports the Sparkles icon but not the lowercase word", () => {
+    const text = 'import { Sparkles, SparklesIcon } from "lucide-react";\n// no sparkles here';
+    expect(findViolations(text, "a.tsx").map((v) => v.match)).toEqual(["Sparkles", "SparklesIcon"]);
+  });
+
+  it("allows a rule only in its own allow-listed files", () => {
+    expect(findViolations("✨ Sparkles", "packages/ui/stories/design-system/WhatToAvoid.mdx")).toEqual([]);
+    expect(findViolations("✨", "packages/ui/stories/design-system/Other.mdx")).toHaveLength(1);
+  });
+
+  it("gives every allow-list entry a reason", () => {
+    for (const files of Object.values(ALLOWED)) {
+      for (const reason of Object.values(files)) expect(reason.length).toBeGreaterThan(10);
+    }
+  });
+
   it("normalizes Windows-style separators when recognizing the tokens file", () => {
     const windowsPath = TOKENS_FILE.split("/").join(path.sep);
     expect(findViolations("--raw: #fff;", windowsPath)).toEqual([]);
@@ -134,11 +204,11 @@ describe("run", () => {
     expect(log.mock.calls.at(-1)[0]).toMatch(/1 value\(s\) outside tokens in 1 files\. Use a semantic token class/);
   });
 
-  it("checks the design-system folders by default", () => {
+  it("checks the design-system folders and the app by default", () => {
     const log = vi.fn();
     const fs = fakeFs({});
     run([], { root: "/repo", fs, readFile: fs.readFile, log });
-    expect(DEFAULT_PATHS).toEqual(["packages/ui/src", "packages/ui/stories", "packages/ui/.storybook"]);
+    expect(DEFAULT_PATHS).toEqual(["packages/ui/src", "packages/ui/stories", "packages/ui/.storybook", "packages/app/src"]);
     expect(log).toHaveBeenCalledWith("✓ Tokens: 0 files checked, no values outside tokens.");
   });
 

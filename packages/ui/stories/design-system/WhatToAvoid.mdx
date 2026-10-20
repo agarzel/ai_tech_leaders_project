@@ -40,7 +40,7 @@ None of these is in the product; each is a way an assistant drifts when no one s
 
 | Avoid | Recognise it in code | Why | Instead |
 |---|---|---|---|
-| A value outside the tokens | a colour literal, `bg-zinc-900`, `text-white`, `p-[13px]`; `lint:tokens` reports it | Prompt rule 3; two themes cannot follow a literal | `bg-card`, `text-muted-foreground`, `gap-in-group`, `p-panel` |
+| A value outside the tokens | a colour literal, `bg-zinc-900`, `text-white`, `p-[13px]`; `lint:tokens` reports it (also gradients, blur, shadows, `rounded-full`, emoji, Sparkles) | Prompt rule 3; two themes cannot follow a literal | `bg-card`, `text-muted-foreground`, `gap-in-group`, `p-panel` |
 | A variant added on the way | a new `variant="…"` or `size="…"` prop in a primitive for one screen; a class override on a shared component | Prompt rule 6; the system grows with no decision | Compose existing parts; propose the variant (Contributing) |
 | A `div` instead of a button or a link | `<div onClick>`, `<span role="button">`, `<a onClick>` without `href` | WCAG 4.1.2, 2.1.1: no keyboard, no role | `Button`; a real `<a href>` |
 | A placeholder instead of a label | `<Input placeholder="Email" />` with no `Field`/`Label` | WCAG 3.3.2; the name vanishes when typing | `Field` with `FieldLabel`; the placeholder shows a format |

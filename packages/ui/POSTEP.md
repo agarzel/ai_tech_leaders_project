@@ -11,7 +11,7 @@ Plik roboczy zadania z `lekcja-06/prompt-storybook.md`. Nowa sesja: przeczytaj p
 | 2. Komponenty bazowe | **zakończony** 2026-10-19 – partie 1–5, scalone w `main` (PR #41) |
 | 3. Komponenty produktu, wzorce, ekrany | **zakończony** 2026-10-20 – partie 1–5 zacommitowane; partia 6 (ostatnia) gotowa, czeka na decyzje C69–C72, Q13–Q14 i „dalej” do etapu 4 |
 | 4. Strony, które uczą | **zakończony** 2026-10-20 – 7 nowych stron + rozszerzone „What is missing”, `.ai/docs/design-system.md`; decyzje D-S1–D-S4 i Q15 podjęte (niżej); czeka na „dalej” |
-| 5. Sprawdzenie i raport | nie rozpoczęty – następny krok |
+| 5. Sprawdzenie i raport | **w toku** 2026-10-20 – wdrożone: #40 (strona główna), D-S3, D-S4, S7 (joby CI); sprawdzenia przeszły; **czeka test agentem w osobnej sesji** (nie uruchomiony) |
 
 ## Następny krok
 
@@ -1095,3 +1095,30 @@ Strony pod `Design system/`: **Start here** (charakter w 3 zdaniach, słowa char
 - **D-S1, D-S2** przyjęte jako wdrożone.
 - **D-S3** (rozszerzyć `lint:tokens` o gradienty, `backdrop-blur`, cienie, `rounded-full` z wyjątkami: awatar, radio, tor przełącznika, emoji, ikonę Sparkles) i **D-S4** (generować tabelę komponentów w `.ai/docs/design-system.md` z `components-data.ts`) przyjęte, **odłożone do etapu 5** – wpisane do jego planu.
 - Dopisane do „What is missing”: strony Docs przewijają się w bok przy 320 px (szerokie tabele MDX; wcześniej istniejące; komponenty i ekrany w porządku).
+
+
+## Etap 5 – postęp (2026-10-20, gałąź `lesson-6-ds-stage-5`)
+
+Zrobione:
+- **#40** `packages/app/src/app/page.tsx`: `PageLayout` + `AppHeader` z `@devmentor/ui`, `type-*`, tokeny; tekst z briefu (płatna sesja tekstowa 25/50 min o jednym problemie, płatność z góry, cena przed pytaniem); bez eyebrow, wyrównanie do lewej (A01), bez słów „career/journey” (A02). Martwy CTA `#mentors` usunięty; zamiast linku zdanie „The mentor list is not open yet.” (E1). Test integracyjny strony głównej zaktualizowany.
+- **D-S3** `scripts/check-tokens.mjs`: skanuje też `packages/app/src`; nowe reguły: gradienty, backdrop blur/filter, cienie, `rounded-full`, emoji (tsx/mdx), ikona Sparkles. Jawna lista wyjątków `ALLOWED` z powodem przy każdym wpisie (awatar, radio, tor switcha; 3 pliki dokumentacji ze Skeleton/kształtem; 2 strony „anty-przykładów”; `storybook.css` – podgląd focusu). Trafień w kodzie produktu: 0. `lint:tokens` = 0 (288 plików).
+- **D-S4** `scripts/design-system-doc.mjs` (+ testy 100%): sekcja między znacznikami `BEGIN/END:components-table` w `.ai/docs/design-system.md` generowana z `components-data.ts`; `npm run docs:design-system` i `docs:design-system:check` (dodane do `AGENTS.md`, `BACKWARD_COMPATIBILITY.md`). Wygenerowany wynik jest identyczny z dotychczasową tabelą ręczną.
+- **S7** `.github/workflows/ci.yml`: nowe joby „Design tokens” (`lint:tokens` + `docs:design-system:check`) i „Storybook tests” (`playwright install --with-deps chromium`, `build-storybook`, `test:storybook`). Brama walidacji zsynchronizowana w `.ai/agentic.config.json` i `SDLC.md`; `AGENTS.md` zaktualizowany.
+- Strony Storybooka: usunięty wiersz „What is missing” o braku automatycznego sprawdzania (D-S3 załatwione); `Contributing` i `What to avoid` opisują nowy zakres.
+
+Sprawdzenia: lint OK, typecheck OK, test:coverage OK (427 testów, 100%), build OK, build-storybook OK, test:storybook 1096/1096 (oba motywy), lint:tokens 0, docs:design-system:check OK, test:integration 11/11.
+
+Propozycje: E1 (strona główna bez CTA), E2 (zdanie z pytaniem o treść strony głównej do akceptacji), E3 (lista wyjątków `ALLOWED` – do przeglądu), E4 (job CI „Storybook tests” w jednym kroku z buildem i testami).
+
+Następny krok: test agentem (jeden nowy ekran z backlogu) w osobnej, świeżej sesji; potem raport końcowy etapu 5 (liczenie stron, komponentów, stories; szerokości 320/768/1440; klawiatura – jeszcze nie wykonane).
+
+### Decyzje etapu 5 (E1–E5, Q16, Q17)
+
+Zatwierdzone przez Arkadiusza 2026-10-20.
+
+- **E1 / Q16:** strona główna bez CTA, dopóki nie istnieje `/mentors`.
+- **E2:** treść strony głównej przyjęta.
+- **E3:** lista `ALLOWED` przyjęta.
+- **E4:** heurystyki przyjęte.
+- **E5:** generator tabeli używa `module.stripTypeScriptTypes`. Do sprawdzenia przy aktualizacji do Node 24 (#19).
+- **Q17:** „Storybook tests” zostaje jednym jobem CI.
