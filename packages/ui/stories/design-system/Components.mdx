@@ -1,0 +1,84 @@
+import { Meta, Unstyled } from "@storybook/addon-docs/blocks";
+import { ComponentCatalogue } from "../../.storybook/blocks/Catalogue";
+
+<Meta title="Design system/Components" />
+
+# Components
+
+Every component that exists in `packages/ui`, grouped by the job it does, each with a small working preview, one sentence on what it is for and a link to its documentation page. The previews are the components' own stories (`Playground`, or the first state story), not copies. For imports and for when not to use a component, see [Start here](?path=/docs/design-system-start-here--docs); to choose between neighbours, see [How to choose](?path=/docs/design-system-how-to-choose--docs).
+
+Where the pages live in the menu: **Primitives** (shadcn/ui base-nova on Base UI, adapted to our tokens), **Primitives / Panel blocks** (building blocks of pages: forms, tables, feedback, layout), **Product / E01** and **Product / E02** (components of one domain, named after the epic that needs them). Dialogs and menus open from their trigger in the preview. Previews that call the API (a submit) have no server in this page – open the component's page or story to try those.
+
+## Actions
+
+Start something now or follow a reference.
+
+<Unstyled>
+  <ComponentCatalogue group="Actions" />
+</Unstyled>
+
+## Forms and input
+
+Collect values and tell the person what to fix.
+
+<Unstyled>
+  <ComponentCatalogue group="Forms and input" />
+</Unstyled>
+
+## Feedback and states
+
+Say what is happening, what failed and what is empty.
+
+<Unstyled>
+  <ComponentCatalogue group="Feedback and states" />
+</Unstyled>
+
+## Overlays
+
+Interrupt or annotate the page, then give focus back.
+
+<Unstyled>
+  <ComponentCatalogue group="Overlays" />
+</Unstyled>
+
+## Structure and navigation
+
+Frame a page, group a topic, move between places.
+
+<Unstyled>
+  <ComponentCatalogue group="Structure and navigation" />
+</Unstyled>
+
+## Lists and data
+
+Show many things of one kind.
+
+<Unstyled>
+  <ComponentCatalogue group="Lists and data" />
+</Unstyled>
+
+## Mentor offer (E01)
+
+Product components of the mentor's offer: accounts, profile, prices, slots and the public list.
+
+<Unstyled>
+  <ComponentCatalogue group="Mentor offer (E01)" />
+</Unstyled>
+
+## Booking and prepayment (E02)
+
+Product components of booking, paying and the mentor's decision.
+
+<Unstyled>
+  <ComponentCatalogue group="Booking and prepayment (E02)" />
+</Unstyled>
+
+## Not components
+
+| Thing | What it is | Where it is described |
+|---|---|---|
+| `formatPrice`, `parsePrice`, `formatPriceInput` | Money formatting and parsing (grosze ↔ text) | [Amount in PLN](?path=/docs/patterns-amount-in-pln--docs), [Content](?path=/docs/design-system-content--docs) |
+| `formatDateTime`, `formatZoneLabel`, `formatRelative`, `localToUtc`, `useNow` | Dates, zones, relative time, local time to UTC, the page's clock | [Time with zone and DST](?path=/docs/patterns-time-with-zone-and-dst--docs), [Content](?path=/docs/design-system-content--docs) |
+| `apiCall`, `describeApiError` | The only `fetch` to `/api/*`; the text of an API failure | [ErrorMessage](?path=/docs/primitives-panel-blocks-errormessage--docs), [Form](?path=/docs/patterns-form--docs) |
+| `cn`, `navLinkClassName`, `renderLink` | Class merging that knows the design-system utilities; one navigation link style; links through the app's router | `packages/ui/AGENTS.md` |
+| Screens | Compositions in Storybook, not exported; real pages are app work | [E01](?path=/docs/design-system-epics-e01-mentor-offer--docs), [E02](?path=/docs/design-system-epics-e02-booking-and-prepayment--docs) |

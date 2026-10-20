@@ -72,6 +72,10 @@ New reusable components have one designated home each – never scattered ad hoc
 3. Component tied to one concept's domain shape → `ui/src/components/<concept>/`, named after the same concept folder used in `db`/`core`.
 4. Used by exactly one page → colocate next to that `page.tsx` until a second consumer appears.
 
+### Design system – read first when building a screen
+
+Before you build or change any UI, read `.ai/docs/design-system.md`: product character, component table (import / when / when not), semantic tokens, "if … then use …" guides, what to avoid and the Storybook commands. The full documentation is the Storybook in `packages/ui` (`npm run storybook`; pages under "Design system").
+
 ### Engineering standards
 
 The full standards – naming table, principles (SRP, DRY, dependency inversion, YAGNI, fail closed, idempotency), security minimums, code quality rules and the code review checklist – are in `.ai/docs/engineering-standards.md`. Follow them; its preface lists the adaptations for this repo (Next.js 16 `connection()` instead of `force-dynamic`, MikroORM 7 `defineEntity`).

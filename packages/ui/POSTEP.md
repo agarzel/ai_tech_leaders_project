@@ -10,12 +10,12 @@ Plik roboczy zadania z `lekcja-06/prompt-storybook.md`. Nowa sesja: przeczytaj p
 | 1. Fundamenty | zakończony 2026-10-19 – F1 wdrożone, F2–F6 zapisane; czeka na „dalej” |
 | 2. Komponenty bazowe | **zakończony** 2026-10-19 – partie 1–5, scalone w `main` (PR #41) |
 | 3. Komponenty produktu, wzorce, ekrany | **zakończony** 2026-10-20 – partie 1–5 zacommitowane; partia 6 (ostatnia) gotowa, czeka na decyzje C69–C72, Q13–Q14 i „dalej” do etapu 4 |
-| 4. Strony, które uczą | nie rozpoczęty – następny krok |
-| 5. Sprawdzenie i raport | nie rozpoczęty |
+| 4. Strony, które uczą | **zakończony** 2026-10-20 – 7 nowych stron + rozszerzone „What is missing”, `.ai/docs/design-system.md`; decyzje D-S1–D-S4 i Q15 podjęte (niżej); czeka na „dalej” |
+| 5. Sprawdzenie i raport | nie rozpoczęty – następny krok |
 
 ## Następny krok
 
-Etap 4: strony, które uczą (po decyzjach C69–C72, Q13–Q14 i „dalej”): Start here, Components (katalog z podglądem), How to choose, Usage and accessibility, Content, What to avoid, Contributing; uzupełnienie „What is missing” (strona już jest – dodać do niej wnioski z tych stron) i stron epików (E01, E02 są); skrót dla agentów `.ai/docs/design-system.md` (S19); test agentem. Potem etap 5 (sprawdzenie i raport; S7 – CI Storybooka).
+Etap 5: sprawdzenie i raport (po „dalej”; plan zawiera D-S3 i D-S4): build, typecheck, lint, `lint:tokens` z listą trafień, dostępność wszystkich stories, szerokości 320/768/1440 w obu motywach, klawiatura i nakładki, przygotowanie testu agentem (jeden nowy ekran z backlogu, opis w tym pliku – test w nowej sesji), liczenie stron, komponentów, stories i testów interakcji; S7 (job CI Storybooka).
 
 ## Zatwierdzone decyzje (źródła: `lekcja-06/referencje.md`, `lekcja-06/tokeny.md`)
 
@@ -1057,3 +1057,41 @@ Partie 1–6: komponenty produktu E01 i E02, bloki ogólne (`backend/`), wzorce,
 - **C69–C72** przyjęte w całości.
 - **Q13** tak: `GET /api/bookings` dostaje opcjonalny filtr `?status=`, `GET /api/mentor/bookings` zwraca `pendingCount` (wszystkie oczekujące, nie tylko pierwsza strona). Zapisane w spec E02. `/mentor` używa teraz `pendingCount` (fikstury i MSW zwracają je w `Page`).
 - **Q14** nie: `MentorBookingDto` nie ma `paymentStatus` – mentor nie widzi szczegółów zwrotu (C68). Poprawione: typ `MentorBooking` bez `paymentStatus`, `MentorBookingRow` pokazuje etykietę mentora (`mentorStatusLabel`: Awaiting your decision, Confirmed, Declined, Expired …), fikstury, MSW i stories bez `paymentStatus`; test, że wiersz mentora nigdy nie renderuje słowa „refund”.
+
+
+## Etap 4 – wynik (2026-10-20)
+
+Strony pod `Design system/`: **Start here** (charakter w 3 zdaniach, słowa charakteru, 5 kroków, wzorce, tokeny, stany danych, tabela 66 komponentów: import / kiedy / kiedy nie), **Components** (katalog 66 komponentów w 8 grupach, podglądy = prawdziwe stories przez `composeStories`, opis, link), **How to choose** (8 tabel „jeśli… to użyj…”), **Usage and accessibility** (klawiatura, formularze, kolor, ruch i treść, układ, reguły produktu – każda ze źródłem), **Content** (ton, 3 zdania „mówi” / „nie mówi”, przyciski, błędy, puste stany, formaty; F6 zapisane: „PLN 180.00”, zgodnie z `lib/format`), **What to avoid** (A01–A05, generyczny wygląd AI, błędy implementacji – jak rozpoznać w kodzie, dlaczego, czym zastąpić), **Contributing**; rozszerzone **What is missing**. Kolejność w menu: `storySort` w `preview.tsx`. Dane komponentów: `.storybook/blocks/components-data.ts`, bloki `Catalogue.tsx`. Plik dla agentów `.ai/docs/design-system.md` (S19) + odwołania w `AGENTS.md` i `packages/ui/AGENTS.md`. Po drodze naprawiony błąd z etapu 3: `{mentor}` w `EpicE02.mdx` wywracał stronę epiku E02 (MDX traktuje klamry jako JS) – teraz w backtickach.
+
+### Propozycje D-S1–D-S4 (wdrożone odwracalnie – do decyzji)
+| # | Propozycja | Źródło / dlaczego |
+|---|---|---|
+| D-S1 | Reguły treści bez źródła w materiałach: zdania z wielkiej litery bez kropki na przyciskach, bez skracania etykiet, imiona bez zmiany wielkości liter | zaobserwowane w komponentach; materiały milczą |
+| D-S2 | Długość sesji: „25 min” w przyciskach, wierszach i cennikach, „25 minutes” w zdaniu podsumowania | tak jest dziś w komponentach (`SlotBookActions`, `PriceList` vs `BookingSummary`) |
+| D-S3 | Rozszerzyć `scripts/check-tokens.mjs` (z testami) o gradienty, `backdrop-blur`, cienie, `rounded-full`, emoji, ikonę Sparkles | strona „What to avoid” – dziś tylko przegląd |
+| D-S4 | Generować tabelę komponentów w `.ai/docs/design-system.md` z `components-data.ts` (dziś ręcznie, jednorazowy skrypt w scratchpadzie) | brak rozjazdu danych |
+
+### Pytania
+- **Q15** `MentorProfileForm` używa `Switch` (*Show me on the public list*) w formularzu zapisywanym przyciskiem *Save profile* (C7, przyjęte), a reguła Switch mówi „działa od razu; zapisywane z formularzem = Checkbox”. Zmienić na Checkbox, czy doprecyzować regułę Switch?
+
+### Wyniki sprawdzeń
+| Komenda | Wynik |
+|---|---|
+| `npm run lint` | OK |
+| `npm run typecheck` | OK |
+| `npm run test:coverage` | OK – 399 testów |
+| `npm run build` | OK |
+| `npm run build-storybook` | OK; 8 stron sprawdzonych w Chromium (1440; tabele jako tabele, bez błędów; linki `?path=` i 66 linków katalogu istnieją w indeksie; kliknięcie linku otwiera stronę komponentu; kolejność menu poprawna; Start here także w ciemnym motywie) |
+| `npm run test:storybook` | OK – 1096/1096 |
+| `npm run lint:tokens` | OK – 0 (278 plików) |
+
+### Czego nie sprawdzono
+- Przy 320 px strony Docs (nowe i istniejące, np. Button) przewijają się w bok (tabele MDX poza `Unstyled`) – to „chrom” Docs, nie komponenty; nie zmieniałem.
+- Podglądy w katalogu, które wołają API (submit), nie mają mocka na stronie Docs.
+- Klawiatura w managerze, czytnik ekranu; test agentem (etap 5).
+
+### Decyzje właściciela – etap 4 (Arkadiusz, 2026-10-20)
+- **Q15** → Checkbox: opcja „Show me on the public list” w `MentorProfileForm` zmieniona z `Switch` na `Checkbox` (opcja zapisywana z formularzem to checkbox; reguła Switch bez zmian). Zmienione: komponent, testy, strona komponentu, strony Checkbox/Switch, How to choose, What is missing, plik dla agentów.
+- **D-S1, D-S2** przyjęte jako wdrożone.
+- **D-S3** (rozszerzyć `lint:tokens` o gradienty, `backdrop-blur`, cienie, `rounded-full` z wyjątkami: awatar, radio, tor przełącznika, emoji, ikonę Sparkles) i **D-S4** (generować tabelę komponentów w `.ai/docs/design-system.md` z `components-data.ts`) przyjęte, **odłożone do etapu 5** – wpisane do jego planu.
+- Dopisane do „What is missing”: strony Docs przewijają się w bok przy 320 px (szerokie tabele MDX; wcześniej istniejące; komponenty i ekrany w porządku).

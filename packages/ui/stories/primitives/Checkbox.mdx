@@ -26,7 +26,7 @@ Lets a person turn one option on or off, or pick several options from a short li
 
 | Instead of a checkbox… | Use | Why |
 |---|---|---|
-| A setting that takes effect immediately (*Show me on the public list*) | `Switch` | a switch acts at once, a checkbox waits for *Save* (WAI-ARIA switch) |
+| A setting that takes effect immediately, with no *Save* | `Switch` | a switch acts at once, a checkbox waits for *Save* (WAI-ARIA switch) |
 | Exactly one of several options (25 or 50 min) | `RadioGroup` | one answer only |
 | An action (*Copy share link*) | `Button` | a checkbox holds state |
 | Accepting rules with a fake "I agree" | nothing, unless the spec asks for it | no invented consent steps (rule 7) |
@@ -133,7 +133,7 @@ All props of Base UI `Checkbox.Root`:
 ## 13. Related
 
 - **Confused with:** `Switch` (immediate), `RadioGroup` (one of many).
-- **Used in:** mentor profile (stack tags), `FieldSet`; pattern *Form* (stage 3).
+- **Used in:** mentor profile (stack tags, *Show me on the public list*), `FieldSet`; pattern *Form* (stage 3).
 
 ### Interaction test
 

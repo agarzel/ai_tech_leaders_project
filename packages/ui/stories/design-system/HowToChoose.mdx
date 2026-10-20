@@ -1,0 +1,90 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design system/How to choose" />
+
+# How to choose
+
+Read each table from the left: find the situation, take the component. When two components look alike, the table says which question separates them. Every row has an example from DevMentor and its source. "Not built" means the design system has no such component on purpose (rule 6: nothing outside the approved plan); it is listed on [What is missing](?path=/docs/design-system-what-is-missing--docs).
+
+## Button, link, icon button, action menu
+
+| If… | then use… | Example in DevMentor | Source |
+|---|---|---|---|
+| the person starts an action (pay, accept, save, add) | `Button`; `default` only for the one main action of the screen | *Pay* on `/book/[slotId]`; *Add slot* is `secondary` or `outline` | WAI-ARIA (a button acts), R01.5/P5, K3 |
+| the person goes to another page or address | a link: `link-text` in a sentence, `navLinkClassName` in navigation, `ItemLink` for a whole row | A public-work link in a profile; *Mentors* in the header; a booking row | WAI-ARIA, T11, B34, B36 |
+| an action must read like text inside a row | `Button variant="link"` | *Show full question* under a long question | B19, T11 |
+| only an icon fits | `Button size="icon"` with `aria-label` and a `Tooltip` with the same words | *Copy share link* | WCAG 4.1.2, 2.5.3; Icons page |
+| a row has three or more secondary actions | `DropdownMenu` | *Change time*, *Copy share link*, *Delete slot* of a slot | R01.1; mentor spec |
+| a row has one or two actions | visible `Button size="sm"` | *Accept* and *Decline* on a booking row | R01.1, B2; hidden actions are found less often (**proposal**) |
+| the action is the main one | never in a menu | *Accept*, *Pay* | R01.5/P5 |
+
+## Radio, select, field with search
+
+| If… | then use… | Example in DevMentor | Source |
+|---|---|---|---|
+| two to five options are worth comparing side by side | `RadioGroup`, with the price in each label | *25 minutes · PLN 120.00* / *50 minutes · PLN 220.00* | R01.5/P5, WAI-ARIA radio group |
+| the list is longer than about five options or space is tight | `NativeSelect` | Stack filter on `/mentors`, time zone, role in an admin form | S12; **proposal** for the five-option threshold |
+| the person must pick a value from a very long list and needs to search it | not built (combobox); use `NativeSelect` until a screen needs it | none yet | S12 |
+| the person types text to narrow a list | `Input` with a search icon in `InputGroup` | no screen yet | InputGroup page (**proposal**) |
+| the person may choose several values | `Checkbox` group in a `FieldSet` | The mentor's stack tags | mentor spec (`MENTOR_TAGS`) |
+
+## Switch and checkbox
+
+| If… | then use… | Example in DevMentor | Source |
+|---|---|---|---|
+| the setting takes effect the moment it changes | `Switch` | no such setting exists in the specs yet | WAI-ARIA switch |
+| the option is saved later with the form | `Checkbox` | The stack tags and *Show me on the public list* in the profile form | WAI-ARIA checkbox |
+| the person picks exactly one option | `RadioGroup` | Session length | WAI-ARIA |
+| the person starts something | `Button` | *Accept booking* | WAI-ARIA |
+
+
+## Dialog, confirmation, side panel, separate page, popover, tooltip
+
+| If… | then use… | Example in DevMentor | Source |
+|---|---|---|---|
+| the person must decide or enter a little (up to about three fields) without leaving the page | `Dialog` | Declining a booking with an optional reason (≤ 280) | booking spec; **proposal** for the three-field limit |
+| the person must confirm an irreversible action and enters nothing | `AlertDialog` (*Keep…* first, a verb on the destructive button) | *Delete the slot on Wed 4 Nov, 18:00?* – *Keep slot* / *Delete slot* | WAI-ARIA alertdialog, B51; prompt stage 3 |
+| the task needs a long form or has its own address | a separate page | Profile and prices (`/mentor/profile`), booking (`/book/[slotId]`) | specs give each its own URL |
+| the person should keep the page visible while working on a side task | side panel – not built | none | What is missing |
+| a short explanation sits beside a thing and nothing is required | `Popover` | Why a slot time differs between mentor and mentee | mentor spec (time zones) |
+| an icon-only control needs a name | `Tooltip` | *Copy share link* | WCAG 2.5.3 |
+| the information is needed to act (a limit, a price, why a button is off) | visible text on the page, never a popover or tooltip | the 2,000-character limit under the question | B17; prompt stage 4 |
+
+## Field error, alert, toast
+
+| If… | then use… | Example in DevMentor | Source |
+|---|---|---|---|
+| one field is wrong | `FieldError` under that field, with an icon and what to do | *Enter an email address, like ola@example.com.* | WCAG 3.3.1, 3.3.3, B10 |
+| the whole form or page failed, or the person must act | `Alert` (`destructive`) or `ErrorMessage`, in place, until fixed | *Payment could not start* with *Try again* | S10; prompt stage 4 |
+| information changes a decision | `Alert` (`default`) | The mentor may decline – full refund | booking spec, R05 |
+| a short confirmation that needs no action | text next to the action | *Profile saved.* beside the button | C50, S10 |
+| you want a toast | not built; an error that needs action is never a toast | none | S10; prompt stage 4 |
+
+## Skeleton and loading indicator
+
+| If… | then use… | Example in DevMentor | Source |
+|---|---|---|---|
+| the content has a known shape (rows, a panel) | `Skeleton`, or the component's own `…Skeleton` | A booking list while the first page loads | prompt stage 4, P5 |
+| the shape is unknown and the wait is short | `LoadingMessage` | First load of an admin list | `DataTable` source |
+| a button is waiting for the server | `Spinner` and *Saving…* inside the button, disabled and `aria-busy` | *Create account* → *Saving…* | B18 |
+| the wait is for a payment | `PaymentPending` (words, no spinner after about a minute) | `/bookings/[id]` after paying | spec E02, C66, WCAG 2.2.2 |
+| the wait lasts minutes | a status in words that changes when the state changes | *Waiting for Marek — they decide by …* | A02 (no progress "journey") |
+
+## Table, list, cards
+
+| If… | then use… | Example in DevMentor | Source |
+|---|---|---|---|
+| admin data has several attributes to compare per row | `DataTable` | Users, invitations | S21 |
+| each item is one title and one line of context | `ItemGroup` with `Item` rows | Bookings, slots, mentors | R01.1, S21 |
+| one topic needs a title and a form or summary | `Card` (one frame, no card per row) | The booking summary | R01.3, P3 |
+| you are tempted to show three identical cards with an icon | write the content as text or rows | the old `/admin` grid | A01 |
+| you want an avatar wall of mentors | `MentorCard` rows: name, headline, tags, public work, prices | `/mentors` | A05, N02, C6 |
+
+## Tabs and separate pages
+
+| If… | then use… | Example in DevMentor | Source |
+|---|---|---|---|
+| two to five short views of the same list on one page | `Tabs` | *Upcoming* / *Past* (an illustration; the specs show one list) | WAI-ARIA tabs; **proposal** |
+| the views are different tasks | separate pages with `RoleNav` | Profile, Slots, Bookings | specs, R02.6/P12 |
+| the person narrows one list | filters with a result count and removable chips | `/mentors?tag=React` | List with filters pattern |
+| the steps must be done in order | a page per step | Book → pay → status | spec E02 |

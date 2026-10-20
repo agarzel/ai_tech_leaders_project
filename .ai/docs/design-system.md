@@ -1,0 +1,208 @@
+# DevMentor design system – read this before building a screen
+
+Shortcut of the Storybook in `packages/ui` for coding agents. Full rules with sources: Storybook "Design system" pages (`npm run storybook`). Rules marked (proposal) are not decided. Decisions are owned by Arkadiusz; do not add components, variants, tokens or dependencies without his approval – list them as proposals.
+
+## Product character
+
+DevMentor: a developer books and prepays a senior engineer for a 25- or 50-minute text session about one problem. Character: factual, clear, warm, direct, calm. Anti-character: generic, loud, course-like, judging (R01–R02, A01–A05).
+
+- Dense lists: a title and one metadata line, rows separated by a 1 px line, no cards per row, no card in a card (R01.1, R01.3).
+- Warm greys; the teal accent (`primary`) on ONE element per screen: the main action and its status (R01.5/P5, K3).
+- Never: ratings, years of experience, counters, courses or progress bars, subscriptions, gradients, blur, glow, sparkles, emoji, toasts for errors (A01–A05, N02, P10, P11, S10).
+- UI language English, sentence case, "you". Every time shows its zone; prices are PLN; the server computes prices and deadlines.
+
+## Build a screen in five steps
+
+1. Find the pattern: Form, List with filters, Detail view, Delete confirmation, Status and next action, Deadline with a countdown, Time with zone and DST, Amount in PLN, Payment and waiting, Bookability checklist, Link shown once (Storybook `Patterns/`). Epic screens and state maps: `Design system/Epics/E01`, `E02`.
+2. Choose components with the guides below; product component first, then panel block, then primitive.
+3. Use semantic classes only (tables below).
+4. Design every data state: loading (`Skeleton`), nothing yet (`EmptyState` + create action), no results (*Clear filters*), error (`ErrorMessage`, `error={result.error}`), partial (omit missing parts or "Not set"), many (`Pagination`, `ResultCount`), long text, 320 px.
+5. Check "What to avoid" below, then run the commands at the end.
+
+## Components
+
+Import paths are under `@devmentor/ui/`. Use by path, never a barrel. Base UI parts take `render`, not `asChild`. Page for each: Storybook `Primitives/<Name>`, `Primitives/Panel blocks/<Name>` or `Product/E01|E02/<Name>`.
+
+### Actions
+
+| Component | Import path | Use when | Not when |
+|---|---|---|---|
+| Button | `components/ui/button` | One action: Pay, Accept, Add slot, Delete slot. One `default` button per screen; rows use `size="sm"`. | Going to a URL: link. Choosing 25 or 50 min: RadioGroup. A setting that stays on: Switch. |
+| TextLink | `class="link-text"` | A link inside running text, a hint, an alert, a profile. | An action: Button. A whole list row: ItemLink. App navigation: RoleNav. Never in the accent colour. |
+| DropdownMenu | `components/ui/dropdown-menu` | Three or more secondary row actions (Change time, Copy share link, Delete slot). | One or two actions: visible Buttons. The main action (Accept, Pay): a visible `default` Button. Choosing a value: NativeSelect. |
+
+### Forms and input
+
+| Component | Import path | Use when | Not when |
+|---|---|---|---|
+| Field | `components/ui/field` | Every form field; wrap a whole form in FieldGroup. | A form CrudForm can render: CrudForm. A server error about the whole form: Alert or ErrorMessage. |
+| Label | `components/ui/label` | Your own layout where Field does not fit (a control in a dense toolbar). | A form field: Field + FieldLabel. A group of radios: FieldSet + FieldLegend. A placeholder as the name: never. |
+| Input | `components/ui/input` | One line of text, always inside a Field with a visible label. | Several lines: Textarea. A fixed list: NativeSelect or RadioGroup. A value shown but not editable: plain text. |
+| InputGroup | `components/ui/input-group` | A price with PLN after the number; a link with a copy button; a counter under the booking question. | A plain field: Input. A field and a submit button: Input + Button side by side. Explaining the field: FieldDescription. |
+| Textarea | `components/ui/textarea` | The booking question (2,000), the mentor bio (2,000), the decline reason (280). | One short value: Input. Session messages (Enter sends): the session composer, not built. |
+| NativeSelect | `components/ui/native-select` | Stack filter, role, time zone, rows per page; more than about five options or tight space. | Two to four options worth comparing: RadioGroup. Several values: Checkbox group. A long searchable list: not built. |
+| Checkbox | `components/ui/checkbox` | The mentor's stack tags; a yes/no option saved with a form. | A setting that acts at once: Switch. Exactly one option: RadioGroup. An action: Button. |
+| RadioGroup | `components/ui/radio-group` | Session length with prices, before the question box; two to five options worth comparing. | More than about five options: NativeSelect. Several answers: Checkbox group. One on/off: Switch. |
+| Switch | `components/ui/switch` | Show me on the public list; any setting saved the moment it changes. | An option saved later with the form: Checkbox. Two named options: RadioGroup. Starting an action: Button. |
+| CrudForm | `backend/forms/CrudForm` | Sign-in, registration, invitations, admin forms: text, email, number, password or one choice. | Tags, a list of links, prices, a switch: a bespoke form from Field parts (MentorProfileForm). A single action: Button. |
+| CopyField | `backend/forms/CopyField` | The invitation link (shown once), the mentor's share link. | A value the person types: Input. A secret: never shown. |
+
+### Feedback and states
+
+| Component | Import path | Use when | Not when |
+|---|---|---|---|
+| Alert | `components/ui/alert` | A form or page-level failure; information that changes a decision (the mentor may decline, full refund). | An error of one field: FieldError. A short confirmation: inline text. An empty list: EmptyState. Marketing: nothing. |
+| Badge | `components/ui/badge` | A booking status (`secondary` or `outline`), stack tags, a missing checklist step. | An action: Button. A counter or "Top rated": nothing. A status in the accent colour: never (`default` is not for statuses). |
+| Spinner | `components/ui/spinner` | Inside a button that is saving (Saving…); a short status. | A list or panel of known shape: Skeleton. A progress "journey": nothing. A wait of minutes: a status in words. |
+| Skeleton | `components/ui/skeleton` | The first page of a list of rows; a panel whose data has not arrived. | A wait inside a button: Spinner. A wait with no known shape: LoadingMessage. Zero rows: EmptyState. |
+| EmptyState | `backend/feedback/EmptyState` | Nothing yet (No bookings yet + Find a mentor); a mentor page without bookable times. | A failed load: ErrorMessage. Still loading: Skeleton. No results for filters: its own state with Clear filters. |
+| ErrorMessage | `backend/feedback/ErrorMessage` | A list or detail view failed to load (Try again); a form rejected without a field to point at. | One field: FieldError. An error that needs action as a toast: never. An empty list: EmptyState. |
+| LoadingMessage | `backend/feedback/LoadingMessage` | First load of an admin list; a short wait with no known layout. | A list or card of known shape: Skeleton. Saving a form: the button's Saving… state. Payment: PaymentPending. |
+
+### Overlays
+
+| Component | Import path | Use when | Not when |
+|---|---|---|---|
+| Dialog | `components/ui/dialog` | Declining a booking with an optional reason; a short form of about three fields. | Confirming with no input: AlertDialog. A long form: its own page. Extra info: Popover. A message: Alert. |
+| AlertDialog | `components/ui/alert-dialog` | Deleting a slot; any irreversible action with no input. | An action that needs input: Dialog. A reversible or cheap action: do it and show the result. Reporting an error: Alert. |
+| Popover | `components/ui/popover` | Why a slot time differs between mentor and mentee; a short note with a link. | Information needed to act: visible text. An icon name: Tooltip. A decision or form: Dialog. Actions: DropdownMenu. |
+| Tooltip | `components/ui/tooltip` | Icon-only buttons (the same text as `aria-label`); a shortcut next to a label. | Anything needed to act (why a button is disabled, a limit, a price): visible text. Long text or links: Popover. |
+
+### Structure and navigation
+
+| Component | Import path | Use when | Not when |
+|---|---|---|---|
+| Card | `components/ui/card` | A checklist panel, a booking summary, a frame around a form with a title. | Each row of a list: Item rows. A grid of identical cards with an icon: never. A state message: Alert. |
+| Separator | `components/ui/separator` | Between groups inside one panel; between items of a toolbar (vertical). | Between rows of a list: the row's own border. Between page sections: space (`gap-section`). Around a group: nothing. |
+| Tabs | `components/ui/tabs` | Two to five short, parallel views of one list on one page. | Different tasks (profile, slots): separate pages. Filtering: filters with a result count. Steps: a page per step. |
+| PageLayout | `backend/layout/PageLayout` | Every page: `content` width for lists and panels, `narrow` for one form. | A dialog's content: Dialog. The session view: its own layout, not built. |
+| AppHeader | `backend/layout/AppHeader` | The top of every page, inside PageLayout. | The session view side panel: the session panel, not built. A marketing hero: nothing. |
+| RoleNav | `backend/layout/RoleNav` | AppHeader of every signed-in page: one fixed list per role, only places that exist. | A list of sections with descriptions: Item + ItemLink. Views inside a page: Tabs. A link in a sentence: `link-text`. |
+| Avatar | `components/ui/avatar` | The author of a message group, next to the name and time. | A wall of mentor cards led by faces: never. Presence dots, "+3" stacks: never. Decoration of a row: text. |
+| Kbd | `components/ui/kbd` | The composer hint: Enter to send · Shift + Enter for a new line. | Code, file names, versions: `type-code`. A control that looks like a key: Button. |
+
+### Lists and data
+
+| Component | Import path | Use when | Not when |
+|---|---|---|---|
+| Item | `components/ui/item` | Bookings, slots, mentors, sections of a page: a title and one metadata line. | Admin data with many comparable columns: DataTable. One topic with a form: Card. Cards per item with shadows: never. |
+| Table | `components/ui/table` | Genuinely tabular data with several independent attributes per row. | Product lists (bookings, slots): Item rows. A one-column list: Item. |
+| DataTable | `backend/tables/DataTable` | Admin lists: users, invitations. It has loading, error, empty states and paging. | Product lists (bookings, slots, mentors): Item rows. Two or three facts about one record: Card. |
+| Pagination | `backend/tables/Pagination` | Under DataTable and under paged product lists (mentors, bookings). | A list that fits on one page (a mentor's slots): nothing. An endless feed: nothing. |
+| ActiveFilters | `backend/filters/ActiveFilters` | /mentors filtered by stack; /bookings filtered by status. | The control that sets a filter: NativeSelect or Input in a Field. A saved search: not built. |
+| ResultCount | `backend/filters/ResultCount` | Above the mentor list and the bookings list. | A count as a badge or hype number: never. The page range: Pagination. |
+
+### Mentor offer (E01)
+
+| Component | Import path | Use when | Not when |
+|---|---|---|---|
+| AccountMenu | `components/auth/AccountMenu` | The account area of AppHeader. | Profile and prices: the `/mentor/profile` page. A menu for one or two items: the inline links here. |
+| InvitationLinkPanel | `components/mentors/InvitationLinkPanel` | Right after an invitation is created, until Done. | The always-available share link: CopyField on `/mentor`. An old invitation's link: it cannot be shown. |
+| InvitationStatusBadge | `components/mentors/InvitationStatusBadge` | Rows of `/admin/invitations`. | Booking statuses: BookingStatusBadge. A status that needs an action: a sentence and a button. |
+| TagList | `components/mentors/TagList` | MentorCard and the mentor's profile. | Choosing tags: checkboxes in MentorProfileForm. Statuses: Badge. Skill levels, years, counts: nothing. |
+| PublicWorkLinks | `components/mentors/PublicWorkLinks` | MentorCard (inline) and the mentor's profile; up to five https links. | Star ratings, review counts, "Top rated": nothing. In-app navigation: RoleNav, ItemLink. |
+| PriceList | `components/mentors/PriceList` | The mentor's profile and MentorCard. | The price of one chosen booking: BookingSummary. Entering prices: MentorProfileForm. |
+| MentorProfileHeader | `components/mentors/MentorProfileHeader` | Top of `/m/[slug]`. | A row of the public list: MentorCard. An avatar wall, years of experience: nothing. |
+| MentorCard | `components/mentors/MentorCard` | A row of `/mentors`: name, headline, tags, public work, prices, the next time. | The full profile: MentorProfileHeader. A grid of cards, an avatar wall, ratings: never. |
+| OfferChecklist | `components/mentors/OfferChecklist` | `/mentor` until the offer is bookable. | A progress bar or "3 of 5": never. Booking statuses: BookingStatusPanel. |
+| MentorProfileForm | `components/mentors/MentorProfileForm` | `/mentor/profile`. | Simple admin forms: CrudForm. Publishing times: AddSlotForm. |
+| SlotTimeField | `components/availability/SlotTimeField` | Inside AddSlotForm; any input of a time in a zone, with DST handled. | Showing a time: `formatDateTime` + `formatZoneLabel`. A range or recurrence: not built. |
+| AddSlotForm | `components/availability/AddSlotForm` | `/mentor/slots`. | Adding many slots at once or editing a slot: not built (delete and add again). |
+| SlotList | `components/availability/SlotList` | The mentor's own slots and the public mentor page. | A calendar grid: not built. Bookings: BookingRow. |
+| DeleteSlotDialog | `components/availability/DeleteSlotDialog` | Deleting an open slot. | A booked slot: no action, cancel the booking instead. Anything undoable at once: no dialog. |
+
+### Booking and prepayment (E02)
+
+| Component | Import path | Use when | Not when |
+|---|---|---|---|
+| SlotBookActions | `components/bookings/SlotBookActions` | A slot row on `/m/[slug]`. | Paying: BookingForm. A slot nobody can book: no action, the reason in words. |
+| BookingSummary | `components/bookings/BookingSummary` | Before paying on `/book/[slotId]` and on the booking page. | A list row: BookingRow. Computing a price: never, the server computes it. |
+| QuestionField | `components/bookings/QuestionField` | BookingForm (plain text, up to 2,000, required). | A short single-line value: Input in a Field. Editing after booking: not possible. |
+| BookingForm | `components/bookings/BookingForm` | `/book/[slotId]`. | Paying: the hosted card page. Changing a booking: not built. |
+| PaymentPending | `components/bookings/PaymentPending` | `/bookings/[id]` right after paying. | Waiting for the mentor: BookingStatusPanel. |
+| BookingStatusBadge | `components/bookings/BookingStatusBadge` | BookingRow and any list of bookings. | The status with the next action: BookingStatusPanel. |
+| BookingStatusPanel | `components/bookings/BookingStatusPanel` | Top of `/bookings/[id]`, for the mentee or the mentor. | A row of a list: BookingStatusBadge. Payment progress: PaymentPending. |
+| BookingQuestion | `components/bookings/BookingQuestion` | The booking page and the mentor's rows (collapsible). | Markdown or code blocks: not built, plain text only. |
+| BookingRow | `components/bookings/BookingRow` | `/bookings`. | The mentor's list: MentorBookingRow. The full status: BookingStatusPanel. |
+| MentorBookingRow | `components/bookings/MentorBookingRow` | `/mentor/bookings`; Accept in the accent only for the nearest deadline. | Cancelling after acceptance: not built. The mentee's list: BookingRow. |
+| AcceptDeadline | `components/bookings/AcceptDeadline` | MentorBookingRow and the mentor's booking page. | A countdown that ticks by the second: never. The mentee's wait: BookingStatusPanel. |
+| DeclineBookingDialog | `components/bookings/DeclineBookingDialog` | Declining a booking (reason up to 280). | A confirmation with no input: AlertDialog. |
+| PendingBookingsNotice | `components/bookings/PendingBookingsNotice` | `/mentor` when something is pending. | A counter badge in the navigation: never. Email: not built. |
+
+Not components: `lib/format` (`formatPrice`, `parsePrice`, `formatPriceInput`, `formatDateTime`, `formatDay`, `formatTime`, `formatZoneLabel`, `formatRelative`), `lib/time` (`localToUtc`), `lib/useNow`, `backend/api/apiCall` (the only `fetch` to `/api/*`), `describeApiError`, `lib/utils` (`cn`), `backend/layout/links` (`navLinkClassName`, `renderLink`).
+
+## Semantic tokens
+
+Values live only in `packages/ui/src/styles/tokens.css`; classes map in `theme.css`. Never a colour literal, palette class (`bg-zinc-900`, `text-white`) or arbitrary value (`p-[13px]`).
+
+### Colour
+
+| Class | Purpose |
+|---|---|
+| `bg-background` / `bg-card`, `bg-popover` | page / list, panel, menu surface |
+| `text-foreground` | main text, row titles, links in text (underlined) |
+| `text-muted-foreground` | metadata, times, secondary text; never text needed to act |
+| `bg-muted` | table header, row hover, quiet fills |
+| `bg-secondary` (`hover:bg-secondary-hover`), `bg-accent` | secondary button and status badge; neutral menu highlight (not the brand accent) |
+| `bg-primary text-primary-foreground` | the ONE accented element per screen (`default` Button) – never statuses, links, icons |
+| `text-destructive`, `border-destructive` | errors, decline, delete – always with an icon and words |
+| `border-border` | 1 px lines between rows and around lists/panels (decorative) |
+| `border-input` | outline of fields (meets 3:1) |
+| `ring-ring/50` | focus ring, the same everywhere (neutral) |
+| `bg-overlay` | dim behind dialogs; no blur |
+
+### Spacing, size, shape, type
+
+| Class | Value / purpose |
+|---|---|
+| `gap-in-group` | 8 px between items of one group |
+| `gap-between-groups` | 16 px between groups in a panel |
+| `p-panel` | 16 px padding of a panel or list |
+| `gap-section` | 32 px between page sections |
+| `py-list-row px-list-row` | 8 / 12 px dense row padding |
+| `gap-message-group`, `gap-message` | 12 / 4 px in the session stream (not built) |
+| `h-control`, `h-control-sm` | 32 px (40 px on touch); 28 px only in dense rows |
+| `rounded-lg`, `rounded-md` | 6 px for controls, panels, overlays; 4.8 px for small parts; full circle only avatar, radio, switch |
+| `type-page-title`, `type-section-title` | 24/600, 18/600 – one page title per page |
+| `type-body`, `type-label`, `type-meta` | 14 text; 14/500 labels and row titles; 12 muted metadata |
+| `type-code` | Geist Mono – only code, paths, file names, versions |
+| `link-text` | link in running text; `tabular-nums` for prices, times, counters |
+| `max-w-prose`, `max-w-5xl` | text line ≤ ~65 characters; content column 1024 px |
+
+## If … then use …
+
+- Starts an action → `Button` (`default` only for the main one, rows `size="sm"`). Goes to a URL → link (`link-text`, `navLinkClassName`, `ItemLink`). Icon only → `Button size="icon"` + `aria-label` + `Tooltip`. 3+ secondary row actions → `DropdownMenu`; 1–2 → visible Buttons.
+- 2–5 options to compare → `RadioGroup` (price in the label). Longer list → `NativeSelect`. Several values → `Checkbox` group. Searchable long list → not built.
+- Acts immediately → `Switch`. Saved with the form → `Checkbox`.  The public-list option in `MentorProfileForm` is a `Checkbox` (Q15).
+- Short input or decision → `Dialog`. Irreversible, no input → `AlertDialog` (safe choice first, verb on the destructive button). Long form or own URL → page. Explanation beside a thing → `Popover`. Icon name → `Tooltip`. Information needed to act → visible text, never popover/tooltip. Side panel → not built.
+- One field wrong → `FieldError`. Form/page failed or action needed → `Alert` / `ErrorMessage` in place. No toast exists; a confirmation is text beside the action.
+- Known shape while loading → `Skeleton`; unknown shape → `LoadingMessage`; waiting button → `Spinner` + *Saving…*; payment → `PaymentPending`.
+- Admin columns to compare → `DataTable`. Product list → `ItemGroup` + `Item`. One topic → `Card`. Mentors → `MentorCard` rows, never an avatar wall.
+- Views of one list → `Tabs`. Different tasks → separate pages + `RoleNav`. Narrowing a list → `ResultCount` + `ActiveFilters`.
+- Create/edit form → `CrudForm` (bespoke from `Field` parts only when fields do not fit; say why in the PR).
+
+## Content rules
+
+- Buttons: verb + object (*Pay*, *Delete slot*, *Keep slot*), never *OK*/*Submit*; busy: *Saving…*; booking button carries the price: *Book 25 min · PLN 180.00*.
+- Errors: what happened + what to do, in words, no codes, no blame. Not found and no access share one message.
+- Empty: why it is empty + next step. "Nothing yet" (create action) and "no results" (*Clear filters*) are separate states.
+- Formats: `formatDateTime` → *Wed 4 Nov, 18:00* (24 h) with `formatZoneLabel` → *Europe/Warsaw, UTC+1*; `formatRelative` → *in 9 h*; `formatPrice` → *PLN 180.00* / *PLN 1,200.00* (code, no-break space, two decimals); counts in a sentence (*2 bookings waiting for your decision*), never a badge.
+- Forms: visible label, placeholder = format example only, optional fields say "(optional)", errors under the field with an icon, focus on the first error, typed values stay, success only after the server confirms.
+
+## What to avoid
+
+- A01–A05 look: gradients (`bg-linear-*`, `from-*`), `backdrop-blur`, glow, sparkles/✨, emoji, three identical icon cards, everything in pills (`rounded-full`), card in card, shadow instead of a border, everything centred, hero + cards; stars/scores/"Top rated"; courses, progress bars, journeys; plans, "community"; "X years of experience" and hype counters.
+- Values outside tokens; a variant added for one screen; `div`/`span` with `onClick` instead of `Button`/`<a href>`; placeholder as the label; status by colour alone; disabled button without visible reason; error toast; tooltip/popover with needed information; raw `fetch("/api/…")` (use `apiCall`); `result.error.message` in JSX; `asChild`; hand-written primitives; computed prices; times without a zone.
+- `npm run lint:tokens` finds only colour values, palette classes and arbitrary values; the rest is a search and a review.
+
+## Storybook and checks (from the repo root)
+
+```bash
+npm run storybook          # http://localhost:6006
+npm run build-storybook    # static build; check MDX tables and links here
+npm run test:storybook     # all stories in Chromium, light + dark, axe must pass
+npm run lint:tokens        # values outside tokens (must be 0)
+npm run lint && npm run typecheck && npm run test:coverage && npm run build
+```
+
+New component: docs page with 13 sections + stories (Playground, variants, state matrix, long content at 320 px, play test) + unit tests at 100% + a row in `packages/ui/.storybook/blocks/components-data.ts` and in the table above (keep them in step). Add primitives only with `npx shadcn@latest add <name>` in `packages/ui`. Never `git stash`.

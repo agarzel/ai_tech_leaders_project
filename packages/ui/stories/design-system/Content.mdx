@@ -1,0 +1,97 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design system/Content" />
+
+# Content
+
+How DevMentor writes: tone, buttons, errors, empty states and the formats of dates, times, money and numbers. The interface language is English (project brief for this work). Examples marked with a file are the real wording of a component; wording of the booking states is in `bookingStatus.ts` and follows spec E02.
+
+## Tone
+
+Factual, clear, warm, direct and calm (`lekcja-06/referencje.md`). In practice: short sentences in plain words, addressed to "you", saying what is true and what to do next. No emoji (R02.5/P11), no exclamation marks to cheer or to scold, no marketing, no course vocabulary (A02), no scores (A03).
+
+### Three things the product says
+
+| Sentence | Where | Why it fits |
+|---|---|---|
+| *Declined — refund on its way* | `BookingStatusBadge`, `BookingStatusPanel` | States the fact and the consequence in words; no drama (calm, direct) – spec E02 |
+| *Copy the link now and send it to the mentor yourself. It is shown only once.* | `InvitationLinkPanel` | Says what to do and why now (direct) – C35, spec E01 |
+| *This time was just taken* | server answer shown in `BookingForm` | Says what happened without blaming; the next step is on the screen – spec E02 |
+
+### Three things it does not say
+
+| Sentence | Why not | Source |
+|---|---|---|
+| *Grow with a mentor who knows the way… next step in your tech career* (the current home page) | A promise and a "journey" – the course look | A02; audit `lekcja-06/audyt-aplikacji.md` |
+| *Top rated · 4.9 (123)* | A score; users distrust it ("every card has 5.0") | A03, N02 |
+| *Oops! Something went wrong 😅* | Emoji and a casual shrug where the person needs to know what to do | R02.5/P11 (the sentence itself is an illustration) |
+
+## Buttons: a verb and its object
+
+| Rule | Good | Not | Source |
+|---|---|---|---|
+| Start with the verb; add the object when the verb alone is ambiguous | *Pay*, *Add slot*, *Save profile*, *Create account*, *Log in* | *Submit*, *OK*, *Go* | prompt stage 4; stage 3 (delete confirmation) |
+| A destructive button names the act and the object | *Delete slot*, *Decline booking* | *Delete*, *Yes* | prompt stage 3 |
+| The safe button names what is kept | *Keep slot*, *Keep booking* | *Cancel*, *No* | prompt stage 3; B51 |
+| A button that books carries the price | *Book 25 min · PLN 180.00* | *Book now* | spec E02; R01.5/P5 |
+| While waiting, the label says what is happening | *Saving…* | a spinner alone | B18 |
+| A copy action says what is copied | *Copy share link* | *Copy* | WCAG 2.4.6 |
+| Sentence case, no full stops, no emoji | *Find a mentor* | *Find A Mentor!* | R02.5/P11; sentence case is an observed convention (**proposal** D-S1) |
+
+An icon-only button has the same words as its `aria-label` and tooltip. Long labels wrap; do not shorten a label to fit – a longer language needs the room (**proposal** D-S1).
+
+## Errors: what happened and what to do
+
+Pattern: **title** names the failed action or the problem; **message** says what to do. No error codes, no "invalid", no blame. Technical failures are explained in plain words by `describeApiError`; domain errors keep the server's message, which core writes for people (C18).
+
+| Case | Title | Message | Source |
+|---|---|---|---|
+| No network | No connection | We could not reach DevMentor. Check your connection and try again. | C18 |
+| Server failure | Something went wrong on our side | Try again in a moment. | C18 |
+| A field | – | *Enter an email address, like ola@example.com.* | WCAG 3.3.3; B10 |
+| A slot taken | Could not book | *This time was just taken* | spec E02 |
+| Too many unpaid bookings | Could not book | *Finish or abandon your previous payment first.* | spec E02 |
+| Not found or not yours | We could not find this booking | one message for both cases, so existence is not revealed | spec E02 (`not_found`) |
+| A form action failed | Could not create the account (the action named) | the reason and the next step | C24 |
+
+Rules: the error appears where the person is looking and stays until fixed (S10); a field error sits under its field with an icon; typed values stay; the reason is visible text, never only a colour (WCAG 1.4.1).
+
+## Empty states: why it is empty and what next
+
+| Situation | Title | Next step | Source |
+|---|---|---|---|
+| The mentee has no bookings | No bookings yet | *Find a mentor* (the accent: it is the next step) | C72 |
+| A filter finds nothing | No bookings with this status / No mentors match this filter | *Clear filters* | prompt stage 3; C62, C72 |
+| Nobody is on the public list | No mentors here yet | none: a visitor creates nothing | C62 |
+| A mentor has no bookable time | No times available right now | none for the visitor; the mentor sees *Add slot* | spec E01 |
+| A mentor has no slots | No slots yet | *Add slot* | spec E01 |
+
+Two different empty states are never merged: "nothing yet" has a create action, "no results" has *Clear filters* (prompt stage 3). Never point at a button that may be hidden ("with the button above" is the audited mistake in `users-admin.tsx`).
+
+## Formats
+
+| What | Format | Example | Source |
+|---|---|---|---|
+| Date and time | `formatDateTime`: weekday, day, month, 24-hour clock, in the viewer's zone | *Wed 4 Nov, 18:00* | C5 |
+| Time zone | `formatZoneLabel` beside every time that matters (booking, slot, deadline) | *Europe/Warsaw, UTC+1* | spec E01 Edge Cases |
+| Day heading | `formatDay` | *Wednesday 4 November* | C5, C56 |
+| Relative time | `formatRelative`, rounded down, only next to the absolute time | *in 9 h*, *in 45 min*, *in 3 days* | C12 |
+| Money | `formatPrice`: currency code, a no-break space, the amount with two decimals, a point as the decimal mark, a comma for thousands, `tabular-nums` | *PLN 180.00*, *PLN 1,200.00* | F6, C4, D12 |
+| Money in a field | accepts *180*, *180.5*, *180,50*, *1 200*; a comma is a decimal mark; shown back as *180.00* | `parsePrice`, `formatPriceInput` | C41 |
+| Storing money | grosze (integer), PLN only; the interface never computes a price | 18000 | D12; spec E02 |
+| Session length | *25 min* and *50 min* in buttons, rows and price lists; *25 minutes* in a summary sentence | *Book 25 min · PLN 180.00* | observed in the components; **proposal** D-S2 |
+| Counts | the number goes in a sentence, never in a badge | *2 bookings waiting for your decision*, *12 mentors* | Q2, P10 |
+| Limits | a counter in the hint; over the limit the text stays and the field says how much to cut | *Shorten the question by N characters.* | C48, C64 |
+| Names | as typed, never forced to upper case; long names wrap | *Marek Zieliński* | observed in the components; **proposal** D-S1 |
+| Placeholders | an example of the format, never a name or a person | *ola@example.com* | WCAG 3.3.2; audit (the "Ada Lovelace" placeholder) |
+
+The amount rule was open as F6 since stage 1 and is now written down as above; it matches `src/lib/format.ts`, the [Amount in PLN](?path=/docs/patterns-amount-in-pln--docs) pattern and its tests.
+
+## Where each kind of text lives
+
+| Text | In | Rule |
+|---|---|---|
+| Booking statuses and their sentences | `bookingStatus.ts` | one place for the whole state machine (C68) |
+| API failure wording | `describeApiError` | technical codes explained, domain messages kept (C18) |
+| Field messages | the Zod schema of the API route | the same text the server returns (CrudForm) |
+| Everything else | next to the component that shows it | no separate copy deck exists yet; see [What is missing](?path=/docs/design-system-what-is-missing--docs) |

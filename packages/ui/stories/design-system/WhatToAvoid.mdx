@@ -1,0 +1,56 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design system/What to avoid" />
+
+# What to avoid
+
+Three lists: our own anti-references, the generic AI look, and mistakes of implementation. Each item says how to recognise it in code or in the browser, why it is a problem and what to do instead. `npm run lint:tokens` catches colour values, palette classes and arbitrary values automatically; for everything else the check is a search and a review (an automatic check for the other patterns is proposal D-S3).
+
+## 1. Our anti-references (A01–A05)
+
+From `lekcja-06/referencje.md`, confirmed by the owner.
+
+| Avoid | Recognise it | Why | Instead |
+|---|---|---|---|
+| **A01** The typical AI-startup page: purple or pink gradients, glass cards, sparkles | `bg-linear-to-*`, `bg-gradient-*`, `from-*`/`to-*`, `backdrop-blur`, `bg-white/10`, a sparkles icon, ✨, the words "AI-powered" | "Looks like everything else." | Flat `bg-background` / `bg-card`, 1 px `border-border`, the teal accent on one element |
+| **A01 (P13)** Large rounding everywhere, glow in shadows, a hero with a big headline and three icon cards, default shadcn look, emoji in headings | `rounded-2xl`, `rounded-3xl`, `shadow-lg`, `ring-primary/*` glow, a grid of three `Card`s | Same reason; P13 added these as signs of the same look | `rounded-lg` (6 px), no shadows on lists and panels, a page that starts with its content (`PageLayout`) |
+| **A02** A course, a learning path, a "mentorship journey" | progress bars, certificates, badges, streaks, the words lesson, module, level, journey | Users want an answer, not a course: *"I don't want a course, I want an answer"* | A status in words and the next action (`BookingStatusPanel`); a checklist without a percentage (`OfferChecklist`) |
+| **A03** Ratings like a marketplace | stars, `4.9 (123)`, "Top rated", rankings, sorting by score | *"everybody has five stars"*; N02 excludes ratings | Links to the mentor's public work (`PublicWorkLinks`) |
+| **A04** Subscription and community | plan tables, "Join the community", upsell banners, member counters | *"I'd pay for speed, not for a subscription"* | One price per session, shown before the question (`PriceList`) |
+| **A05** "X years of experience" catalogue and hype counters | an avatar wall, a title and "10 years" on a card, numbers such as "36,000+ experts" | What counts is concrete work, not tenure | Name, headline, stack tags, public work, prices (`MentorCard`) |
+
+## 2. The generic AI look
+
+None of these is in the product; each is a way an assistant drifts when no one stops it. Sources: A01 and its additions (P13), R01.3, R02.5, B50.
+
+| Avoid | Recognise it in code or on screen | Why | Instead |
+|---|---|---|---|
+| Gradients on a background, on text or on buttons | `bg-linear-*`, `bg-gradient-*`, `bg-clip-text` with `text-transparent`, `from-*` `to-*` | A01; marks the template look | A flat token colour; the accent is `bg-primary` |
+| Glass and blur | `backdrop-blur`, `bg-*/10` over an image, a translucent card with a light border | A01; poor contrast over content | Opaque `bg-card` and `border-border`; overlays use `bg-overlay` without blur (B47) |
+| Glow | a coloured `shadow-*`, a blurred pseudo-element behind a button, `ring-8` in the accent | A01 | The neutral focus ring (`ring-ring/50`) and nothing else |
+| Emoji instead of icons or in text | an emoji in a label, a heading or a status | R02.5/P11; screen readers read the emoji's name | A `lucide-react` icon with `aria-hidden` beside words, or just words |
+| Sparkles as the symbol of AI | the `Sparkles` icon, ✨, "magic" wording | A01 | Say what the thing does in a verb |
+| Three identical cards with an icon | `grid-cols-3` of `Card` with an icon and a title; the old `/admin` | A01; the audit found it in the app | A dense list of rows with one sentence each (`Item` + `ItemLink`) |
+| Everything in pills | `rounded-full` on badges, buttons, tags, tabs | A01, T7; the only full circle is the avatar (and the radio and switch, B4) | `rounded-lg` or `rounded-md` |
+| A card inside a card | a `Card` or a bordered box inside another one | R01.3/P3 | One frame; groups separated by `Separator` or space |
+| Shadow as the only separation | `shadow-sm` and no `border` on a panel or a row | R01.3: lines, not shadows | A 1 px `border-border` line |
+| Everything centred | `text-center` and `mx-auto` on headings, forms, lists | Prompt stage 4 ("everything centred"); B50 (left-aligned dialogs) | Left-aligned text; centre only a stand-alone empty state, as `EmptyState` does |
+
+## 3. Mistakes of implementation
+
+| Avoid | Recognise it in code | Why | Instead |
+|---|---|---|---|
+| A value outside the tokens | a colour literal, `bg-zinc-900`, `text-white`, `p-[13px]`; `lint:tokens` reports it | Prompt rule 3; two themes cannot follow a literal | `bg-card`, `text-muted-foreground`, `gap-in-group`, `p-panel` |
+| A variant added on the way | a new `variant="…"` or `size="…"` prop in a primitive for one screen; a class override on a shared component | Prompt rule 6; the system grows with no decision | Compose existing parts; propose the variant (Contributing) |
+| A `div` instead of a button or a link | `<div onClick>`, `<span role="button">`, `<a onClick>` without `href` | WCAG 4.1.2, 2.1.1: no keyboard, no role | `Button`; a real `<a href>` |
+| A placeholder instead of a label | `<Input placeholder="Email" />` with no `Field`/`Label` | WCAG 3.3.2; the name vanishes when typing | `Field` with `FieldLabel`; the placeholder shows a format |
+| A status shown only by colour | a coloured dot or a `bg-*` badge with no text | WCAG 1.4.1 | A word (`BookingStatusBadge`); an icon only as an addition |
+| A disabled button with no reason | `disabled` with the reason only in a `title` or `Tooltip`, or nowhere | B17; the person cannot tell what to fix | Visible text next to it, or validate on submit instead of disabling |
+| A toast with an error that needs action | a toast, a snackbar, `alert()` for a failure | S10; it vanishes before the person acts | `Alert` or `ErrorMessage` in place, until fixed |
+| A tooltip with information needed to act | `Tooltip` or `Popover` holding a limit, a price or an instruction | Prompt stage 4; a tooltip is not reliably available to touch users | Visible text: `FieldDescription`, the page |
+| Plain `fetch` to the API | `fetch("/api/…")` in a component | `apiCall` adds the CSRF header and the envelope handling | `apiCall` (the only sanctioned call site) |
+| `result.error.message` shown raw | `{result.error.message}` in JSX | Technical codes reach the person | `ErrorMessage error={result.error}` |
+| `asChild` on a Base UI part | `asChild` | Base UI uses `render` | `render={…}` |
+| A hand-written primitive | a new file in `components/ui/` not made by the CLI | `packages/ui/AGENTS.md` | `npx shadcn@latest add <name>`, then adapt |
+| A bespoke form with no reason | hand-built `Label` + `Input` markup for a plain create form | `packages/ui/AGENTS.md` | `CrudForm`; say why in the PR when it does not fit |
+| A time without its zone, or a computed price | `toLocaleString()` in a component; `price * 1.23` | Spec E01 (zones), spec E02 (the server computes) | `formatDateTime` + `formatZoneLabel`; the price from the DTO |

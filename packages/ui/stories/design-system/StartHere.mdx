@@ -1,0 +1,110 @@
+import { Meta, Unstyled } from "@storybook/addon-docs/blocks";
+import { ComponentTable } from "../../.storybook/blocks/Catalogue";
+
+<Meta title="Design system/Start here" />
+
+# Start here: how to build a screen
+
+Read this page before you build or review a screen. It is written for three readers: a developer, an AI agent and a designer checking a screen against the system. Every rule has its source in brackets: a reference (R01.1), an anti-reference (A01), a product decision (D13, N02), a design decision of the owner (T7, B34, C12) or a standard (WCAG, WAI-ARIA). A rule marked **proposal** has no source yet and waits for the owner. The same content, shortened for coding agents, is in `.ai/docs/design-system.md`.
+
+## What DevMentor is, in three sentences
+
+1. DevMentor lets a developer who is stuck on one specific problem book and prepay a senior engineer for a 25- or 50-minute text session, and lets that engineer publish times and prices (R01, R03, R07; product brief).
+2. The interface looks and reads like the tools its users already live in: dense lists, one line of metadata under a title, warm greys, one teal accent on the single most important thing of a screen (R01.1, R01.3, R01.4, R01.5, P4, P5).
+3. It never sells, scores or teaches: no ratings, courses, subscriptions, counters or decoration (A01–A05, N02, P10).
+
+## Character words
+
+Confirmed by the owner (`lekcja-06/referencje.md`). Every choice on a screen should be explainable by one of them.
+
+| Word | What it means in the interface | Source |
+|---|---|---|
+| Factual (*rzeczowy*) | Says what happened and what to do, in words, with the real data of the specs; no promises, no emoji | R02.5/P11, A01 |
+| Clear (*czytelny*) | Dense lists that can be scanned; one highlighted thing per screen; text lines of about 65 characters at most | R01.1, R01.5/P5, WCAG 1.4.8 |
+| Warm (*ciepły*) | Warm greys instead of cold ones; plain sentences addressed to the person | R01.4/P4 |
+| Direct (*bezpośredni*) | The price, the deadline and the next action are visible before the person asks; buttons name the action | R01.5/P5, Content page |
+| Calm (*spokojny*) | No sounds, no counters, no entry animations, one signal for booking events | R02.2/P8, R02.4/P10, D15 |
+
+Anti-character, also confirmed: **generic** (A01), **loud** (counters, sounds, emoji – R02.4, R02.5), **course-like** (A02) and **judging** (ratings, years of experience – A03, A05, N02).
+
+## Five steps to build a screen
+
+| # | Step | What you do | Where |
+|---|---|---|---|
+| 1 | Find the pattern | Check whether the screen is a form, a list with filters, a detail view, a delete confirmation, a status with its next action, a deadline, a time with a zone, an amount or a payment wait. Reuse the pattern's states instead of inventing them. | [Patterns](#step-1-find-the-pattern) |
+| 2 | Choose components | Go through the "if … then use …" tables. Prefer a product component, then a panel block, then a primitive (root `AGENTS.md`: reuse the shared layers). | [How to choose](?path=/docs/design-system-how-to-choose--docs) |
+| 3 | Use semantic tokens | Pick the spacing by relation, the colour by role, the type by role. Never a raw value. | [Tokens](#step-3-use-semantic-tokens) |
+| 4 | Design the data states | Loading, nothing yet, no results, error, partial data, many items, long text, 320 px. | [Data states](#step-4-design-the-data-states) |
+| 5 | Check what to avoid | Walk through the three lists, then run the checks. | [What to avoid](?path=/docs/design-system-what-to-avoid--docs) |
+
+### Step 1. Find the pattern
+
+| Screen or part | Pattern | Why |
+|---|---|---|
+| Any form: sign-in, profile, booking | [Form](?path=/docs/patterns-form--docs) | Visible labels, validation after leaving a field and on submit, focus on the first error, no double submit, success only after the server confirms |
+| A list the person narrows down (`/mentors`, `/bookings`) | [List with filters](?path=/docs/patterns-list-with-filters--docs) | A result count, removable filters, "no results" and "nothing yet" as separate states |
+| One booking, one mentor | [Detail view](?path=/docs/patterns-detail-view--docs) | The main information and the main action above the fold; "not found or no access" as one message |
+| Deleting a slot | [Delete confirmation](?path=/docs/patterns-delete-confirmation--docs) | The object in the question, the safe choice first, a verb on the destructive button |
+| Where a booking stands | [Status and next action](?path=/docs/patterns-status-and-next-action--docs) | One highlighted element: the status and what happens next (R01.5) |
+| The mentor must decide by a time | [Deadline with a countdown](?path=/docs/patterns-deadline-with-a-countdown--docs) | A time with its zone and a calm relative time, no ticking seconds |
+| Any time a person sets or reads | [Time with zone and DST](?path=/docs/patterns-time-with-zone-and-dst--docs) | A zone beside every time; skipped and repeated hours handled |
+| Any price | [Amount in PLN](?path=/docs/patterns-amount-in-pln--docs) | One format everywhere, stored in grosze |
+| After paying | [Payment and waiting](?path=/docs/patterns-payment-and-waiting--docs) | Checking, slow and not-completed states in words |
+| A mentor's first steps | [Bookability checklist](?path=/docs/patterns-bookability-checklist--docs) | What stands between the mentor and the first booking, with no progress bar (A02) |
+| A secret shown one time | [Link shown once](?path=/docs/patterns-link-shown-once--docs) | Copy now, it will not be shown again |
+
+For a screen of an epic, open the epic page and its state map: [E01 Mentor offer](?path=/docs/design-system-epics-e01-mentor-offer--docs), [E02 Booking and prepayment](?path=/docs/design-system-epics-e02-booking-and-prepayment--docs).
+
+### Step 2. Choose components
+
+Open [How to choose](?path=/docs/design-system-how-to-choose--docs). Use the table of all components below for imports. Rules that apply to every screen:
+
+- Create and edit forms are `CrudForm`; a bespoke form from `Field` parts only when the fields do not fit, and the PR says why (`packages/ui/AGENTS.md`).
+- Tabular admin lists are `DataTable`; product lists (bookings, slots, mentors) are dense `Item` rows (S21, R01.1).
+- Loading, error and empty states are the `feedback/` blocks and `Skeleton`, not new markup (`packages/ui/AGENTS.md`).
+- Every page sits in `PageLayout` with `AppHeader` (C31, spec E01).
+
+### Step 3. Use semantic tokens
+
+The class names say what a thing is for, never how it looks. The full list is in `.ai/docs/design-system.md` and on the [Color](?path=/docs/foundations-color--docs), [Typography](?path=/docs/foundations-typography--docs) and [Spacing and layout](?path=/docs/foundations-spacing-and-layout--docs) pages.
+
+| You need | Use | Source |
+|---|---|---|
+| Space between items of one group / between groups / inside a panel / between sections | `gap-in-group` (8 px) / `gap-between-groups` (16 px) / `p-panel` (16 px) / `gap-section` (32 px) | T8 |
+| A dense list row | `py-list-row px-list-row` (8 and 12 px) | T9, R01.1 |
+| Control height | `h-control` (32 px; 40 px on touch), `h-control-sm` only in dense rows | P4, B2 |
+| Page title, section title, body, label, metadata, code | `type-page-title`, `type-section-title`, `type-body`, `type-label`, `type-meta`, `type-code` | P2, R01.2 |
+| Page background / list or panel surface | `bg-background` / `bg-card` | T13 |
+| Secondary text such as metadata | `text-muted-foreground` | R01.1, T2 |
+| The one important element of a screen | `bg-primary text-primary-foreground` (the `default` Button) | R01.5/P5, K3 |
+| A line between rows, the frame of a list | `border-border` | R01.3, T5 |
+| An error | `text-destructive` with an icon and a sentence | T6, WCAG 1.4.1 |
+| Rounded corners | `rounded-lg` (6 px); `rounded-md` for small parts | T7, B3 |
+
+### Step 4. Design the data states
+
+Every list, panel and form has these states, each one a story in its component or pattern (C3, prompt stage 3):
+
+| State | What the screen shows | Component |
+|---|---|---|
+| Loading | The shape of the content | `Skeleton`, the component's own `…Skeleton`; `LoadingMessage` only when the shape is unknown |
+| Nothing yet | Why it is empty and the next step | `EmptyState` |
+| No results for filters | A separate message and *Clear filters* | List with filters pattern |
+| Error | What happened and what to do, with *Try again* | `ErrorMessage` |
+| Partial data | Missing parts are simply not rendered, or say "Not set" | the component's `Partial` story |
+| Many items | Paging and a result count | `Pagination`, `ResultCount` |
+| Long text | Wraps or is cut with the full text available; check 320 px | the component's `LongText` story |
+
+### Step 5. Check what to avoid
+
+Walk through [What to avoid](?path=/docs/design-system-what-to-avoid--docs), then run `npm run lint:tokens`, `npm run lint`, `npm run test:storybook` (both themes) and look at the screen at 320, 768 and 1440 px.
+
+## Every component
+
+Name, import, when to use and when not. The same table with a preview of each component is on the [Components](?path=/docs/design-system-components--docs) page.
+
+<Unstyled>
+  <ComponentTable />
+</Unstyled>
+
+Helpers that are not components: `formatPrice`, `parsePrice`, `formatDateTime`, `formatZoneLabel`, `formatRelative`, `localToUtc`, `useNow`, `apiCall`, `describeApiError`, `cn`, `navLinkClassName` – see the [Content](?path=/docs/design-system-content--docs) page for the formats.
