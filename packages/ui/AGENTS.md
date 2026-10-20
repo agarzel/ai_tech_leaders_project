@@ -9,7 +9,7 @@ src/
   styles/tokens.css   design tokens – raw, semantic and component layers, light (:root) and dark (.dark); the ONLY file with colour values
   styles/theme.css    Tailwind 4 mapping (@theme inline), spacing utilities (gap-in-group, p-panel, py-list-row, h-control …), type roles (type-*)
   components/ui/      shadcn/ui primitives (Base UI, base-nova style) – added via the CLI, then adapted to tokens; never written from scratch
-  components/<concept>/  components tied to one concept's domain shape: auth/AccountMenu, mentors/{InvitationLinkPanel, InvitationStatusBadge, TagList, PublicWorkLinks, PriceList, MentorProfileHeader, OfferChecklist, MentorProfileForm, MentorCard}, availability/{SlotTimeField, SlotList, AddSlotForm, DeleteSlotDialog} …
+  components/<concept>/  components tied to one concept's domain shape: auth/AccountMenu, mentors/{InvitationLinkPanel, InvitationStatusBadge, TagList, PublicWorkLinks, PriceList, MentorProfileHeader, OfferChecklist, MentorProfileForm, MentorCard}, availability/{SlotTimeField, SlotList, AddSlotForm, DeleteSlotDialog}, bookings/{SlotBookActions, BookingSummary, QuestionField, BookingForm, BookingStatusBadge, BookingStatusPanel, PaymentPending, BookingQuestion, bookingStatus.ts} …
                          (data shapes restated from the spec DTOs in <concept>/types.ts and re-exported by the component)
   backend/
     api/apiCall.ts       apiCall / apiCallOrThrow – the only sanctioned fetch() to /api/*

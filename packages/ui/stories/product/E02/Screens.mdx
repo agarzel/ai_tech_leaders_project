@@ -1,0 +1,52 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Product/E02/Screens/State map" />
+
+# E02 screens – state map
+
+Each screen state has its own full-screen story (C14). This batch covers booking and payment: the E02 form of `/m/[slug]`, `/book/[slotId]` and `/bookings/[id]`. The mentor's decisions, `/bookings` and `/mentor/bookings` follow in batch 6. The hosted card payment page and `/dev/fake-checkout` are outside the design system (C13).
+
+## /m/[slug] with booking (#29)
+
+| State | Story |
+|---|---|
+| Each slot offers *Book 25 min · price* and *Book 50 min · price*; no accent | [WithBooking](?path=/story/product-e01-screens-mentorpage--with-booking) |
+| A visitor who is not signed in is sent to `/login?next=…` and returns (app behaviour, no story) | – |
+
+## /book/[slotId]?length=… (#30)
+
+| State | Story |
+|---|---|
+| 25 minutes | [Default](?path=/story/product-e02-screens-bookslot--default) |
+| 50 minutes | [FiftyMinutes](?path=/story/product-e02-screens-bookslot--fifty-minutes) |
+| Question missing | [QuestionInvalid](?path=/story/product-e02-screens-bookslot--question-invalid) |
+| Question near the limit | [NearLimit](?path=/story/product-e02-screens-bookslot--near-limit) |
+| Submitting | [Submitting](?path=/story/product-e02-screens-bookslot--submitting) |
+| Opening the payment page | [RedirectingToCheckout](?path=/story/product-e02-screens-bookslot--redirecting-to-checkout) |
+| Time just taken | [SlotTaken](?path=/story/product-e02-screens-bookslot--slot-taken) |
+| Two unpaid bookings | [TooManyUnpaid](?path=/story/product-e02-screens-bookslot--too-many-unpaid) |
+| Payment unavailable (503) | [PaymentUnavailable](?path=/story/product-e02-screens-bookslot--payment-unavailable) |
+| No connection | [NetworkError](?path=/story/product-e02-screens-bookslot--network-error) |
+| 320 px | [Narrow320](?path=/story/product-e02-screens-bookslot--narrow-320) |
+
+## /bookings/[id] (#30, #32)
+
+| State | Story |
+|---|---|
+| Payment processing | [Checking](?path=/story/product-e02-screens-bookingdetail--checking) |
+| Payment lands while the page waits | [PaidWhilePolling](?path=/story/product-e02-screens-bookingdetail--paid-while-polling) |
+| After a minute: "This page will update shortly" | [Slow](?path=/story/product-e02-screens-bookingdetail--slow) |
+| Waiting for the mentor | [Waiting](?path=/story/product-e02-screens-bookingdetail--waiting) |
+| Confirmed | [Confirmed](?path=/story/product-e02-screens-bookingdetail--confirmed) |
+| Declined, with the mentor's reason | [Declined](?path=/story/product-e02-screens-bookingdetail--declined) |
+| Declined, no reason | [DeclinedNoReason](?path=/story/product-e02-screens-bookingdetail--declined-no-reason) |
+| Expired | [Expired](?path=/story/product-e02-screens-bookingdetail--expired) |
+| Refunded | [Refunded](?path=/story/product-e02-screens-bookingdetail--refunded) |
+| Refund delayed | [RefundDelayed](?path=/story/product-e02-screens-bookingdetail--refund-delayed) |
+| Payment not completed | [PaymentNotCompleted](?path=/story/product-e02-screens-bookingdetail--payment-not-completed) |
+| Payment arrived after the release | [LatePayment](?path=/story/product-e02-screens-bookingdetail--late-payment) |
+| No such booking or not yours | [NotFound](?path=/story/product-e02-screens-bookingdetail--not-found) |
+| Loading | [Loading](?path=/story/product-e02-screens-bookingdetail--loading) |
+| Load failed | [LoadError](?path=/story/product-e02-screens-bookingdetail--load-error) |
+| Question of 2,000 characters | [LongQuestion](?path=/story/product-e02-screens-bookingdetail--long-question) |
+| 320 px | [Narrow320](?path=/story/product-e02-screens-bookingdetail--narrow-320) |

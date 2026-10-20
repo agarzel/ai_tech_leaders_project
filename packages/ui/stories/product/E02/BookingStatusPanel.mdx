@@ -1,0 +1,107 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./BookingStatusPanel.stories";
+
+<Meta of={Stories} />
+
+# BookingStatusPanel
+
+`import { BookingStatusPanel } from "@devmentor/ui/components/bookings/BookingStatusPanel"`
+
+Product component, concept `bookings` (E02, #30, #32). Instance of the pattern [Status and next action](?path=/docs/patterns-status-and-next-action--docs).
+
+## 1. Purpose
+
+Says where a booking stands and what happens next, above the fold of its page.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| `/bookings/[id]` for the mentee | spec E02, UI/UX |
+| The mentor's view of a booking (batch 6) | spec E02, UI/UX |
+
+## 3. When not to use
+
+| Instead of `BookingStatusPanel`… | Use | Why |
+|---|---|---|
+| A row in a list | `BookingStatusBadge` | one phrase is enough |
+| Payment progress | `PaymentPending` (used inside this panel) | a different state with its own timing |
+
+## 4. Anatomy
+
+A titled section: title (the state), one sentence, the mentor's reason (to the mentee only), the next action.
+
+## 5. Variants
+
+`audience`: *mentee* or *mentor*. Wording per state is in `describeBooking`.
+
+<Canvas of={Stories.WaitingMentee} />
+
+## 6. States
+
+| State | Story |
+|---|---|
+| Waiting – mentee | [WaitingMentee](?path=/story/product-e02-bookingstatuspanel--waiting-mentee) |
+| Waiting – mentor | [WaitingMentor](?path=/story/product-e02-bookingstatuspanel--waiting-mentor) |
+| Confirmed – mentee | [ConfirmedMentee](?path=/story/product-e02-bookingstatuspanel--confirmed-mentee) |
+| Confirmed – mentor | [ConfirmedMentor](?path=/story/product-e02-bookingstatuspanel--confirmed-mentor) |
+| Declined, with reason – mentee | [DeclinedMentee](?path=/story/product-e02-bookingstatuspanel--declined-mentee) |
+| Declined, no reason | [DeclinedNoReason](?path=/story/product-e02-bookingstatuspanel--declined-no-reason) |
+| Declined – mentor | [DeclinedMentor](?path=/story/product-e02-bookingstatuspanel--declined-mentor) |
+| Expired – mentee | [ExpiredMentee](?path=/story/product-e02-bookingstatuspanel--expired-mentee) |
+| Expired – mentor | [ExpiredMentor](?path=/story/product-e02-bookingstatuspanel--expired-mentor) |
+| Refunded | [Refunded](?path=/story/product-e02-bookingstatuspanel--refunded) |
+| Refund delayed | [RefundDelayed](?path=/story/product-e02-bookingstatuspanel--refund-delayed) |
+| Payment not completed | [PaymentNotCompleted](?path=/story/product-e02-bookingstatuspanel--payment-not-completed) |
+| Payment arrived late | [LatePayment](?path=/story/product-e02-bookingstatuspanel--late-payment) |
+| Awaiting payment – checking | [PaymentChecking](?path=/story/product-e02-bookingstatuspanel--payment-checking) |
+| Awaiting payment – slow | [PaymentSlow](?path=/story/product-e02-bookingstatuspanel--payment-slow) |
+
+Every state of the state machine, including the refund phases, for both readers.
+
+<Canvas of={Stories.DeclinedMentee} />
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| The title is a heading of a labelled section. | WCAG 1.3.1, 2.4.6 |
+| State in words; refund wording follows the payment, not the booking alone. | spec E02 (Refund lifecycle) |
+| The mentor's reason is for the mentee; the mentor panel never shows refund details. | spec E02 |
+| The page decides the action and its accent; at most one. | R01.5, P5/K3 |
+
+## 8. Content
+
+Titles from spec E02: "Waiting for \{mentor\} — they decide by \{time\}", "Confirmed", "Declined — refund on its way", "Expired — refund on its way", "Refunded", "Refund delayed — we are on it", "Payment not completed — the time was released". Refund sentences say banks take a few days.
+
+## 9. Responsive
+
+<Canvas of={Stories.LongReasonNarrow} />
+
+## 10. API
+
+| Prop | Type | Description |
+|---|---|---|
+| `booking` | `Booking` | `BookingDto` |
+| `audience` | `"mentee" \| "mentor"` |  |
+| `timeZone` | `string` |  |
+| `pendingPhase` | `"checking" \| "slow"` | for a booking awaiting payment |
+| `actions` | `ReactNode` | the next action |
+
+<Controls of={Stories.WaitingMentee} />
+
+## 11. Code
+
+<Source dark code={`<BookingStatusPanel booking={booking} audience="mentee" timeZone={zone} actions={<a className={buttonVariants()} href="/mentors">Find another mentor</a>} />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| Say what happens next. | Show only "Declined". |
+| Show "Refund delayed — we are on it" when it is. | Promise "refunded" while it is requested. |
+
+## 13. Related
+
+- **Confused with:** `BookingStatusBadge`, `Alert`.
+- **Used in:** [/bookings/[id]](?path=/story/product-e02-screens-bookingdetail--waiting).

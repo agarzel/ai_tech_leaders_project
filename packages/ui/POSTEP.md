@@ -9,13 +9,13 @@ Plik roboczy zadania z `lekcja-06/prompt-storybook.md`. Nowa sesja: przeczytaj p
 | 0. Inwentaryzacja i plan | zakończony 2026-10-19 – decyzje właściciela zapisane niżej |
 | 1. Fundamenty | zakończony 2026-10-19 – F1 wdrożone, F2–F6 zapisane; czeka na „dalej” |
 | 2. Komponenty bazowe | **zakończony** 2026-10-19 – partie 1–5, scalone w `main` (PR #41) |
-| 3. Komponenty produktu, wzorce, ekrany | w toku – partie 1–3 zacommitowane; partia 4 gotowa (sloty i lista publiczna), czeka na decyzje C54–C62, Q10 i „dalej” do partii 5 |
+| 3. Komponenty produktu, wzorce, ekrany | w toku – partie 1–3 zacommitowane; partia 4 zacommitowana (C54–C62, Q10 przyjęte); partia 5 (rezerwacja i płatność) gotowa, czeka na decyzje C63–C68, Q11–Q12 i „dalej” do partii 6 |
 | 4. Strony, które uczą | nie rozpoczęty |
 | 5. Sprawdzenie i raport | nie rozpoczęty |
 
 ## Następny krok
 
-Etap 3, partia 4 gotowa (commit robi koordynator). Czeka na decyzje C54–C62 i odpowiedź na Q10. Po „dalej” partia 5: E02 rezerwacja i płatność (`SlotBookActions`, `BookingSummary`, `QuestionField`, `BookingForm`, `PaymentPending`, `BookingStatusBadge`, `BookingStatusPanel`; wzorce Płatność, Status i następna akcja, Widok szczegółów; ekrany `/m/[slug]` z *Book*, `/book/[slotId]`, `/bookings/[id]`).
+Etap 3, partia 5 gotowa (commit robi koordynator). Czeka na decyzje C63–C68 i odpowiedzi na Q11–Q12. Po „dalej” partia 6: E02 listy i decyzje mentora (`BookingRow`, `MentorBookingRow`, `AcceptDeadline`, `DeclineBookingDialog`, `PendingBookingsNotice`; wzorzec Termin z odliczaniem; ekrany `/bookings`, `/mentor/bookings`, `/mentor` z oczekującymi; strona epiku E02 już jest, do rozszerzenia; kontrola kompletności map stanów).
 
 ## Zatwierdzone decyzje (źródła: `lekcja-06/referencje.md`, `lekcja-06/tokeny.md`)
 
@@ -945,3 +945,60 @@ Zatwierdzone przez Arkadiusza 2026-10-20.
 
 - C54–C62: wszystkie w wersji wdrożonej w partii 4.
 - Q10: `GET /api/mentors/[slug]` zwraca `{ ...PublicMentorDto, slots: SlotDto[] }` (tylko sloty rezerwowalne). Wpisane do specyfikacji E01.
+
+
+### Decyzje właściciela – partia 4 (Arkadiusz, 2026-10-20)
+- **C54–C62** przyjęte w całości. **Q10**: `GET /api/mentors/[slug]` → `{ ...PublicMentorDto, slots: SlotDto[] }` (tylko rezerwowalne); zapisane w spec E01.
+
+## Etap 3 – partia 5, wynik (2026-10-20)
+
+Rezerwacja i płatność (E02, #29–#30, #32): `SlotBookActions`, `BookingSummary`, `QuestionField`, `BookingForm`, `BookingStatusBadge`, `BookingStatusPanel`, `PaymentPending`, `BookingQuestion` (wyprzedzone z partii 6 – `/bookings/[id]` pokazuje pytanie); `bookingStatus.ts` (`describeBooking`, `bookingStatusLabel` – całe słownictwo maszyny stanów w jednym miejscu); ekrany `/book/[slotId]`, `/bookings/[id]` i E02-owa wersja `/m/[slug]` (`MentorPage/WithBooking`); wzorce „Payment and waiting”, „Status and next action”, „Detail view”; BookingForm dopisany do wzorca Form. Nic nie jest zacommitowane. Bez nowych zależności i CLI, bez serwera dev. Poza DS zostają `/dev/fake-checkout` i strona Stripe (C13).
+
+### Co powstało
+- `src/components/bookings/`: `types.ts` (`Booking`, `BookingStatus`, `PaymentStatus`), `bookingStatus.ts`, `SlotBookActions`, `BookingSummary`, `QuestionField` (+ `QUESTION_MAX`), `BookingForm`, `BookingStatusBadge`, `BookingStatusPanel`, `PaymentPending`, `BookingQuestion`. Token `grid-cols-label-value` w `theme.css` (lista opisu: termin + wartość).
+- Stories i strony 13-sekcyjne w `stories/product/E02/` dla 8 komponentów (strony generowane z jednego szkieletu, treść per komponent); ekrany `E02/screens/{BookSlot (11 stanów), BookingDetail (17 stanów, z odpytywaniem)}`, `MentorPage/WithBooking`; mapa stanów `Product/E02/Screens/State map`; fikstury `bookings.*` (każdy stan maszyny), `bookingSummary`, `longQuestion`.
+- Zgodność ze spec E02: tylko karta (D16), wstrzymanie 35 min w treści, cena zapisana przy rezerwacji (UI jej nie liczy), limit 2 nieopłaconych (komunikat „Finish or abandon your previous payment first.” – tekst serwera w MSW), imię mentee tylko mentorowi (typ `Booking` nie ma mentee; widok mentora w partii 6), pytanie zwykłym tekstem ≤ 2000.
+
+### Propozycje C63–C68 (materiały milczą; wdrożone zachowawczo i odwracalnie – do decyzji)
+| # | Propozycja | Źródło / dlaczego |
+|---|---|---|
+| C63 | Nowy token siatki `grid-cols-label-value` (`auto 1fr`) dla `BookingSummary`; bez wartości arbitralnych | reguła tokenów |
+| C64 | `QuestionField`: limit 2000 nie obcina tekstu – wklejone pytanie zostaje całe, pole mówi „Shorten the question by N characters.”; licznik w podpowiedzi, ogłaszany (polite) dopiero przy ≤ 200 znaków do limitu; powód „nie ma Markdownu” w podpowiedzi: „Paste error messages and code as text.” | spec E02 (≤ 2000, plain text), Q5, S10 |
+| C65 | `BookingForm`: po odpowiedzi 201 przycisk zostaje zablokowany („Opening payment…”) do opuszczenia strony – nie da się zrobić drugiej rezerwacji podwójnym kliknięciem; pole pytania wymagane (puste → „Write your question for the mentor.”) | idempotentność, wzorzec Form – Q11 |
+| C66 | `PaymentPending`: faza `checking` (spinner) i `slow` (bez spinnera, „This page will update shortly”) po ok. minucie | spec E02 UI/UX, WCAG 2.2.2 |
+| C67 | Ekran `/bookings/[id]` po minucie sprawdza dalej, 10× wolniej, żeby zdanie „will update shortly” było prawdziwe | spójność komunikatu – decyzja dla implementacji app |
+| C68 | Dwa poziomy słownictwa stanu: krótki (`BookingStatusBadge`: „Declined · refund on its way”) w wierszach, zdanie (`BookingStatusPanel`) na stronie; „Refunded” dopiero gdy płatność = `refunded`; płatność, która doszła po zwolnieniu slotu: „Payment arrived too late — refund on its way”; dla mentora bez szczegółów zwrotu | spec E02 (Refund lifecycle, late paid webhook) |
+
+### Pytania
+- **Q11** Czy pytanie przy rezerwacji może być puste? Spec mówi tylko „≤ 2000 znaków”; wdrożyłem wymóg niepustego (C65). Jeśli puste ma być dozwolone, wystarczy zdjąć jedną regułę.
+- **Q12** `BookingDto`: czy zawiera `paymentStatus`, `mentor { name, slug }`, `startsAt`, `lengthMinutes`, `priceAmount`, `currency`, `acceptBy`, `declineReason` i `question`? Spec nazywa tylko „effective status” i „incl. question”. UI na tym polega (kształt w `types.ts`); `paymentStatus` jest potrzebny do rozróżnienia „refund on its way” / „Refunded” / „Refund delayed”.
+
+### Wyniki sprawdzeń
+| Komenda | Wynik |
+|---|---|
+| `npm run lint` | OK |
+| `npm run typecheck` | OK |
+| `npm run test:coverage` | OK – 362 testy (+50), 100% we wszystkich metrykach (930/750/256/818) |
+| `npm run build` | OK |
+| `npm run build-storybook` | OK; wszystkie linki `?path=` w MDX istnieją w indeksie |
+| `npm run test:storybook` | OK – 986/986 (493 stories × 2 motywy; +88 stories), a11y bez naruszeń |
+| `npm run lint:tokens` | OK – 0 (247 plików) |
+
+Ekrany `BookSlot`, `BookingDetail`, `MentorPage/WithBooking` i strony docs `BookingForm`, `BookingStatusPanel` obejrzane w zbudowanym Storybooku przy 1440 i 320 px: bez przewijania w bok, bez błędów strony. Znalezione po drodze: kwota ma twardą spację (testy nazwy dostępnej muszą ją mieć); fokus przy walidacji bez zmiany stanu wymagał bezpośredniego `focus()`.
+
+### Czego nie sprawdzono
+- Aplikacja na żywo, prawdziwa strona płatności (Stripe/fake) i webhook – komponenty niepodpięte; odpytywanie sprawdzone tylko z MSW (`PaidWhilePolling`), minuta oczekiwania symulowana przez `giveUpMs`.
+- Ścieżka gościa (`/login?next=…`) – zachowanie app, bez story.
+- Klawiatura w managerze Storybooka, czytnik ekranu, urządzenie dotykowe.
+
+### Do „What is missing” (etap 4)
+- Spec E02: czy pytanie może być puste (Q11); kształt `BookingDto` (Q12); co robi `/bookings/[id]` po minucie (C67).
+- App: strony `/book/[slotId]`, `/bookings/[id]` muszą przekazywać `from` (`entryPoint`) i zapamiętywać go przez logowanie.
+
+### Decyzje C63–C68, Q11 i Q12
+
+Zatwierdzone przez Arkadiusza 2026-10-20.
+
+- C63–C68: wszystkie w wersji wdrożonej w partii 5.
+- Q11: pytanie jest wymagane. Kryterium akceptacji w #30 („empty question → booking refused”) i D05 rozstrzygają to już wcześniej.
+- Q12: kształt `BookingDto` wpisany do specyfikacji E02.

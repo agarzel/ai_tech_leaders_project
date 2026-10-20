@@ -224,3 +224,18 @@ Verified: lint, typecheck, test:coverage (312 tests, 100%), build, build-storybo
 Open: C54–C62 and Q10 await the owner; nothing committed.
 
 Handoff: next is batch 5 (E02 booking and payment) per `packages/ui/POSTEP.md` "Następny krok". Note for tests of date inputs: jsdom and Chromium accept `fireEvent.change` with a valid ISO value.
+
+
+## Stage 3, batch 5 (2026-10-20)
+
+Goal: booking and prepayment screens (E02 #29–#30, #32). Owner had accepted C54–C62 and Q10 (spec E01 updated by the coordinator).
+
+Built: `SlotBookActions`, `BookingSummary`, `QuestionField`, `BookingForm`, `BookingStatusBadge`, `BookingStatusPanel`, `PaymentPending`, `BookingQuestion` (pulled forward from batch 6) and `bookingStatus.ts` (all state-machine wording in one place); screens `/book/[slotId]`, `/bookings/[id]` (with polling) and the E02 `/m/[slug]`; patterns Payment and waiting, Status and next action, Detail view; E02 state map. Proposals C63–C68, questions Q11–Q12 in `packages/ui/POSTEP.md`.
+
+Decisions: spec decisions respected (card only, 35 min hold, price stored by the server, max 2 unpaid, mentee name only to the mentor); the UI shows server wording for refusals and never computes price or deadlines; docs pages for the 8 components generated from one skeleton (scratchpad script, not in the repo) to keep the 13-section structure identical.
+
+Verified: lint, typecheck, test:coverage (362 tests, 100%), build, build-storybook (all MDX links resolve), test:storybook (986/986), lint:tokens (0, 247 files). Visual check at 1440/320 px: no horizontal scroll.
+
+Open: C63–C68, Q11, Q12 await the owner; nothing committed.
+
+Handoff: next is batch 6 (booking lists, mentor decisions, `AcceptDeadline`, `DeclineBookingDialog`, `PendingBookingsNotice`) per `packages/ui/POSTEP.md` "Następny krok". Gotcha: formatted amounts contain a no-break space – use `\u00a0` in accessible-name queries, a plain space in text matchers.

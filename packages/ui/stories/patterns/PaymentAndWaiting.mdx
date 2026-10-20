@@ -1,0 +1,44 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as DetailStories from "../product/E02/screens/BookingDetail.stories";
+import * as FormStories from "../product/E02/BookingForm.stories";
+
+<Meta title="Patterns/Payment and waiting" />
+
+# Payment and waiting
+
+Paying happens on a hosted page, and confirmation arrives later by webhook (spec E02: card only, D16). The pattern covers the minutes in between so the mentee always knows what is going on and nothing happens twice.
+
+<Canvas of={FormStories.RedirectingToCheckout} />
+
+## Rules
+
+| Rule | Source |
+|---|---|
+| The price is on the button (*Pay PLN 180.00*) and in the summary before the question. | R01.4 |
+| What happens next is said before paying: the time is held for 35 minutes; the mentor may decline; a decline or a missed deadline is a full refund. | spec E02, UI/UX |
+| After the server creates the booking the button stays busy ("Opening payment…") until the browser leaves – no second booking by double click. | C65 |
+| A refused booking is explained in words: the time was just taken; finish the previous payment first; payment is unavailable and nothing was charged. | spec E02 (Edge Cases) |
+| Back from the payment page the status is *Payment processing…* until the webhook lands; the page re-checks every few seconds for up to a minute. | spec E02, UI/UX |
+| After a minute the spinner stops and the page says "This page will update shortly" and keeps checking more slowly, so the sentence stays true. | C66, C67, WCAG 2.2.2 |
+| The success redirect never marks a payment as paid; only the status from the server does. | spec E02 (Stripe guidance) |
+| A payment that arrives after the time was released is refunded and says so. | spec E02 (late paid webhook) |
+
+## States
+
+| State | Story |
+|---|---|
+| Ready to pay | [BookingForm / Playground](?path=/story/product-e02-bookingform--playground) |
+| Submitting | [BookingForm / Submitting](?path=/story/product-e02-bookingform--submitting) |
+| Redirecting to the payment page | [BookingForm / RedirectingToCheckout](?path=/story/product-e02-bookingform--redirecting-to-checkout) |
+| Slot just taken | [BookingForm / SlotTaken](?path=/story/product-e02-bookingform--slot-taken) |
+| Payment unavailable | [BookingForm / PaymentUnavailable](?path=/story/product-e02-bookingform--payment-unavailable) |
+| Checking | [BookingDetail / Checking](?path=/story/product-e02-screens-bookingdetail--checking) |
+| Paid while the page waits | [BookingDetail / PaidWhilePolling](?path=/story/product-e02-screens-bookingdetail--paid-while-polling) |
+| Slow | [BookingDetail / Slow](?path=/story/product-e02-screens-bookingdetail--slow) |
+| Not completed | [BookingDetail / PaymentNotCompleted](?path=/story/product-e02-screens-bookingdetail--payment-not-completed) |
+
+<Canvas of={DetailStories.Slow} />
+
+## Related
+
+`BookingForm`, `PaymentPending`, `BookingStatusPanel`, the `/book/[slotId]` and `/bookings/[id]` screens.

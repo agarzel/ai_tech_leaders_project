@@ -4,6 +4,7 @@
 import { z } from "zod";
 
 import type { CrudFormField } from "../../src/backend/forms/CrudForm";
+import type { Booking } from "../../src/components/bookings/types";
 
 /** Mentee registration – spec E01, `POST /api/auth/register` `{ name, email, password }`, password 12–128 characters. */
 export const registerSchema = z.object({
@@ -285,3 +286,53 @@ export const manyMentors = Array.from({ length: 25 }, (_, index) => ({
   slug: `mentor-${index}`,
   name: `${publicMentors[index % publicMentors.length].name} ${index + 1}`,
 }));
+
+
+/** What the booking page shows before paying (spec E02): slot 27 Oct 17:00 Warsaw, 25 minutes, the price stored by the server. */
+export const bookingSummary = {
+  mentorName: "Marek Zieliński",
+  startsAt: "2026-10-27T16:00:00Z",
+  lengthMinutes: 25 as const,
+  priceAmount: 18000,
+  currency: "PLN",
+  timeZone,
+};
+
+/** `BookingDto` in every state of the state machine (spec E02); decide-by = start − 12 h (R05). */
+const baseBooking: Booking = {
+  id: "b1",
+  mentor: { name: "Marek Zieliński", slug: mentorProfile.shareSlug },
+  startsAt: "2026-10-27T16:00:00Z",
+  lengthMinutes: 25,
+  priceAmount: 18000,
+  currency: "PLN",
+  status: "awaiting_acceptance",
+  paymentStatus: "paid",
+  acceptBy: "2026-10-27T04:00:00Z",
+  declineReason: null,
+  question:
+    "After upgrading ingress-nginx to 1.28 our canary rollout hangs at 20%.\nThe controller logs show no errors, only the admission webhook timing out.\nWhat should I check first?",
+};
+
+export const bookings = {
+  waiting: baseBooking,
+  pending: { ...baseBooking, status: "pending_payment", paymentStatus: "open", acceptBy: null } satisfies Booking,
+  confirmed: { ...baseBooking, status: "confirmed" } satisfies Booking,
+  declined: { ...baseBooking, status: "declined", paymentStatus: "refund_requested", declineReason: "I am on leave that week – please pick a later time." } satisfies Booking,
+  declinedNoReason: { ...baseBooking, status: "declined", paymentStatus: "refund_requested" } satisfies Booking,
+  expired: { ...baseBooking, status: "expired", paymentStatus: "refund_requested" } satisfies Booking,
+  refunded: { ...baseBooking, status: "declined", paymentStatus: "refunded", declineReason: "I am on leave that week – please pick a later time." } satisfies Booking,
+  refundDelayed: { ...baseBooking, status: "expired", paymentStatus: "refund_failed" } satisfies Booking,
+  paymentNotCompleted: { ...baseBooking, status: "payment_expired", paymentStatus: "expired", acceptBy: null } satisfies Booking,
+  latePayment: { ...baseBooking, status: "payment_expired", paymentStatus: "refund_requested", acceptBy: null } satisfies Booking,
+};
+
+/** A question at the limit: long paragraphs, a stack trace pasted as text, a very long URL. */
+export const longQuestion = [
+  "After upgrading ingress-nginx from 1.26 to 1.28 our canary rollout hangs at 20% and never finishes. I have checked the obvious things and I would like a second pair of eyes before I roll back.",
+  "Controller logs:\nW1019 07:41:12.113 admission webhook \"validate.nginx.ingress.kubernetes.io\" timeout after 10s\nE1019 07:41:12.114 failed calling webhook: Post \"https://ingress-nginx-controller-admission.ingress-nginx.svc:443/networking/v1/ingresses?timeout=10s\": context deadline exceeded",
+  "The chart values I changed are in https://gitlab.example/platform/deploy/-/merge_requests/4812/diffs?commit_id=3b1f0c2d9e8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c&view=inline&w=1 and the rollout is controlled by Argo Rollouts 1.7 with a 5-step canary.",
+].join("\n\n");
+
+/** Default tails for the booking MSW routes. */
+export const startedBooking = { bookingId: "b1", checkoutUrl: "https://checkout.example/pay/cs_test_a1b2c3" };

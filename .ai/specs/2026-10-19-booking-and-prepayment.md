@@ -118,7 +118,7 @@ Envelope and CSRF as everywhere. Amounts in grosze.
 |---|---|---|---|
 | `POST /api/bookings` | any session | `{ slotId, lengthMinutes, question, entryPoint }` → `{ bookingId, checkoutUrl }` (201) | price from `priceFor`, never from the client; slot locked; booking one's own slot → `forbidden` |
 | `GET /api/bookings` | any session | `Page<BookingDto>` (own, as mentee) | effective status |
-| `GET /api/bookings/[id]` | the mentee or the mentor of that booking | `BookingDto` incl. question | otherwise `not_found` (does not reveal existence) |
+| `GET /api/bookings/[id]` | the mentee or the mentor of that booking | `BookingDto` incl. question | otherwise `not_found` (does not reveal existence); `BookingDto` = `{ id, status (effective), paymentStatus, mentor: { name, slug }, startsAt, lengthMinutes, priceAmount, currency, acceptBy, declineReason, question }` — `paymentStatus` lets the page tell *refund on its way*, *Refunded* and *Refund delayed* apart (Q12, owner decision 2026-10-20); the mentee's own booking only |
 | `GET /api/mentor/bookings` | mentor session | `Page<MentorBookingDto>` | awaiting first, ordered by `acceptBy`; the mentee appears by name only (no email) |
 | `POST /api/mentor/bookings/[id]/accept` · `/decline` | mentor (own) | decline: `{ reason? }` → `BookingDto` | after `acceptBy` → `conflict` "The acceptance deadline has passed" |
 | `POST /api/payments/webhook` | provider signature (`webhookHandler`) | raw event → `{ received: true }` | idempotent; Stripe or fake by provider |

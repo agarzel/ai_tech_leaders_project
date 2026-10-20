@@ -1,0 +1,96 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./BookingSummary.stories";
+
+<Meta of={Stories} />
+
+# BookingSummary
+
+`import { BookingSummary } from "@devmentor/ui/components/bookings/BookingSummary"`
+
+Product component, concept `bookings` (E02, #30).
+
+## 1. Purpose
+
+Shows what is being bought before paying, and again on the booking page: mentor, time with zone, length, price.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| `/book/[slotId]` above the question | spec E02, UI/UX |
+| `/bookings/[id]` under the status | spec E02, UI/UX |
+
+## 3. When not to use
+
+| Instead of `BookingSummary`… | Use | Why |
+|---|---|---|
+| A list row of bookings | `BookingRow` (batch 6) | one line per booking |
+| Computing a price | never | the server computes and stores it (spec E02) |
+
+## 4. Anatomy
+
+A description list: *Mentor*, *When* (time, zone label), *Length*, *Price* (tabular figures).
+
+## 5. Variants
+
+None.
+
+<Canvas of={Stories.Playground} />
+
+## 6. States
+
+| State | Story |
+|---|---|
+| 25 minutes | [Playground](?path=/story/product-e02-bookingsummary--playground) |
+| 50 minutes | [FiftyMinutes](?path=/story/product-e02-bookingsummary--fifty-minutes) |
+| Viewer in another zone | [OtherTimeZone](?path=/story/product-e02-bookingsummary--other-time-zone) |
+| Long name | [LongName](?path=/story/product-e02-bookingsummary--long-name) |
+
+No interactive states; errors and loading belong to the page.
+
+<Canvas of={Stories.OtherTimeZone} />
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| A `dl` pairs each term with its value. | WCAG 1.3.1 |
+| The zone is named next to the time. | spec E01 (Edge Cases) |
+| Long values wrap. | WCAG 1.4.10 |
+
+## 8. Content
+
+Terms are plain nouns. Time as everywhere: "Wed 4 Nov, 18:00 (Europe/Warsaw, UTC+1)".
+
+## 9. Responsive
+
+<Canvas of={Stories.Narrow} />
+
+## 10. API
+
+| Prop | Type | Description |
+|---|---|---|
+| `mentorName` | `string` |  |
+| `startsAt` | `string` | ISO UTC |
+| `lengthMinutes` | `25 \| 50` |  |
+| `priceAmount` | `number` | grosze, from the server |
+| `currency` | `string` |  |
+| `timeZone` | `string` | the viewer's zone |
+
+<Controls of={Stories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<BookingSummary mentorName={mentor.name} startsAt={slot.startsAt} lengthMinutes={25} priceAmount={price} currency="PLN" timeZone={zone} />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| Show the price before the question. | Hide the amount until the payment page. |
+| Name the zone. | Show a bare time. |
+
+## 13. Related
+
+- **Confused with:** `PriceList` (a mentor's two prices).
+- **Used in:** `BookingForm`, [/bookings/[id]](?path=/story/product-e02-screens-bookingdetail--waiting).

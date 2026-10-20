@@ -9,6 +9,7 @@ import { ErrorMessage } from "../../../../src/backend/feedback/ErrorMessage";
 import { AppHeader } from "../../../../src/backend/layout/AppHeader";
 import { PageLayout } from "../../../../src/backend/layout/PageLayout";
 import { AccountMenu } from "../../../../src/components/auth/AccountMenu";
+import { SlotBookActions } from "../../../../src/components/bookings/SlotBookActions";
 import { SlotList, SlotListSkeleton, type Slot } from "../../../../src/components/availability/SlotList";
 import { MentorProfileHeader, MentorProfileHeaderSkeleton } from "../../../../src/components/mentors/MentorProfileHeader";
 import { PriceList, PriceListSkeleton } from "../../../../src/components/mentors/PriceList";
@@ -37,9 +38,10 @@ const REASON_ID = "booking-reason";
  * `/m/[slug]` in its E01 form (spec E01, Phase 4; C11, owner decision Q4): profile, prices and bookable
  * times for anyone with the link. *Book* is disabled until booking exists, and the page says why in
  * words – a disabled control with no reason is a dead end (B17). No accent on this page: the choices
- * are equal (Q3). Replaced by `SlotBookActions` when booking ships (E02).
+ * are equal (Q3). With `withBooking` it is the E02 version (#29): each slot offers *Book 25 min · price*
+ * and *Book 50 min · price* (`SlotBookActions`) and the reason sentence is gone.
  */
-function MentorPageScreen() {
+function MentorPageScreen({ withBooking = false }: { withBooking?: boolean }) {
   const [mentor, setMentor] = useState<MentorPageData>();
   const [error, setError] = useState<ApiError | null>(null);
 
@@ -97,19 +99,31 @@ function MentorPageScreen() {
               <h2 id="times" className="type-section-title">
                 Available times
               </h2>
-              <p id={REASON_ID} className="max-w-prose type-body text-muted-foreground">
-                Booking opens soon. For now you can see when {mentor.name} is free; times are shown in your time zone.
-              </p>
+              {!withBooking && (
+                <p id={REASON_ID} className="max-w-prose type-body text-muted-foreground">
+                  Booking opens soon. For now you can see when {mentor.name} is free; times are shown in your time zone.
+                </p>
+              )}
             </div>
             <SlotList
               slots={mentor.slots}
               timeZone={timeZone}
               showStatus={false}
-              rowActions={(slot) => (
-                <Button variant="outline" size="sm" disabled aria-describedby={REASON_ID} aria-label={`Book ${formatDateTime(slot.startsAt, timeZone)}`}>
-                  Book
-                </Button>
-              )}
+              rowActions={(slot) =>
+                withBooking ? (
+                  <SlotBookActions
+                    slotLabel={formatDateTime(slot.startsAt, timeZone)}
+                    price25={mentor.price25}
+                    price50={mentor.price50}
+                    currency={mentor.currency}
+                    hrefFor={(length) => `/book/${slot.id}?length=${length}`}
+                  />
+                ) : (
+                  <Button variant="outline" size="sm" disabled aria-describedby={REASON_ID} aria-label={`Book ${formatDateTime(slot.startsAt, timeZone)}`}>
+                    Book
+                  </Button>
+                )
+              }
             />
           </section>
         </>
@@ -149,6 +163,19 @@ export const BookingNotYetAvailable: Story = {
       await expect(book).not.toHaveClass("bg-primary");
     }
     await expect(canvas.getByText(/Booking opens soon/)).toBeVisible();
+  },
+};
+
+/** E02: each slot offers both lengths with the price inside the button; no accent (equal choices, Q3). */
+export const WithBooking: Story = {
+  args: { withBooking: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const short = await canvas.findByRole("link", { name: "Book 25 min · PLN\u00a0180.00, Thu 22 Oct, 18:00" });
+    await expect(short).toHaveAttribute("href", "/book/o2?length=25");
+    await expect(canvas.getAllByRole("link", { name: /^Book / })).toHaveLength(6);
+    await expect(short).not.toHaveClass("bg-primary");
+    await expect(canvas.queryByText(/Booking opens soon/)).not.toBeInTheDocument();
   },
 };
 

@@ -1,0 +1,87 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./PaymentPending.stories";
+
+<Meta of={Stories} />
+
+# PaymentPending
+
+`import { PaymentPending } from "@devmentor/ui/components/bookings/PaymentPending"`
+
+Product component, concept `payments` (E02, #30). Instance of the pattern [Payment and waiting](?path=/docs/patterns-payment-and-waiting--docs).
+
+## 1. Purpose
+
+Tells the mentee the payment is being confirmed, and after about a minute that the page will update shortly.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| `/bookings/[id]` after the card payment, until the webhook lands | spec E02, UI/UX |
+
+## 3. When not to use
+
+| Instead of `PaymentPending`… | Use | Why |
+|---|---|---|
+| Waiting for the mentor | `BookingStatusPanel` | a decision, not a payment |
+
+## 4. Anatomy
+
+A titled section: title (with a spinner while checking), one sentence in a polite status.
+
+## 5. Variants
+
+`checking` and `slow`.
+
+<Canvas of={Stories.Checking} />
+
+## 6. States
+
+| State | Story |
+|---|---|
+| Checking | [Checking](?path=/story/product-e02-paymentpending--checking) |
+| Slow | [Slow](?path=/story/product-e02-paymentpending--slow) |
+
+The checking itself – every few seconds for up to a minute – is the page's job (see the screen stories).
+
+<Canvas of={Stories.Slow} />
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| The spinner is decorative; the sentence is a polite status. | WCAG 4.1.3 |
+| After a minute the spinner stops: nothing spins forever. | C66, WCAG 2.2.2 |
+| Nothing is asked of the person. | R01.5 |
+
+## 8. Content
+
+"Payment processing…", "This page will update shortly". No "please do not close this page" – the status is stored on the server.
+
+## 9. Responsive
+
+<Canvas of={Stories.Narrow} />
+
+## 10. API
+
+| Prop | Type | Description |
+|---|---|---|
+| `phase` | `"checking" \| "slow"` | how long the page has been checking |
+
+<Controls of={Stories.Checking} />
+
+## 11. Code
+
+<Source dark code={`<PaymentPending phase={waitedMinute ? "slow" : "checking"} />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| Stop the spinner and say what happens. | Spin until the person reloads. |
+| Reassure that nothing is needed. | Ask to press the back button. |
+
+## 13. Related
+
+- **Confused with:** `LoadingMessage` (data loading).
+- **Used in:** `BookingStatusPanel`, [/bookings/[id] checking](?path=/story/product-e02-screens-bookingdetail--checking).

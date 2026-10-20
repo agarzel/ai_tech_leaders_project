@@ -1,0 +1,38 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as Stories from "../product/E02/screens/BookingDetail.stories";
+
+<Meta title="Patterns/Detail view" />
+
+# Detail view
+
+A page about one thing the person owns: the status and next action above the fold, the facts below, the long text last. Instance: `/bookings/[id]`.
+
+<Canvas of={Stories.Declined} />
+
+## Rules
+
+| Rule | Source |
+|---|---|
+| Order: status and next action (`BookingStatusPanel`), details (`BookingSummary`), then free text (`BookingQuestion`). | R01.5, P5 |
+| Loading is a skeleton in the page's shape; an error says what happened with *Try again*. | C3 |
+| Not found and no access are one message that does not reveal whether the item exists. | spec E02 (API) |
+| Long free text wraps and keeps its line breaks; it never widens the page. | WCAG 1.4.10, Q5 |
+| The page title names the other party ("Booking with Marek Zieliński"); the question never appears in a title. | spec E02 (sensitive data) |
+| Statuses that change while the page is open are re-checked (payment) and say so. | C67 |
+
+## States
+
+| State | Story |
+|---|---|
+| Loaded (waiting) | [Waiting](?path=/story/product-e02-screens-bookingdetail--waiting) |
+| Loading | [Loading](?path=/story/product-e02-screens-bookingdetail--loading) |
+| Not found or no access | [NotFound](?path=/story/product-e02-screens-bookingdetail--not-found) |
+| Error | [LoadError](?path=/story/product-e02-screens-bookingdetail--load-error) |
+| Long question | [LongQuestion](?path=/story/product-e02-screens-bookingdetail--long-question) |
+| 320 px | [Narrow320](?path=/story/product-e02-screens-bookingdetail--narrow-320) |
+
+<Canvas of={Stories.NotFound} />
+
+## Related
+
+`BookingStatusPanel`, `BookingSummary`, `BookingQuestion`, `EmptyState`, `ErrorMessage`.

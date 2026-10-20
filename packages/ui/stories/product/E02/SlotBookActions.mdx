@@ -1,0 +1,100 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./SlotBookActions.stories";
+
+<Meta of={Stories} />
+
+# SlotBookActions
+
+`import { SlotBookActions } from "@devmentor/ui/components/bookings/SlotBookActions"`
+
+Product component, concept `bookings` (E02, #29). The E02 form of the mentor page: replaces the disabled *Book* of E01.
+
+## 1. Purpose
+
+Starts a booking from a slot row: one action per session length, with its price in the button.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Each bookable slot on `/m/[slug]` | spec E02, UI/UX |
+| The same slot rows reached from the public list (`?from=list` is kept on the links) | spec E02, API (`entryPoint`) |
+
+## 3. When not to use
+
+| Instead of `SlotBookActions`… | Use | Why |
+|---|---|---|
+| Paying | `BookingForm` | payment starts on `/book/[slotId]` |
+| A slot nobody can book | no action, the reason in words | spec E01 (D13) |
+
+## 4. Anatomy
+
+One or two outline links styled as small buttons: *Book 25 min · PLN 180.00*, *Book 50 min · PLN 320.00*. The accessible name adds the slot (*…, Thu 22 Oct, 18:00*) because rows repeat; it starts with the visible text.
+
+## 5. Variants
+
+A length without a price is not offered; no price at all gives a sentence; the mentor's own slot gives "Your own slot".
+
+<Canvas of={Stories.Playground} />
+
+## 6. States
+
+| State | Story |
+|---|---|
+| Both lengths | [Playground](?path=/story/product-e02-slotbookactions--playground) |
+| One price | [OnePrice](?path=/story/product-e02-slotbookactions--one-price) |
+| No price | [NoPrice](?path=/story/product-e02-slotbookactions--no-price) |
+| Own slot | [OwnSlot](?path=/story/product-e02-slotbookactions--own-slot) |
+| Large amounts | [LargeAmounts](?path=/story/product-e02-slotbookactions--large-amounts) |
+| Hover and focus | [States](?path=/story/product-e02-slotbookactions--states) |
+
+Hover and focus follow `Button`. No loading or error state: it renders data the row already has.
+
+<Canvas of={Stories.States} />
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Real links (navigation to `/book/…`), not buttons. | WAI-ARIA |
+| Names include the visible text and the slot; label-in-name. | WCAG 2.5.3 |
+| Equal choices, so neither is the accent. | Q3, C10 |
+| The price is in the action before anything is typed. | R01.4 |
+| Booking one's own slot is forbidden by the server; the UI shows no action. | spec E02 (Edge Cases) |
+
+## 8. Content
+
+*Book \{length\} min · \{price\}*. Amounts with `formatPrice`, code and amount on one line (no-break space).
+
+## 9. Responsive
+
+<Canvas of={Stories.Narrow} />
+
+## 10. API
+
+| Prop | Type | Description |
+|---|---|---|
+| `slotLabel` | `string` | the slot in words, for accessible names |
+| `price25`, `price50` | `number \| null` | grosze; `null` = not offered |
+| `currency` | `string` | ISO code |
+| `hrefFor` | `(length) => string` | target of each action |
+| `isOwnSlot` | `boolean` | the mentor's own slot |
+| `renderLink` | `(props) => ReactNode` | Next.js `Link` in the app |
+
+<Controls of={Stories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<SlotBookActions slotLabel={label} price25={mentor.price25} price50={mentor.price50} currency="PLN" hrefFor={(length) => \`/book/\${slot.id}?length=\${length}&from=\${from}\`} />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| Price in the button. | "Book" with the price three clicks later. |
+| One neutral style for both lengths. | Making the cheaper one the accent. |
+
+## 13. Related
+
+- **Confused with:** `BookingForm` (pays), the disabled *Book* of E01.
+- **Used in:** [/m/[slug] with booking](?path=/story/product-e01-screens-mentorpage--with-booking).
