@@ -52,3 +52,73 @@ export const userWithLongValues: UserRow = {
   role: "mentor",
   createdAt: "2026-10-17T12:00:00Z",
 };
+
+/** Log-in – spec E01, `POST /api/auth/login` `{ email, password }`; wrong credentials → generic 401. */
+export const loginSchema = z.object({
+  email: z.email("Enter the email address you registered with."),
+  password: z.string().min(1, "Enter your password.").meta({ input: "password" }),
+});
+
+export const loginFields: CrudFormField<typeof loginSchema>[] = [
+  { name: "email", label: "Email", autoComplete: "email" },
+  { name: "password", label: "Password", autoComplete: "current-password" },
+];
+
+/** Mentor registration from an invitation – spec E01, `POST /api/auth/register/mentor` `{ token, name, password }`; the email comes from the invitation. */
+export const mentorRegisterSchema = z.object({
+  name: z.string().trim().min(1, "Enter your name."),
+  password: z
+    .string()
+    .min(12, "Use at least 12 characters.")
+    .max(128, "Use at most 128 characters.")
+    .meta({ input: "password" }),
+});
+
+export const mentorRegisterFields: CrudFormField<typeof mentorRegisterSchema>[] = [
+  { name: "name", label: "Name", autoComplete: "name", description: "Shown on your public profile and your share link." },
+  { name: "password", label: "Password", autoComplete: "new-password", description: "12 to 128 characters." },
+];
+
+/** An invited mentor. */
+export const mentor = { name: "Marek Zieliński", email: "marek.zielinski@example.com", password: "helm-chart-rollback-2" };
+
+/** Short navigation per role (R02.6/P12) – only pages that exist in the specs. */
+export const nav = {
+  visitor: [{ label: "Mentors", href: "/mentors" }],
+  mentee: [
+    { label: "Mentors", href: "/mentors" },
+    { label: "My bookings", href: "/bookings" },
+  ],
+  mentor: [
+    { label: "Overview", href: "/mentor" },
+    { label: "Profile", href: "/mentor/profile" },
+    { label: "Slots", href: "/mentor/slots" },
+    { label: "Bookings", href: "/mentor/bookings" },
+  ],
+  admin: [
+    { label: "Users", href: "/admin/users" },
+    { label: "Invitations", href: "/admin/invitations" },
+  ],
+};
+
+export const signedIn = {
+  mentee: { id: "u2", name: "Ola Wiśniewska", role: "mentee" as const },
+  mentor: { id: "u1", name: "Marek Zieliński", role: "mentor" as const },
+  admin: { id: "u5", name: "Oliwia Nowak", role: "admin" as const },
+};
+
+/** The zone the stories display times in. */
+export const timeZone = "Europe/Warsaw";
+
+/** Admin invitation list (`GET /api/admin/invitations`): pending, used, expired; 14-day validity. */
+export const invitations = [
+  { id: "i1", email: "kasia.lewandowska@example.com", status: "pending" as const, createdAt: "2026-10-18T09:10:00Z", expiresAt: "2026-11-01T09:10:00Z" },
+  { id: "i2", email: "marek.zielinski@example.com", status: "used" as const, createdAt: "2026-10-10T16:40:00Z", expiresAt: "2026-10-24T16:40:00Z" },
+  { id: "i3", email: "piotr.wojcik@example.com", status: "expired" as const, createdAt: "2026-09-20T11:00:00Z", expiresAt: "2026-10-04T11:00:00Z" },
+];
+
+/** The POST response: the new row plus the link with the raw token, returned only this once. */
+export const newInvitation = {
+  invitation: { id: "i4", email: "tomasz.kowalczyk@example.com", status: "pending" as const, createdAt: "2026-10-19T08:00:00Z", expiresAt: "2026-11-02T08:00:00Z" },
+  link: "https://devmentor.example/register/mentor?token=q7Vt2mKx9LwR4sNp8ZcB1yHd6Jf3Ua0E",
+};

@@ -1,0 +1,61 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Product/E01/Screens/State map" />
+
+# E01 screens – state map
+
+Each screen state has its own full-screen story (C14). Screens are compositions of package components; the pages themselves are app code. Batch 2 covers sign-in and admin; the mentor screens follow in batches 3–4.
+
+## /login (spec E01, Phase 1)
+
+| State | Story |
+|---|---|
+| Form | [Default](?path=/story/product-e01-screens-login--default) |
+| Wrong email or password (generic message) | [InvalidCredentials](?path=/story/product-e01-screens-login--invalid-credentials) |
+| Too many attempts (429) | [RateLimited](?path=/story/product-e01-screens-login--rate-limited) |
+| No network | [NetworkError](?path=/story/product-e01-screens-login--network-error) |
+| Signed in | [Success](?path=/story/product-e01-screens-login--success) |
+| 320 px | [Narrow320](?path=/story/product-e01-screens-login--narrow-320) |
+
+## /register (Phase 1)
+
+| State | Story |
+|---|---|
+| Form | [Default](?path=/story/product-e01-screens-register--default) |
+| Password under 12 characters | [PasswordTooShort](?path=/story/product-e01-screens-register--password-too-short) |
+| Email cannot be used (409) | [EmailTaken](?path=/story/product-e01-screens-register--email-taken) |
+| Account created | [Success](?path=/story/product-e01-screens-register--success) |
+| 320 px | [Narrow320](?path=/story/product-e01-screens-register--narrow-320) |
+
+## /register/mentor?token=… (Phase 1b)
+
+| State | Story |
+|---|---|
+| Checking the link (`GET /api/auth/invitations/[token]`) | [Loading](?path=/story/product-e01-screens-registermentor--loading) |
+| Valid invitation – invited email shown, name and password | [Default](?path=/story/product-e01-screens-registermentor--default) |
+| Used, expired, revoked or unknown link (same 404) – no form | [InvitationInvalid](?path=/story/product-e01-screens-registermentor--invitation-invalid) |
+| Link used in another tab while the form was open | [UsedMeanwhile](?path=/story/product-e01-screens-registermentor--used-meanwhile) |
+| Account created | [Success](?path=/story/product-e01-screens-registermentor--success) |
+| 320 px | [Narrow320](?path=/story/product-e01-screens-registermentor--narrow-320) |
+
+## /admin
+
+| State | Story |
+|---|---|
+| Sections as a dense list (replaces the "Coming soon" card grid – audit) | [Default](?path=/story/product-e01-screens-adminhome--default) |
+| One focus style for every link | [KeyboardFocus](?path=/story/product-e01-screens-adminhome--keyboard-focus) |
+| 320 px | [Narrow320](?path=/story/product-e01-screens-adminhome--narrow-320) |
+
+## /admin/invitations (Phase 1b)
+
+| State | Story |
+|---|---|
+| Form + list (pending, used, expired) | [Default](?path=/story/product-e01-screens-admininvitations--default) |
+| List loading | [Loading](?path=/story/product-e01-screens-admininvitations--loading) |
+| No invitations yet | [Empty](?path=/story/product-e01-screens-admininvitations--empty) |
+| List failed to load | [LoadError](?path=/story/product-e01-screens-admininvitations--load-error) |
+| Link shown once | [LinkShownOnce](?path=/story/product-e01-screens-admininvitations--link-shown-once) |
+| Link dismissed | [LinkDismissed](?path=/story/product-e01-screens-admininvitations--link-dismissed) |
+| Sending failed | [SendFailed](?path=/story/product-e01-screens-admininvitations--send-failed) |
+| Re-inviting a pending email – new link once, old row *Revoked* (Q6) | [ReinviteRevokesOld](?path=/story/product-e01-screens-admininvitations--reinvite-revokes-old) |
+| 320 px | [Narrow320](?path=/story/product-e01-screens-admininvitations--narrow-320) |

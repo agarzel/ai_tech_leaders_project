@@ -9,7 +9,8 @@ src/
   styles/tokens.css   design tokens – raw, semantic and component layers, light (:root) and dark (.dark); the ONLY file with colour values
   styles/theme.css    Tailwind 4 mapping (@theme inline), spacing utilities (gap-in-group, p-panel, py-list-row, h-control …), type roles (type-*)
   components/ui/      shadcn/ui primitives (Base UI, base-nova style) – added via the CLI, then adapted to tokens; never written from scratch
-  components/<concept>/  components tied to one concept's domain shape (created when needed)
+  components/<concept>/  components tied to one concept's domain shape: auth/AccountMenu, mentors/InvitationLinkPanel, mentors/InvitationStatusBadge …
+                         (data shapes restated from the spec DTOs in <concept>/types.ts and re-exported by the component)
   backend/
     api/apiCall.ts       apiCall / apiCallOrThrow – the only sanctioned fetch() to /api/*
     api/types.ts         ApiResult envelope type (mirrors core's – ui must not import core)
@@ -18,6 +19,8 @@ src/
     tables/DataTable.tsx column-config list with loading/error/empty states, pagination, row actions
     tables/Pagination.tsx previous/next paging (nav landmark), shared by DataTable and product lists
     feedback/            LoadingMessage, ErrorMessage, EmptyState
+    forms/CopyField.tsx  read-only value with a copy button (invitation and share links)
+    layout/              AppHeader (word mark + RoleNav + account), RoleNav, PageLayout (header + main + h1), links.tsx (navLinkClassName, renderLink)
   lib/utils.ts        cn() helper, configured for the design-system utilities
   lib/format.ts       formatPrice (grosze → "PLN 180.00"), formatDateTime, formatZoneLabel, formatRelative – time zone and "now" are arguments
   lib/time.ts         localToUtc (local date + time in a zone → ISO UTC, refuses DST gaps, flags repeated hours), browserTimeZone
@@ -38,9 +41,10 @@ components.json       shadcn config (CSS variables go to src/styles/tokens.css; 
 - Links in running text: `className="link-text"` on a plain `<a>` (utility in `theme.css`, T11); clickable list rows use `ItemLink` inside `ItemTitle`.
 - Every value comes from a token: no colour literals outside `src/styles/tokens.css`, no Tailwind palette classes (`bg-zinc-900`, `text-white`), no arbitrary values (`p-[13px]`). `npm run lint:tokens` checks it. Use semantic classes (`bg-card`, `text-muted-foreground`, `gap-in-group`, `type-meta`).
 - After `npx shadcn@latest add`, adapt the primitive to the tokens, import `cn` from `@devmentor/ui/lib/utils` (the configured one – ESLint rejects `"cn"` inside `src/components/**`), and check `package.json` for dependencies outside the plan. Refuse overwriting existing files; compare with `git show HEAD:<file>`, never `git stash`.
-- Component docs: `stories/primitives/<Name>.mdx` (13 sections) + `<Name>.stories.tsx` (Playground, variants/sizes, state matrix with frozen hover/focus via `data-preview-state`, long content at 320 px, a play-function test).
+- Component docs: `stories/primitives/<Name>.mdx`, `stories/blocks/<Name>.mdx` (panel blocks) or `stories/product/<Epic>/<Name>.mdx` (13 sections) + `<Name>.stories.tsx` next to it (Playground, variants/sizes, state matrix with frozen hover/focus via `data-preview-state`, long content at 320 px, a play-function test). Screens: `stories/product/<Epic>/screens/` (full screen, one story per state, linked from the epic's state map page).
 - Tests: Testing Library + `user-event`, query by role/label (what users and screen readers see), jest-dom matchers. Watch for duplicate live regions – shadcn `Spinner` already has `role="status"`.
-- Consumers import by path: `@devmentor/ui/components/ui/<name>`, `@devmentor/ui/backend/<category>/<Name>`, `@devmentor/ui/backend/api/apiCall`, `@devmentor/ui/lib/utils`, `@devmentor/ui/lib/format`, `@devmentor/ui/lib/time`.
+- Navigation links use `navLinkClassName`; components that render links take `renderLink` (the app passes Next.js `Link`) – ui never imports `next`.
+- Consumers import by path: `@devmentor/ui/components/ui/<name>`, `@devmentor/ui/components/<concept>/<Name>`, `@devmentor/ui/backend/<category>/<Name>`, `@devmentor/ui/backend/api/apiCall`, `@devmentor/ui/lib/utils`, `@devmentor/ui/lib/format`, `@devmentor/ui/lib/time`.
 - Use `CrudForm` for every create/edit form, `DataTable` for every tabular (admin) list – product lists (bookings, slots) use the dense list row – and the `feedback/` components for loading/error/empty states; write a bespoke one only when the UX genuinely does not fit (say why in the PR).
 - `CrudForm` infers inputs from the Zod schema: `z.enum` → select, `z.email()` → email, `z.number()` → number, `z.string().meta({ input: "password" })` → password, otherwise text. Fields take `description`, `optional` and `autoComplete`.
 - Show API failures with `ErrorMessage error={result.error}` (or `DataTable error={result.error}`), not `result.error.message` – technical codes are explained by `describeApiError`.

@@ -1,0 +1,98 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as RoleNavStories from "./RoleNav.stories";
+
+<Meta of={RoleNavStories} />
+
+# RoleNav
+
+`import { RoleNav, type RoleNavItem } from "@devmentor/ui/backend/layout/RoleNav"`
+
+Panel block; part of `AppHeader`. Its link style (`navLinkClassName` in `backend/layout/links`) is the one style for navigation links.
+
+## 1. Purpose
+
+Takes a person to the few places their role uses, and shows where they are.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| In `AppHeader` on every signed-in page: one fixed list per role | R02.6, P12 |
+| Admin: *Users*, *Invitations* – only sections that exist | audit 2026-10-19 (cards "Coming soon"); A01 |
+
+## 3. When not to use
+
+| Instead of `RoleNav`… | Use | Why |
+|---|---|---|
+| A list of sections with descriptions on a page (`/admin`) | dense `Item` list with `ItemLink` | R01.1 – no grid of cards (A01) |
+| Switching views inside one page | `Tabs` | navigation changes the page, tabs do not |
+| A link inside a sentence | `link-text` | T11 |
+| Places that do not exist yet | nothing | audit ("Coming soon"), rule 6 |
+
+## 4. Anatomy
+
+`nav` landmark (named), list, links; the current one has `aria-current="page"` and a muted background.
+
+## 5. Variants
+
+None. The content is the role's list (see `PerRole`).
+
+<Canvas of={RoleNavStories.PerRole} />
+
+## 6. States
+
+<Canvas of={RoleNavStories.States} />
+
+Default (muted text), hover (muted background, full-contrast text), focus (the neutral 3 px ring every button and field has – T4), current page (muted background + `aria-current`). Not disabled: a place you cannot go is not in the list.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| A `nav` landmark with a name (default *Main*); a list of links in reading order. | WAI-ARIA landmarks, WCAG 2.4.1 |
+| The current page: `aria-current="page"`, not only a colour. | WCAG 1.4.1, 4.1.2 |
+| Focus ring identical to buttons and fields. | T4, WCAG 2.4.7; audit (three focus styles) |
+| Targets 28 px high, 40 px on touch. | B2, P4, WCAG 2.5.8 |
+| In the app, links render through Next.js `Link` via `renderLink`; ui never imports `next`. | `AGENTS.md`; C29 (**proposal**) |
+
+<Canvas of={RoleNavStories.Keyboard} />
+
+## 8. Content
+
+One or two words per item, a noun for the place (*Slots*, *Bookings*, *Invitations*). No counters or badges next to items (P10). Longer languages: items wrap to a second line.
+
+## 9. Responsive
+
+1440 and 768 px: one line. 320 px: wraps; nothing scrolls sideways.
+
+<Canvas of={RoleNavStories.Narrow} />
+
+## 10. API
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `items` | `RoleNavItem[]` | – | `{ label, href }`; empty → renders nothing |
+| `currentHref` | `string` | – | exact `href` of the current item |
+| `label` | `string` | `"Main"` | landmark name |
+| `renderLink` | `(props) => ReactNode` | plain `<a>` | the app passes Next.js `Link` |
+| `className` | `string` | – | placement only |
+
+<Controls of={RoleNavStories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<RoleNav items={[{ label: "Users", href: "/admin/users" }, { label: "Invitations", href: "/admin/invitations" }]} currentHref="/admin/users" />`} />
+
+<Source dark code={`<RoleNav items={mentorNav} currentHref={pathname} renderLink={(props) => <Link {...props} />} />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| Only places that exist: *Users*, *Invitations*. | Four cards, three of them "Coming soon" (audit). |
+| The same focus ring as buttons. | The browser's default outline on links next to the design-system ring on buttons (audit). |
+
+## 13. Related
+
+- **Confused with:** `Tabs`, `Item` list with `ItemLink`, `link-text`.
+- **Used in:** `AppHeader` on every screen.

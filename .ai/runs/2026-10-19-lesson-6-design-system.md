@@ -177,3 +177,19 @@ Bug fixed on the way: `{things}` in MDX prose broke the LoadingMessage docs page
 Nothing committed. No `git stash`.
 
 Handoff: owner decisions on C18–C28, then batch 2 (E01 shell, auth, admin) per POSTEP.md 3.4.
+
+## Stage 3, batch 2 (2026-10-19)
+
+Goal: E01 shell (AppHeader + RoleNav, PageLayout, AccountMenu), sign-in and registration screens (login, register, register/mentor with invitation states), admin invitations (InvitationLinkPanel with CopyField, InvitationStatusBadge), admin home without the card grid, pattern "Link shown once", E01 screen state map. Batch 1 committed by the coordinator (91e24b6), C18–C28 accepted; the dev-server 409→500 finding was moved to #16 (fresh server returns 409).
+
+Decisions: proposals C29–C40 in POSTEP.md (renderLink instead of importing next, inline account area, PageLayout block, monospace copy value, 401 on logout = signed out, one nav-link style, link panel replaces the form until Done, invited email on /register/mentor, admin home as a dense list, invalid-invitation wording, per-role nav items, Register as outline link). Questions Q6 (second invitation for the same email – spec silent, story removed rather than inventing a rule) and Q7 (reading the invitation server-side to show the email).
+
+Verified: lint OK, typecheck OK, test:coverage OK (237, 100%), build OK, build-storybook OK (9 new docs pages checked in Chromium; every `?path=` link in MDX exists in the story index), test:storybook OK (512/512, both themes; +65 stories, +28 interaction tests), lint:tokens OK (0, 164 files). Screens viewed at 1440 and 320 px in the built Storybook, no page-level horizontal scroll. Fixed on the way: duplicate banner/nav landmarks in the AppHeader per-role story (axe), 401 on logout shown as an error (now treated as signed out), a decision id in product copy, word-mark alignment.
+
+Not run: live app (nothing the app uses changed in this batch). No new dependencies, no CLI. Nothing committed. No `git stash`.
+
+Handoff: owner decisions on C29–C40 and Q6–Q7, then batch 3 (mentor profile and offer) per POSTEP.md 3.4.
+
+### Batch 2 follow-up – Q6/Q7 (2026-10-20)
+
+Owner accepted C29–C40; Q6 (re-inviting revokes the pending invitation, `revokedAt`) and Q7 (`GET /api/auth/invitations/[token]` → `{ email, expiresAt }`, generic `not_found` otherwise) were written into the E01 spec by the coordinator. Applied: `revoked` status and *Revoked* badge; `AdminInvitations/ReinviteRevokesOld` story (stateful MSW handlers); `RegisterMentor` reads the invitation via MSW (Loading, Default with email, InvitationInvalid on 404, UsedMeanwhile, Success); state map and "Link shown once" pattern updated. Gate: lint, typecheck, test:coverage (238, 100%), build, build-storybook (all MDX links resolve), test:storybook (516/516), lint:tokens (0) – all OK. Nothing committed; no dev server started.

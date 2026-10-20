@@ -1,0 +1,107 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as AppHeaderStories from "./AppHeader.stories";
+
+<Meta of={AppHeaderStories} />
+
+# AppHeader
+
+`import { AppHeader } from "@devmentor/ui/backend/layout/AppHeader"`
+
+Panel block: word mark + `RoleNav` + account area (`AccountMenu`).
+
+## 1. Purpose
+
+Tells a person where they are and who they are signed in as, on every page, with the way to their role's main places.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| The top of every page, inside `PageLayout` | spec E01, UI/UX ("Header shows Log in / Register, or the user's name and Log out") |
+
+## 3. When not to use
+
+| Instead of `AppHeader`… | Use | Why |
+|---|---|---|
+| Inside the session view, a side panel of session context | the session panel (E03 – not built, "What is missing") | R02.6, K4 |
+| A marketing hero | nothing | A01 (hero + three cards) |
+
+## 4. Anatomy
+
+1. Word mark *DevMentor* (link home; the admin home for admins).
+2. `RoleNav` (optional; none on sign-in pages).
+3. Account area (`AccountMenu`, optional).
+
+A 1 px line under it, no shadow (R01.3).
+
+## 5. Variants
+
+None. Content per role:
+
+<Canvas of={AppHeaderStories.PerRole} />
+
+## 6. States
+
+States belong to its parts: links (`RoleNav` – default, hover, focus, current), account (`AccountMenu` – signed out, loading, signed in, logging out). The header itself has no state.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| A `header` → `banner` landmark, once per page. | WAI-ARIA landmarks |
+| Navigation is a named `nav` (`navLabel`, default *Main*). | WCAG 2.4.1 |
+| Tab order: word mark, navigation, account. | WCAG 2.4.3 |
+
+<Canvas of={AppHeaderStories.Landmarks} />
+
+## 8. Content
+
+The word mark is the product name only – no tagline, no logo square (A01, audit). Long names in the account area are truncated (`title` keeps the full name).
+
+<Canvas of={AppHeaderStories.LongName} />
+
+## 9. Responsive
+
+Up to 1024 px of content, aligned with the page (F2). At 320 px the navigation wraps under the word mark.
+
+<Canvas of={AppHeaderStories.Narrow} />
+
+## 10. API
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `homeHref` | `string` | `"/"` | word mark target |
+| `nav` | `RoleNavItem[]` | `[]` | role navigation |
+| `currentHref` | `string` | – | current item |
+| `navLabel` | `string` | `"Main"` | navigation landmark name |
+| `account` | `ReactNode` | – | `AccountMenu` |
+| `renderLink` | `(props) => ReactNode` | plain `<a>` | Next.js `Link` in the app (C29) |
+
+<Controls of={AppHeaderStories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<AppHeader account={<AccountMenu user={null} onLogout={logout} />} />`} />
+
+<Source
+  dark
+  code={`<AppHeader
+  homeHref="/admin"
+  nav={[{ label: "Users", href: "/admin/users" }, { label: "Invitations", href: "/admin/invitations" }]}
+  currentHref="/admin/invitations"
+  account={<AccountMenu user={session} onLogout={() => apiCall("/api/auth/logout", { method: "POST" })} onLoggedOut={() => router.push("/")} />}
+  renderLink={(props) => <Link {...props} />}
+/>`}
+/>
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| A line under the header. | A shadow or a blurred, translucent bar (A01). |
+| Only the role's places. | Every page of the product for everyone. |
+
+## 13. Related
+
+- **Confused with:** `PageLayout` (the whole frame), `RoleNav` (only the links).
+- **Used in:** every screen (`Product/E01/Screens`).

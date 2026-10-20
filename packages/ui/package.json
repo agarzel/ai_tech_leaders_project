@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./components/ui/*": "./src/components/ui/*.tsx",
+    "./components/*": "./src/components/*.tsx",
     "./backend/*": "./src/backend/*.tsx",
     "./backend/api/*": "./src/backend/api/*.ts",
     "./lib/utils": "./src/lib/utils.ts",

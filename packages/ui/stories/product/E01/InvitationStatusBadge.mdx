@@ -1,0 +1,82 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./InvitationStatusBadge.stories";
+
+<Meta of={Stories} />
+
+# InvitationStatusBadge
+
+`import { InvitationStatusBadge, type Invitation, type InvitationStatus } from "@devmentor/ui/components/mentors/InvitationStatusBadge"`
+
+Product component, concept `mentors` (E01, #26 Phase 1b).
+
+## 1. Purpose
+
+Tells a founder at a glance whether an invitation is still waiting, was used, has expired or was replaced by a newer one.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| The status column of the invitation list on `/admin/invitations` | spec E01, UI/UX ("list shows pending / used / expired"); Q6 (*Revoked* after re-inviting) |
+
+## 3. When not to use
+
+| Instead of `InvitationStatusBadge`… | Use | Why |
+|---|---|---|
+| Booking statuses | `BookingStatusBadge` (batch 5) | other states and wording |
+| A status that needs an action | a sentence + button (status and next action, R01.5) | a badge is not an instruction |
+
+## 4. Anatomy
+
+One `Badge` with one word.
+
+## 5. Variants
+
+None to choose – the status decides: *Pending* (`secondary`), *Used*, *Expired* and *Revoked* (`outline`). Never the accent (T10).
+
+<Canvas of={Stories.Statuses} />
+
+## 6. States
+
+Not interactive: no hover, focus or disabled. Data states belong to the list.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| The word carries the status; colour only supports it. | WCAG 1.4.1 |
+
+<Canvas of={Stories.ReadAsText} />
+
+## 8. Content
+
+One word, capitalised: *Pending*, *Used*, *Expired*, *Revoked*. No icons, no counters (P1, P10).
+
+## 9. Responsive
+
+Short words – never wrap or truncate, also in a narrow table cell.
+
+<Canvas of={Stories.Narrow} />
+
+## 10. API
+
+| Prop | Type | Description |
+|---|---|---|
+| `status` | `"pending" \| "used" \| "expired" \| "revoked"` | derived by core from `usedAt`, `revokedAt` and `expiresAt` |
+
+<Controls of={Stories.Playground} />
+
+## 11. Code
+
+<Source dark code={`{ key: "status", header: "Status", cell: (row) => <InvitationStatusBadge status={row.status} /> }`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| *Expired* in a neutral outline badge. | A red badge for expired – it is not an error (T10). |
+
+## 13. Related
+
+- **Confused with:** `Badge` (the primitive), booking statuses.
+- **Used in:** `/admin/invitations` list (`DataTable`).

@@ -1,0 +1,92 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./InvitationLinkPanel.stories";
+
+<Meta of={Stories} />
+
+# InvitationLinkPanel
+
+`import { InvitationLinkPanel } from "@devmentor/ui/components/mentors/InvitationLinkPanel"`
+
+Product component, concept `mentors` (E01, #26 Phase 1b). Instance of the pattern [Link shown once](?path=/docs/patterns-link-shown-once--docs).
+
+## 1. Purpose
+
+Gives a founder the new mentor invitation link once, so they can copy it and send it themselves.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| `/admin/invitations`, right after *Send invitation* succeeds | spec E01, UI/UX ("the link is shown once with a copy button"); D11 |
+
+## 3. When not to use
+
+| Instead of `InvitationLinkPanel`… | Use | Why |
+|---|---|---|
+| The mentor's share link (always available) | `CopyField` on `/mentor` | not secret, not one-time |
+| Showing an old invitation's link | nothing – it cannot be shown | the token is never stored (spec E01, Data Model) |
+
+## 4. Anatomy
+
+Panel (`Card`, region named by its title): title *Invitation for email*, description (send it yourself; shown once; expiry with time zone), `CopyField` (focused), *Done*.
+
+## 5. Variants
+
+None.
+
+## 6. States
+
+| State | Story |
+|---|---|
+| Link shown, focused | `Playground` |
+| Copied / clipboard refused | `CopyField` stories |
+| Dismissed (*Done*) – the link is gone | [Dismiss](?path=/story/product-e01-invitationlinkpanel--dismiss) |
+| Expiry in another time zone | `OtherTimeZone` |
+
+Loading, empty, error and partial do not apply: the panel exists only with a link from a successful request (C3). Waiting and errors belong to the invitation form.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Focus moves to the link when the panel appears. | WCAG 2.4.3 |
+| A region named by its title. | WAI-ARIA region |
+| *Done* is the panel's one main action (accent). | P5/K3 |
+
+## 8. Content
+
+Say that the link is shown only once and that the founder sends it (DevMentor sends no email – D15). Expiry: date, time and zone (C5). The email wraps if long.
+
+<Canvas of={Stories.LongContentNarrow} />
+
+## 9. Responsive
+
+Full width of the content column; at 320 px the link scrolls inside its field.
+
+## 10. API
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `email` | `string` | – | invited address |
+| `link` | `string` | – | from the POST response only |
+| `expiresAt` | `string` (ISO) | – | 14 days after creation |
+| `timeZone` | `string` | – | viewer's zone |
+| `onDone` | `() => void` | – | drop the link, show the list |
+
+<Controls of={Stories.Playground} />
+
+## 11. Code
+
+<Source dark code={`{created && <InvitationLinkPanel email={created.invitation.email} link={created.link} expiresAt={created.invitation.expiresAt} timeZone={browserTimeZone()} onDone={() => setCreated(null)} />}`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| Keep the link only in component state until *Done*. | Store it, log it or put it in the URL. |
+| Say "shown only once". | Let the founder close it without knowing the link is gone. |
+
+## 13. Related
+
+- **Confused with:** `CopyField` (the field alone), `Alert` (a message, not a value to copy).
+- **Used in:** `/admin/invitations` ([screen](?path=/story/product-e01-screens-admininvitations--link-shown-once)).

@@ -1,0 +1,42 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as PanelStories from "../product/E01/InvitationLinkPanel.stories";
+import * as ScreenStories from "../product/E01/screens/AdminInvitations.stories";
+
+<Meta title="Patterns/Link shown once" />
+
+# Link shown once
+
+A secret link – today the mentor invitation – is created on the server and returned in one response only; it is never stored in readable form (spec E01, Data Model: only the token's hash). The interface must make sure the person copies it before it disappears.
+
+<Canvas of={PanelStories.Playground} />
+
+## Rules
+
+| Rule | Source |
+|---|---|
+| Show the link right after the request succeeds, in place of the form, with a copy button. | spec E01, UI/UX |
+| Say plainly that it is shown only once, how long it works and who sends it. | spec E01; D11, D15 |
+| Move focus to the link. | WCAG 2.4.3 |
+| Confirm copying in words next to the field – no toast. When the clipboard is refused, select the text and say how to copy it. | S10; `CopyField` |
+| *Done* drops the link from memory; it is never put in the URL, storage or logs. | spec E01 (Sensitive data) |
+| Waiting and errors stay in the form that creates the link. | pattern Form |
+| A lost link is recovered by creating a new one: inviting the same email again revokes the pending invitation, and the list shows it as *Revoked*. | spec E01 (Q6, owner 2026-10-20) |
+
+## States
+
+| State | Story |
+|---|---|
+| Link shown | [AdminInvitations / LinkShownOnce](?path=/story/product-e01-screens-admininvitations--link-shown-once) |
+| Copied | [CopyField / Copy](?path=/story/primitives-panel-blocks-copyfield--copy) |
+| Clipboard refused | [CopyField / ClipboardDenied](?path=/story/primitives-panel-blocks-copyfield--clipboard-denied) |
+| Dismissed – the link is gone | [AdminInvitations / LinkDismissed](?path=/story/product-e01-screens-admininvitations--link-dismissed) |
+| Creating failed | [AdminInvitations / SendFailed](?path=/story/product-e01-screens-admininvitations--send-failed) |
+| Re-invited – old link revoked | [AdminInvitations / ReinviteRevokesOld](?path=/story/product-e01-screens-admininvitations--reinvite-revokes-old) |
+
+These states appear after interaction; open the stories (the *Interactions* panel shows each step).
+
+<Canvas of={ScreenStories.Default} />
+
+## Related
+
+`InvitationLinkPanel`, `CopyField`, pattern Form. The mentor's share link (batch 3) uses `CopyField` too, but it is not secret and not one-time.

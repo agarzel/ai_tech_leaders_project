@@ -1,0 +1,95 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as CopyFieldStories from "./CopyField.stories";
+
+<Meta of={CopyFieldStories} />
+
+# CopyField
+
+`import { CopyField } from "@devmentor/ui/backend/forms/CopyField"`
+
+Panel block on `Field` + `InputGroup` (C9).
+
+## 1. Purpose
+
+Lets a person copy a value they must pass on – an invitation link, a share link – without selecting text by hand.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| The invitation link, shown once after it is created | spec E01, `/admin/invitations` |
+| The mentor's share link on `/mentor` (batch 3) | spec E01, Phase 4; D03 |
+
+## 3. When not to use
+
+| Instead of `CopyField`… | Use | Why |
+|---|---|---|
+| A value the person types | `Input` | `CopyField` is read-only |
+| A secret the person should not see (passwords) | nothing – never shown | spec E01 (hashes never leave core) |
+
+## 4. Anatomy
+
+Label, read-only value (monospace – C32, **proposal**, R01.2), copy button, hint (optional), status line (polite live region).
+
+## 5. Variants
+
+None. Button text via `copyLabel` (*Copy link*).
+
+<Canvas of={CopyFieldStories.Uses} />
+
+## 6. States
+
+| State | What the person sees | Story |
+|---|---|---|
+| Default | the value and *Copy link* | `Playground` |
+| Copied | "Copied to the clipboard." under the field | [Copy](?path=/story/primitives-panel-blocks-copyfield--copy) |
+| Clipboard refused | the text is selected; "Could not copy… press Ctrl+C (⌘C on a Mac)" | [ClipboardDenied](?path=/story/primitives-panel-blocks-copyfield--clipboard-denied) |
+
+The copied and refused states appear after the click in the interaction test; open the stories. Hover and focus of the button: see `InputGroup` and `Button`. Not disabled.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| The result is announced in words in a polite status, never a toast. | S10; WAI-ARIA status |
+| Focusing the field selects the whole value. | `CopyField` source |
+| With `autoFocus` the value takes focus when it appears (a link shown once). | WCAG 2.4.3 |
+| Without clipboard access the text is selected so it can be copied by hand. | WCAG 2.1.1 |
+
+## 8. Content
+
+Label names the value (*Invitation link*, *Share link*). Hint: who can use it and for how long. Button: verb + object.
+
+## 9. Responsive
+
+The value scrolls inside the field at 320 px; the button keeps its label (48 px tall on touch – B31).
+
+<Canvas of={CopyFieldStories.LongValueNarrow} />
+
+## 10. API
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `label` | `string` | – | field label |
+| `value` | `string` | – | the text to copy |
+| `description` | `string` | – | hint |
+| `copyLabel` | `string` | `"Copy link"` | button text |
+| `autoFocus` | `boolean` | `false` | focus the value on mount |
+
+<Controls of={CopyFieldStories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<CopyField label="Share link" value={shareUrl} description="Anyone with this link can see your profile and book your open times." />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| "Copied to the clipboard." next to the field. | A toast that disappears before a screen reader reads it (S10). |
+| Select the text when copying fails. | Fail silently. |
+
+## 13. Related
+
+- **Confused with:** `Input` (editable), `InputGroup` (the primitive it is built on).
+- **Used in:** `InvitationLinkPanel`, the share link on `/mentor` (batch 3); pattern [Link shown once](?path=/docs/patterns-link-shown-once--docs).

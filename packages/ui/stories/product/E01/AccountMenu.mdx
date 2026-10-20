@@ -1,0 +1,103 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as AccountMenuStories from "./AccountMenu.stories";
+
+<Meta of={AccountMenuStories} />
+
+# AccountMenu
+
+`import { AccountMenu, AccountMenuSkeleton, type SessionUser } from "@devmentor/ui/components/auth/AccountMenu"`
+
+Product component, concept `auth` (E01, #26).
+
+## 1. Purpose
+
+Shows a visitor how to sign in or register, and a signed-in person who they are and how to log out.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| The right side of `AppHeader` on every page | spec E01, UI/UX |
+
+## 3. When not to use
+
+| Instead of `AccountMenu`… | Use | Why |
+|---|---|---|
+| Profile and prices | `/mentor/profile` page (batch 3) | not an account action |
+| A menu with one or two items | the inline links and button here | C30 (**proposal**) – a menu hides two actions behind a click |
+
+## 4. Anatomy
+
+Visitor: *Log in* (navigation link) + *Register* (outline button style). Signed in: name (truncated if long) + *Log out* (ghost button) + error line (only after a failed logout).
+
+## 5. Variants
+
+By `user`: `null` (visitor) or a `SessionUser`. While the session loads: `AccountMenuSkeleton`.
+
+<Canvas of={AccountMenuStories.SignedOut} />
+
+## 6. States
+
+<Canvas of={AccountMenuStories.States} />
+
+| State | Story |
+|---|---|
+| Loading (session unknown) | `Loading` |
+| Visitor | `SignedOut` |
+| Signed in | `Playground` |
+| Logging out (busy, disabled) | [LoggingOut](?path=/story/product-e01-accountmenu--logging-out) |
+| Logout failed (stays signed in, reason shown) | [LogoutFailed](?path=/story/product-e01-accountmenu--logout-failed) |
+| Session already expired – treated as logged out (C33, **proposal**) | [SessionAlreadyExpired](?path=/story/product-e01-accountmenu--session-already-expired) |
+
+Data states: empty, partial and many do not apply (one person, two fields). Error: only the logout request.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Links and button in tab order after the navigation. | WCAG 2.4.3 |
+| *Logging out…* is `disabled` + `aria-busy`, so it is not sent twice. | B18 |
+| A failed logout is announced (`role="alert"`) and says what to do. | answer 2.4; C18 |
+| Links render through `renderLink` (Next.js `Link` in the app). | C29 (**proposal**) |
+
+<Canvas of={AccountMenuStories.LogOut} />
+
+## 8. Content
+
+*Log in*, *Register*, *Log out* – fixed. The person's own name, no role or avatar (B43: avatars only in the session). Long names truncate in the header only.
+
+## 9. Responsive
+
+Keeps one line; at 320 px `AppHeader` wraps the navigation, not this area.
+
+<Canvas of={AccountMenuStories.LongNameNarrow} />
+
+## 10. API
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `user` | `SessionUser \| null` | – | `null` = visitor |
+| `loginHref`, `registerHref` | `string` | `"/login"`, `"/register"` | add `?next=` to come back (spec E02) |
+| `onLogout` | `() => Promise<ApiResult>` | – | `apiCall("/api/auth/logout", { method: "POST" })` |
+| `onLoggedOut` | `() => void` | – | after success (or an expired session) |
+| `renderLink` | `(props) => ReactNode` | plain `<a>` | Next.js `Link` in the app |
+
+<Controls of={AccountMenuStories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<AccountMenu user={null} onLogout={logout} />`} />
+
+<Source dark code={`{session === undefined ? <AccountMenuSkeleton /> : <AccountMenu user={session} onLogout={() => apiCall("/api/auth/logout", { method: "POST" })} onLoggedOut={() => router.push("/")} />}`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| The name in plain text next to *Log out*. | An avatar with a coloured status dot (B44, P9). |
+| Skeleton while the session loads. | Flashing *Log in* for a moment to a signed-in person. |
+
+## 13. Related
+
+- **Confused with:** `DropdownMenu` (not needed for two actions).
+- **Used in:** `AppHeader`; every screen.

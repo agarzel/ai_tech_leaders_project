@@ -15,7 +15,7 @@ Plik roboczy zadania z `lekcja-06/prompt-storybook.md`. Nowa sesja: przeczytaj p
 
 ## Następny krok
 
-Etap 3, partia 1 gotowa (sekcja „Etap 3 – partia 1, wynik” na końcu pliku; nic nie zacommitowane). Czeka na decyzje C18–C28. Potem partia 2: powłoka E01, auth i admin (plan w „Etap 3 – plan”, 3.4).
+Etap 3, partia 2 gotowa razem z Q6/Q7 (sekcje „Etap 3 – partia 2, wynik” i „…decyzje i Q6/Q7” na końcu pliku; commit robi koordynator). Po „dalej” partia 3: profil i oferta mentora (TagList, PublicWorkLinks, PriceList, MentorProfileHeader, MentorProfileForm, OfferChecklist; ekrany `/mentor`, `/mentor/profile`).
 
 ## Zatwierdzone decyzje (źródła: `lekcja-06/referencje.md`, `lekcja-06/tokeny.md`)
 
@@ -750,7 +750,7 @@ Znalezione i naprawione po drodze: `{things}` w treści MDX (`LoadingMessage`) w
 ### Do „What is missing” (etap 4)
 - Q5: monospace dla bloków kodu w potrójnych backtickach w pytaniu – propozycja do przyszłej specyfikacji sesji.
 - App: `users-admin.tsx` przekazuje do `DataTable` `result.error.message` (string) – przejście na `error={result.error}` (C18) to zmiana w app.
-- App/core: 409 → 500 przy duplikacie e-maila na serwerze dev (wyżej).
+- ~~App/core: 409 → 500 przy duplikacie e-maila na serwerze dev~~ – koordynator: na świeżym serwerze dev jest 409; 500 tylko na długo działającym serwerze z HMR (zdublowana klasa `AppError` po przeładowaniach) – dopisane do #16, bez osobnego zgłoszenia i bez wpisu w „What is missing”.
 - App: placeholdery „Ada Lovelace”/„ada@example.com” i pusty stan „…with the button above” w `users-admin.tsx` (bez zmian – zasada 11).
 
 ### Następny krok
@@ -759,3 +759,76 @@ Decyzje C18–C28, potem partia 2 (E01 powłoka, auth, admin: `AppHeader` + `Rol
 ### Decyzje C18–C28
 
 Zatwierdzone przez Arkadiusza 2026-10-19, wszystkie w wersji wdrożonej w partii 1.
+
+## Etap 3 – partia 2, wynik (2026-10-19)
+
+Powłoka E01 (`AppHeader` + `RoleNav`, `PageLayout`, `AccountMenu`), logowanie i rejestracja (`/login`, `/register`, `/register/mentor` ze stanami zaproszenia), zaproszenia admina (`InvitationLinkPanel` z `CopyField`, `InvitationStatusBadge`), ekran `/admin` bez siatki kart, wzorzec „Link shown once”, mapa stanów ekranów E01. Nic nie jest zacommitowane. Brak nowych zależności i komend CLI.
+
+### Co powstało
+- `src/backend/layout/`: `links.tsx` (`navLinkClassName` – jeden styl linku nawigacji: `muted-foreground`, hover i bieżąca strona `bg-muted`, pierścień `ring-3 ring-ring/50` jak przyciski, 28/40 px; `RenderLink` + `renderAnchor`), `RoleNav.tsx` (`nav` z nazwą, `aria-current="page"`, pusta lista → nic), `AppHeader.tsx` (znak słowny, `RoleNav`, miejsce na konto, linia 1 px, `navLabel`), `PageLayout.tsx` (nagłówek + `main` z jednym `h1`, szerokość `content` 1024 px / `narrow` 384 px).
+- `src/backend/forms/CopyField.tsx`: wartość tylko do odczytu (mono), *Copy link*, potwierdzenie słowami w `role="status"` (bez toastu, S10), przy odmowie schowka zaznaczenie tekstu i instrukcja Ctrl+C/⌘C, zaznaczenie całości przy fokusie, `autoFocus`.
+- `src/components/auth/AccountMenu.tsx` (+ `AccountMenuSkeleton`, typ `SessionUser`): gość – *Log in* (link nawigacji) i *Register* (link w stylu przycisku outline); zalogowany – imię (ucięte przy długim, pełne w `title`) i *Log out* (busy, błąd słowami; 401 = już wylogowany).
+- `src/components/mentors/InvitationLinkPanel.tsx` (region z tytułem, opis „wyślij sam, pokazany raz, ważny do … (strefa)”, `CopyField` z fokusem, *Done*), `InvitationStatusBadge.tsx` (*Pending* `secondary`, *Used*/*Expired* `outline`), typy `Invitation`, `InvitationStatus` (re-eksport z komponentu).
+- Eksport addytywny `./components/*` (C1) + wpis w `BACKWARD_COMPATIBILITY.md`.
+- Stories: bloki `Primitives/Panel blocks/{RoleNav, AppHeader, PageLayout, CopyField}`; produkt `Product/E01/{AccountMenu, InvitationLinkPanel, InvitationStatusBadge}` – każdy ze stroną 13 sekcji; ekrany `Product/E01/Screens/{Login, Register, RegisterMentor, AdminHome, AdminInvitations}` (pełny ekran, MSW tam, gdzie ekran woła API) + `Product/E01/Screens/State map` (stan → story); wzorzec `Patterns/Link shown once`. Fikstury: logowanie, rejestracja mentora, nawigacja ról, zalogowani, lista i nowe zaproszenie.
+
+### Audyt admina w design systemie (zasada 11 – kod app bez zmian)
+- Siatka kart z „Coming soon” → ekran `AdminHome`: `RoleNav` tylko z istniejącymi pozycjami (*Users*, *Invitations*) + gęsta lista sekcji (`Item` + `ItemLink`), bez kart i bez „Coming soon” (test `KeyboardFocus` sprawdza brak tekstu).
+- Jeden styl fokusu linków: `navLinkClassName` (nawigacja, znak słowny, linki konta) = ten sam pierścień co przyciski i pola; linki w treści – `link-text`; wiersze – pierścień `Item`. Link powrotu „← Admin panel” (18 px) zastępuje nawigacja roli z celem 28/40 px.
+- W app: `/admin`, `/admin/users` nadal stare – „What is missing” + zgłoszenie po etapie 3 (C17).
+
+### Propozycje C29–C40 (materiały milczą; wdrożone zachowawczo i odwracalnie – do decyzji)
+| # | Propozycja | Źródło / dlaczego |
+|---|---|---|
+| C29 | Linki w blokach przez prop `renderLink` (app podaje `Link` z Next.js), domyślnie zwykłe `<a>` – ui nie importuje `next` | `AGENTS.md` (granice pakietów) |
+| C30 | `AccountMenu` bez menu rozwijanego: imię + *Log out* obok siebie (dwie akcje nie potrzebują menu) | spec E01 UI/UX („the user's name and Log out”), zasada 6 |
+| C31 | Nowy blok `PageLayout` (nagłówek, `main`, jeden `h1`, szerokość 1024/384 px, odstęp sekcji 32 px) – rama każdego ekranu | F2, T8, A01 (bez hero) |
+| C32 | Wartość w `CopyField` krojem mono (`type-code`) – link z tokenem czyta się znak po znaku | R01.2 (ścieżki, identyfikatory) |
+| C33 | Wylogowanie z odpowiedzią 401 (sesja już wygasła po 24 h) traktowane jak udane – bez komunikatu o błędzie | spec E01 (sesja 24 h bez odświeżania) |
+| C34 | Jeden styl linku nawigacji (`navLinkClassName`): tekst wyciszony, hover i bieżąca strona `bg-muted` + `aria-current`, pierścień jak przyciski | audyt (trzy style fokusu), T4, WCAG 1.4.1 |
+| C35 | `InvitationLinkPanel` zastępuje formularz do *Done*; *Done* w akcencie (jedyna główna akcja w tym momencie); fokus na linku; tekst „Copy the link now and send it to the mentor yourself. It is shown only once…” | spec E01 UI/UX, P5/K3, D15 |
+| C36 | `/register/mentor` pokazuje zaproszony e-mail („You were invited as …”) – wymaga, by strona odczytała zaproszenie po stronie serwera (spec mówi tylko, że nieważny link pokazuje komunikat bez formularza) | spec E01 UI/UX – Q7 |
+| C37 | Ekran `/admin` w DS: krótka nawigacja + gęsta lista sekcji z jednozdaniowym opisem zamiast kart | audyt, R01.1, R02.6/P12, A01 |
+| C38 | Komunikat nieważnego zaproszenia: tytuł „This invitation is no longer valid” + „Links work once and for 14 days. Ask the DevMentor founders for a new one.” (`Alert` z `role="status"` – obecny od wczytania strony) | spec E01 Edge Cases, B42 |
+| C39 | Pozycje nawigacji ról: gość *Mentors*; mentee *Mentors*, *My bookings*; mentor *Overview*, *Profile*, *Slots*, *Bookings*; admin *Users*, *Invitations* (tylko strony ze specyfikacji) | R02.6/P12, specyfikacje E01/E02 |
+| C40 | *Register* w nagłówku jako link w stylu przycisku `outline`, *Log in* jako link nawigacji – akcent zostaje dla głównej akcji strony | P5/K3 |
+
+### Pytania
+- **Q6** Ponowne zaproszenie e-maila, który ma już oczekujące zaproszenie: spec E01 tego nie określa. Story z odmową 409 usunąłem, żeby nie wymyślać reguły. Czy drugie zaproszenie ma być odrzucane, czy tworzyć nowe (stare dalej ważne / unieważnione)?
+- **Q7** (do C36) Czy `/register/mentor` może pokazać zaproszony e-mail? Wymaga to odczytu zaproszenia na serwerze (spec ma tylko `POST /api/auth/register/mentor`); bez tego strona mówi tylko „You were invited to join as a mentor”.
+
+### Wyniki sprawdzeń
+| Komenda | Wynik |
+|---|---|
+| `npm run lint` | OK |
+| `npm run typecheck` | OK |
+| `npm run test:coverage` | OK – 237 testów (+24), 100% we wszystkich metrykach (547/370/146/491) |
+| `npm run build` | OK |
+| `npm run build-storybook` | OK; 9 nowych stron w zbudowanym Storybooku (Chromium): komponenty po 13 sekcji, tabele jako tabele, bez błędów strony; wszystkie linki `?path=` ze stron MDX istnieją w indeksie stories |
+| `npm run test:storybook` | OK – 512/512 (256 stories × 2 motywy; 65 nowych stories, 28 nowych testów interakcji), a11y bez naruszeń |
+| `npm run lint:tokens` | OK – 0 wartości spoza tokenów (164 pliki) |
+
+Ekrany `AdminInvitations`, `AdminHome`, `Login`, `RegisterMentor/InvitationInvalid` obejrzane w zbudowanym Storybooku przy 1440 i 320 px: bez przewijania strony w bok (tabela zaproszeń przy 320 px przewija się w swojej ramce – jak `DataTable`). Poprawione po obejrzeniu: znak słowny wyrównany do lewej krawędzi treści (`-ml-2` względem paddingu linku); z opisu ekranu usunięty identyfikator decyzji „(D11)” – identyfikatory tylko w dokumentacji, nie w treści produktu.
+
+Znalezione i naprawione po drodze: `PerRole` w `AppHeader` (cztery nagłówki na jednej stronie) łamał axe `landmark-unique`/banner – każdy nagłówek w osobnej, nazwanej sekcji + nowy prop `navLabel`; story „wylogowanie przy wygasłej sesji” ujawniło, że 401 pokazywał błąd – stąd C33.
+
+### Czego nie sprawdzono
+- Aplikacja na żywo: nie uruchamiałem serwera dev – partia nie zmienia niczego, czego używa app (nowe bloki i komponenty nie są jeszcze podpięte; `CrudForm`/`DataTable` bez zmian od partii 1).
+- Ręczna klawiatura w managerze Storybooka, czytnik ekranu na żywo, urządzenie dotykowe.
+- Prawdziwy schowek w przeglądarce użytkownika (testy podmieniają `navigator.clipboard`).
+
+### Do „What is missing” (etap 4)
+- App: `/admin` (siatka kart, „Coming soon”, kontrast 2,88 : 1), link „← Admin panel”, fokus linków – do przepięcia na `AppHeader`/`RoleNav`/`PageLayout` (zasada 11, osobne zgłoszenie).
+- Spec E01: zachowanie przy ponownym zaproszeniu tego samego e-maila (Q6); odczyt zaproszenia na stronie `/register/mentor` (Q7).
+
+### Decyzje właściciela – partia 2 (Arkadiusz, 2026-10-20)
+- **C29–C40** przyjęte w całości.
+- **Q6** Ponowne zaproszenie e-maila z oczekującym zaproszeniem tworzy nowe i unieważnia stare (nowa kolumna `revokedAt`, nullable). Zapisane w spec E01 (model danych, tabela API, edge cases).
+- **Q7** `/register/mentor` pokazuje zaproszony e-mail przez nowy `GET /api/auth/invitations/[token]` → `{ email, expiresAt }`; każdy nieważny token (użyty, wygasły, unieważniony, nieznany) → ten sam ogólny `not_found`. Zapisane w spec E01.
+- Wpis „What is missing” o Q6/Q7 nieaktualny – rozstrzygnięte w specyfikacji.
+
+### Partia 2 – Q6/Q7 w design systemie (2026-10-20)
+- `InvitationStatus` + `revoked`; `InvitationStatusBadge` *Revoked* (`outline`), test i strona (status, treść, API).
+- Ekran `AdminInvitations/ReinviteRevokesOld` (MSW ze stanem: po POST lista zwraca nowe zaproszenie i stare jako *Revoked*); wiersz w mapie stanów i we wzorcu „Link shown once”.
+- Ekran `RegisterMentor` czyta zaproszenie przez `GET /api/auth/invitations/[token]` (MSW): `Loading` (szkielety, `role="status"`), `Default` (pokazany e-mail), `InvitationInvalid` (404 → komunikat bez formularza), `UsedMeanwhile`, `Success`, `Narrow320`; mapa stanów zaktualizowana.
+- Sprawdzenia: lint, typecheck, `test:coverage` (238 testów, 100%), build, `build-storybook` (linki `?path=` w MDX – wszystkie istnieją w indeksie), `test:storybook` (516/516 – 258 stories × 2 motywy, +2 stories), `lint:tokens` (0, 164 pliki) – wszystkie OK. Nic nie zacommitowane.
