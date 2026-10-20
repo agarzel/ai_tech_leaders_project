@@ -31,16 +31,34 @@ export function formatZoneLabel(timeZone: string, at: Date): string {
 
 /** "UTC", "UTC+1", "UTC+5:30", "UTC-3" – the zone's offset at the given moment (DST-aware). */
 export function formatUtcOffset(timeZone: string, at: Date): string {
-  const name = new Intl.DateTimeFormat("en-US", { timeZone, timeZoneName: "longOffset" })
-    .formatToParts(at)
-    .filter((part) => part.type === "timeZoneName")
-    .map((part) => part.value)
-    .join("");
-  // "GMT" for a zero offset, otherwise "GMT+01:00" / "GMT-03:00" / "GMT+05:30".
-  const match = name.match(/^GMT([+-])(\d{2}):(\d{2})$/);
-  if (!match) return "UTC";
-  const [, sign, hours, minutes] = match;
-  return `UTC${sign}${Number(hours)}${minutes === "00" ? "" : `:${minutes}`}`;
+  // Computed from the wall-clock parts, not from Intl's zone name: the name for a zero offset differs
+  // between Node/ICU versions ("GMT" locally, "GMT+00:00" in CI).
+  const offset = utcOffsetMinutes(timeZone, at);
+  if (offset === 0) return "UTC";
+  const sign = offset > 0 ? "+" : "-";
+  const hours = Math.floor(Math.abs(offset) / 60);
+  const minutes = Math.abs(offset) % 60;
+  return `UTC${sign}${hours}${minutes === 0 ? "" : `:${String(minutes).padStart(2, "0")}`}`;
+}
+
+/** Minutes the zone is ahead of UTC at the given moment (DST-aware). */
+function utcOffsetMinutes(timeZone: string, at: Date): number {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      hourCycle: "h23",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+      .formatToParts(at)
+      .map((part) => [part.type, part.value]),
+  );
+  const wallClockAsUtc = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour), Number(parts.minute));
+  const atMinute = Math.floor(at.getTime() / 60_000) * 60_000;
+  return Math.round((wallClockAsUtc - atMinute) / 60_000);
 }
 
 const MINUTE = 60_000;
