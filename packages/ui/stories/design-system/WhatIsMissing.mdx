@@ -19,10 +19,31 @@ What is ready, what is not, and why. Priorities are proposals for the owner (Hig
 | #31 Stripe prepayment and refunds (E02) | no interface of its own; the card payment page is hosted by Stripe, `/dev/fake-checkout` is a dev tool | Outside the design system | – |
 | #32 accept or decline (E02) | `MentorBookingRow`, `AcceptDeadline`, `DeclineBookingDialog`, `PendingBookingsNotice`, `/mentor/bookings` | Ready in Storybook | High |
 | #33 hold the text session (E03) | session view: message stream, composer (R02: Enter sends, Shift+Enter new line, author and time per group) | **Not built** – no spec | Medium |
-| #34 cancel a booking and see the refund (E03) | a cancel action and its confirmation (pattern [Delete confirmation](?path=/docs/patterns-delete-confirmation--docs) applies) | **Not built** – no spec; R04 | Medium |
+| #34 cancel a booking and see the refund (E03) | a cancel action and its confirmation; patterns [Page-level destructive action](?path=/docs/patterns-page-level-destructive-action--docs), [Action result](?path=/docs/patterns-action-result--docs) and [Delete confirmation](?path=/docs/patterns-delete-confirmation--docs) apply | **Not built** – no E03 spec; R04 | Medium |
 | #35 settle no-shows (E03) | status wording for no-show on both sides | **Not built** – blocked by Q03 | Low |
 | #36 private note the mentee approves (E03) | note editor and an approval step | **Not built** – no spec | Low |
 | #24 later (E04, parked) | – | No page | – |
+
+## Input for the E03 specification (agent test)
+
+A new session built the *Cancel booking* screen (#34, R04) from this documentation only. The design-system gaps became rules ([Contributing](?path=/docs/design-system-contributing--docs), [How to choose](?path=/docs/design-system-how-to-choose--docs), the patterns). The product gaps below cannot be settled by the design system; the E03 spec (#33–#36) must decide them. The test screen was not kept in the repository. Source: agent test 2026-10-20 (lekcja-06/test-agentem.md).
+
+| Gap | Question for the spec | What the agent guessed |
+|---|---|---|
+| 3 | Is there a `cancelled` booking status? Its wording for the mentee and for the mentor, its badge, and whether the mentor sees "paid" | "Cancelled – refund on its way" / "Cancelled – no refund" |
+| 4 | The API contract of cancelling: route, answer, refusal | `POST /api/bookings/:id/cancel` returning `{ refund: "full" \| "none" }`, refusal 409 |
+| 5 | The 12 h threshold passes while the dialog is open: does the dialog recompute? | no recomputation; the server decides |
+| 6 | What the page does after the server refuses (*the session has already started*): message only, or refresh the booking | message in the dialog, no refresh |
+| 7 | The definition of "session finished" | `startsAt + lengthMinutes` |
+| 14 | Who supplies the free-cancellation threshold: the client computes it for a preview only | proposal: `freeCancellationUntil` in `BookingDto`, like `acceptBy` |
+| 16 | Status of #34 stated differently in two files | fixed: "Not built – no E03 spec" everywhere |
+| 17 | The component table has no row for the cancel component | nothing to do now; add the row when the component is built in E03 |
+
+Two design-system items stay open because they need code, not words:
+
+| Item | State | Priority |
+|---|---|---|
+| A generic deadline component with the verb as a prop (`AcceptDeadline` fixes "Decide"; the pattern is documented) | planned for E03, not built (gap 13) | Medium |
 
 ## App code that still looks like the old interface
 
@@ -69,4 +90,4 @@ Writing "How to choose", "Content" and "What to avoid" showed these gaps.
 
 - Interaction tests run in Chromium; native date and time pickers are exercised by setting a value, not by clicking the picker.
 - Screens are compositions in Storybook; real pages, routing, server data and `from=` entry points are app work.
-- The agent test (a new screen built from this documentation in a fresh session) is prepared in stage 5; every place where that agent guesses goes into this page.
+- The agent test was run on 2026-10-20 (screen *Cancel booking*, 57 decisions: 28 rules, 11 examples, 18 guesses). Every guess became a rule or an entry on this page (lekcja-06/test-agentem.md).

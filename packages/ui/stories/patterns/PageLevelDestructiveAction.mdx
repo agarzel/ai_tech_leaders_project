@@ -1,0 +1,32 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Patterns/Page-level destructive action" />
+
+# Page-level destructive action
+
+An irreversible action that belongs to the whole object on a page, not to a row of a list. Instance (to be built with E03): *Cancel booking* on `/bookings/[id]`. The confirmation itself follows [Delete confirmation](?path=/docs/patterns-delete-confirmation--docs). Rules from the agent test 2026-10-20 (lekcja-06/test-agentem.md), gaps 2 and 8 to 12.
+
+## Rules
+
+| Rule | Source |
+|---|---|
+| A section of its own, below the object's details and outside the status panel: an `h2` with the action's name, one sentence of effect, the trigger. | agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 2 |
+| The trigger is `outline`, default size. The `destructive` colour belongs to the confirming button in the dialog only. | agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 8 |
+| A destructive action never gets the accent. When it is the only action on the screen, the screen has no accent. | agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 9; R01.5/P5 |
+| The effect, including money, is a sentence in `type-body` that starts with the outcome word (*Full refund:*, *No refund:*), so it does not rely on colour. `Alert` is only for information that came from the server or changes while the page is open. | agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 10 |
+| Trigger *Cancel booking*; confirming button *Yes, cancel booking*; safe choice *Keep booking*. The trigger and the confirming button never carry the same words. | agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 11 |
+| Dialog: the title names the object (the time of the session); the description repeats the effect sentence and the amount. Do not repeat the whole summary. | agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 12 |
+| After success: [Action result](?path=/docs/patterns-action-result--docs). | agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 1 |
+
+## States
+
+| State | Shown as |
+|---|---|
+| Available | Section with heading, effect sentence, trigger |
+| Not available (session started or finished) | The reason in words in place of the trigger; never a disabled button alone (B17) |
+| Confirming | `AlertDialog`, focus on *Keep booking* |
+| Done | [Action result](?path=/docs/patterns-action-result--docs) |
+
+## Related
+
+[Delete confirmation](?path=/docs/patterns-delete-confirmation--docs), [Action result](?path=/docs/patterns-action-result--docs), `AlertDialog`, `Button`.

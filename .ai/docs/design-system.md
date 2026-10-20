@@ -13,7 +13,7 @@ DevMentor: a developer books and prepays a senior engineer for a 25- or 50-minut
 
 ## Build a screen in five steps
 
-1. Find the pattern: Form, List with filters, Detail view, Delete confirmation, Status and next action, Deadline with a countdown, Time with zone and DST, Amount in PLN, Payment and waiting, Bookability checklist, Link shown once (Storybook `Patterns/`). Epic screens and state maps: `Design system/Epics/E01`, `E02`.
+1. Find the pattern: Form, List with filters, Detail view, Delete confirmation, Status and next action, Deadline with a countdown, Time with zone and DST, Amount in PLN, Payment and waiting, Bookability checklist, Link shown once, Page-level destructive action, Action result (Storybook `Patterns/`). Epic screens and state maps: `Design system/Epics/E01`, `E02`.
 2. Choose components with the guides below; product component first, then panel block, then primitive.
 3. Use semantic classes only (tables below).
 4. Design every data state: loading (`Skeleton`), nothing yet (`EmptyState` + create action), no results (*Clear filters*), error (`ErrorMessage`, `error={result.error}`), partial (omit missing parts or "Not set"), many (`Pagination`, `ResultCount`), long text, 320 px.
@@ -178,6 +178,7 @@ Values live only in `packages/ui/src/styles/tokens.css`; classes map in `theme.c
 - Starts an action → `Button` (`default` only for the main one, rows `size="sm"`). Goes to a URL → link (`link-text`, `navLinkClassName`, `ItemLink`). Icon only → `Button size="icon"` + `aria-label` + `Tooltip`. 3+ secondary row actions → `DropdownMenu`; 1–2 → visible Buttons.
 - 2–5 options to compare → `RadioGroup` (price in the label). Longer list → `NativeSelect`. Several values → `Checkbox` group. Searchable long list → not built.
 - Acts immediately → `Switch`. Saved with the form → `Checkbox`.  The public-list option in `MentorProfileForm` is a `Checkbox` (Q15).
+- Destructive action on a page (agent test 2026-10-20, gaps 1, 2, 8–12): own section (`h2`, one sentence of effect, trigger) below the details; trigger `outline` default size, `destructive` only on the confirming button; no accent when it is the only action. Money effect = a sentence starting with the outcome word (*Full refund:* / *No refund:*), `Alert` only for server-sourced or changing information. Labels: trigger *Cancel booking*, confirm *Yes, cancel booking*, safe *Keep booking*. Cancel booking (#34) is not built: no E03 spec; the product gaps are on What is missing. Dialog title names the object, description repeats effect and amount, not the whole summary. After success replace the section with one sentence in `role="status"` and focus its heading (`tabIndex={-1}`); refetch server data.
 - Short input or decision → `Dialog`. Irreversible, no input → `AlertDialog` (safe choice first, verb on the destructive button). Long form or own URL → page. Explanation beside a thing → `Popover`. Icon name → `Tooltip`. Information needed to act → visible text, never popover/tooltip. Side panel → not built.
 - One field wrong → `FieldError`. Form/page failed or action needed → `Alert` / `ErrorMessage` in place. No toast exists; a confirmation is text beside the action.
 - Known shape while loading → `Skeleton`; unknown shape → `LoadingMessage`; waiting button → `Spinner` + *Saving…*; payment → `PaymentPending`.
@@ -188,6 +189,9 @@ Values live only in `packages/ui/src/styles/tokens.css`; classes map in `theme.c
 ## Content rules
 
 - Buttons: verb + object (*Pay*, *Delete slot*, *Keep slot*), never *OK*/*Submit*; busy: *Saving…*; booking button carries the price: *Book 25 min · PLN 180.00*.
+- Deadlines (gap 13): `VERB by TIME, ZONE · RELATIVE` (*Free cancellation until … · in 8 h*); `AcceptDeadline` hardcodes "Decide", a generic version is planned for E03 (not built).
+- Live regions (gap 18): `role="alert"` for a message that appears after an action or changes on an open page (`Alert` default); `role="status"` for one present on load and for action results.
+- AlertDialog at 320 px (gap 15): buttons stacked, the safe choice first; Dialog follows the same order.
 - Errors: what happened + what to do, in words, no codes, no blame. Not found and no access share one message.
 - Empty: why it is empty + next step. "Nothing yet" (create action) and "no results" (*Clear filters*) are separate states.
 - Formats: `formatDateTime` → *Wed 4 Nov, 18:00* (24 h) with `formatZoneLabel` → *Europe/Warsaw, UTC+1*; `formatRelative` → *in 9 h*; `formatPrice` → *PLN 180.00* / *PLN 1,200.00* (code, no-break space, two decimals); counts in a sentence (*2 bookings waiting for your decision*), never a badge.
@@ -209,5 +213,7 @@ npm run lint:tokens        # values outside tokens, gradients, blur, shadows, ro
 npm run docs:design-system:check  # the component tables above match components-data.ts
 npm run lint && npm run typecheck && npm run test:coverage && npm run build
 ```
+
+Stories (gaps 19, 20): a component's stories in `stories/product/<Epic>/<Name>.stories.tsx`, a full-page screen in `stories/product/<Epic>/screens/`; a story with an open `Dialog`/`AlertDialog` sets `a11y: { context: "body" }`.
 
 New component: docs page with 13 sections + stories (Playground, variants, state matrix, long content at 320 px, play test) + unit tests at 100% + a row in `packages/ui/.storybook/blocks/components-data.ts`, then `npm run docs:design-system` regenerates the component tables above (`npm run docs:design-system:check` fails when they are stale). Add primitives only with `npx shadcn@latest add <name>` in `packages/ui`. Never `git stash`.

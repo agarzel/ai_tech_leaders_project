@@ -31,7 +31,9 @@ Rules that hold on every screen. Each has its source; **proposal** means no sour
 | Typed values stay after an error; the submit button is disabled and says *Saving…* while it waits. | prompt stage 3, B18 |
 | Success is shown only after the server confirms. | prompt stage 3 |
 | A disabled control always has its reason as visible text next to it, never only in a tooltip. | B17; prompt stage 4 |
-| A message that is on the page from the start uses `role="status"`; one that appears after an action uses `role="alert"`. | B42, WAI-ARIA live regions |
+| A message that is on the page from the start uses `role="status"`; one that appears after an action or changes while the page is open uses `role="alert"`. `Alert` defaults to `alert`; pass `role="status"` for the first kind. | B42, WAI-ARIA live regions; agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 18 |
+| The outcome of an action that succeeded (*Booking cancelled.*) is `role="status"`, and focus moves to the heading of its section. | [Action result](?path=/docs/patterns-action-result--docs); agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 1 |
+| In a stories file, an open `Dialog` or `AlertDialog` needs `a11y: { context: "body" }`, because the dialog renders in a portal outside the story. | agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 20 |
 | An error that needs action is never a toast (there is no toast). | S10; prompt stage 4 |
 | A live region speaks once: the shadcn `Spinner` already has `role="status"`, so do not wrap it in another. | `packages/ui/AGENTS.md` |
 

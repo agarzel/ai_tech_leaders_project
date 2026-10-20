@@ -19,6 +19,7 @@ A mentor has until 12 hours before the session to decide (R05, D07). The pattern
 | Past the deadline the text says "Deadline passed"; the server refuses an acceptance (`conflict`) even before the sweep. | spec E02 (Edge Cases) |
 | The accent goes to *Accept* of the nearest deadline only. | Q3, P5/K3 |
 | `now` is a prop, so stories and tests are deterministic; `useNow(start)` fixes the first reading and runs on from it. | C2 |
+| General form: `VERB by TIME, ZONE · RELATIVE`, the verb is a parameter (*Decide by …*, *Free cancellation until … · in 8 h*). Under two hours the same words and icon apply. Past the deadline the text says it has passed, without a relative time. | agent test 2026-10-20 (lekcja-06/test-agentem.md), gap 13 |
 | No email or push: the in-app notice (`PendingBookingsNotice`) is the signal. | D15 |
 
 ## States
@@ -35,4 +36,4 @@ A mentor has until 12 hours before the session to decide (R05, D07). The pattern
 
 ## Related
 
-`AcceptDeadline`, `MentorBookingRow`, `PendingBookingsNotice`, `useNow`, `formatRelative`.
+`AcceptDeadline` (the verb *Decide* is fixed in it; a generic version with the verb as a prop is planned for E03, see [What is missing](?path=/docs/design-system-what-is-missing--docs)), `MentorBookingRow`, `PendingBookingsNotice`, `useNow`, `formatRelative`.
