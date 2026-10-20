@@ -23,7 +23,7 @@ export function PageLayout({ header, title, description, width = "content", chil
       {header}
       <main className={cn("mx-auto flex w-full flex-col gap-section px-panel py-section", width === "narrow" ? "max-w-sm" : "max-w-5xl")}>
         <div className="flex flex-col gap-in-group">
-          <h1 className="type-page-title">{title}</h1>
+          <h1 className="break-words type-page-title">{title}</h1>
           {description && <p className="max-w-prose type-body text-muted-foreground">{description}</p>}
         </div>
         {children}

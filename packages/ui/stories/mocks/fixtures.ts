@@ -181,3 +181,107 @@ export const longBio = [
   "Good sessions with me start with the exact error message, the command you ran and what you already tried. If it is a pipeline problem, paste the failing job definition; if it is a cluster problem, tell me the Kubernetes version and how it is hosted.",
   "I will not write your service for you, but I will sit with you until you understand why it fails and what to change. Text works best for me: I can read your YAML carefully instead of squinting at a shared screen.",
 ].join("\n\n");
+
+/** `SlotDto` list as the owner sees it (`GET /api/mentor/slots`): too soon, bookable (two on one day), booked. Fixed dates around 2026-10-20. */
+export const ownerSlots = [
+  { id: "o1", startsAt: "2026-10-20T16:00:00Z", status: "open" as const, bookable: false },
+  { id: "o2", startsAt: "2026-10-22T16:00:00Z", status: "open" as const, bookable: true },
+  { id: "o3", startsAt: "2026-10-22T17:30:00Z", status: "open" as const, bookable: true },
+  { id: "o4", startsAt: "2026-10-24T08:00:00Z", status: "booked" as const, bookable: false },
+  { id: "o5", startsAt: "2026-10-27T15:00:00Z", status: "open" as const, bookable: true },
+];
+
+/** Sixty slots over twenty days, three a day – the longest list a mentor realistically keeps. */
+export const manySlots = Array.from({ length: 60 }, (_, index) => {
+  const day = 22 + Math.floor(index / 3);
+  const hour = [8, 12, 16][index % 3];
+  const date = new Date(Date.UTC(2026, 9, day, hour, 0));
+  return { id: `m${index}`, startsAt: date.toISOString(), status: "open" as const, bookable: true };
+});
+
+/** Public mentors for `GET /api/mentors` (`PublicMentorDto`: no email, no ratings – N02). */
+export const publicMentors = [
+  {
+    slug: "marek-zielinski-k3x9q2",
+    name: "Marek Zieliński",
+    headline: "Platform engineer – Kubernetes, Helm, CI pipelines",
+    bio: null,
+    tags: ["Python", "AI agents"],
+    links: ["https://github.com/marek-zielinski", "https://kubecon.example/talks/helm-rollbacks-without-tears"],
+    price25: 18000,
+    price50: 32000,
+    currency: "PLN",
+    soonestSlotAt: "2026-10-22T16:00:00Z",
+  },
+  {
+    slug: "kasia-lewandowska-7fh2m4",
+    name: "Kasia Lewandowska",
+    headline: "Frontend lead – React performance and accessibility",
+    bio: null,
+    tags: ["TypeScript", "React"],
+    links: ["https://github.com/kasia-lewandowska"],
+    price25: 15000,
+    price50: 26000,
+    currency: "PLN",
+    soonestSlotAt: "2026-10-21T18:00:00Z",
+  },
+  {
+    slug: "piotr-wojcik-9d4n6b",
+    name: "Piotr Wójcik",
+    headline: "Backend engineer – Postgres, queues and the incidents between them",
+    bio: null,
+    tags: ["TypeScript", "Python"],
+    links: ["https://blog.example/piotr", "https://github.com/piotr-wojcik"],
+    price25: 20000,
+    price50: 36000,
+    currency: "PLN",
+    soonestSlotAt: "2026-10-23T09:30:00Z",
+  },
+  {
+    slug: "nina-kaminska-2c8v1x",
+    name: "Nina Kamińska",
+    headline: "Building agents with tool calling and evals",
+    bio: null,
+    tags: ["AI agents", "Python", "TypeScript"],
+    links: ["https://github.com/nina-kaminska"],
+    price25: 22000,
+    price50: 40000,
+    currency: "PLN",
+    soonestSlotAt: "2026-10-25T07:00:00Z",
+  },
+];
+
+/** A mentor with the longest values the spec allows: 120-character headline, five links, all four tags. */
+export const publicMentorLong = {
+  slug: "aleksandra-konstantynopolitanczykiewiczowna-5h3k8p",
+  name: "Aleksandra Konstantynopolitańczykiewiczówna-Grzybowska",
+  headline: "Staff engineer – distributed tracing, Kubernetes operators, Postgres replication and the long tail of on-call lore",
+  bio: null,
+  tags: ["TypeScript", "React", "Python", "AI agents"],
+  links: fiveLinks,
+  price25: 120000,
+  price50: 1000000,
+  currency: "PLN",
+  soonestSlotAt: "2026-10-26T15:45:00Z",
+};
+
+/** A listed mentor whose optional fields are empty: no headline, no tags, no links, no next time. */
+export const publicMentorPartial = {
+  slug: "tomasz-kowalczyk-6j1q9z",
+  name: "Tomasz Kowalczyk",
+  headline: null,
+  bio: null,
+  tags: [],
+  links: [],
+  price25: 15000,
+  price50: null,
+  currency: "PLN",
+  soonestSlotAt: null,
+};
+
+/** Twenty-five mentors, for the paginated list. */
+export const manyMentors = Array.from({ length: 25 }, (_, index) => ({
+  ...publicMentors[index % publicMentors.length],
+  slug: `mentor-${index}`,
+  name: `${publicMentors[index % publicMentors.length].name} ${index + 1}`,
+}));

@@ -81,3 +81,18 @@ export function parsePrice(text: string): number | null {
 export function formatPriceInput(minor: number | null): string {
   return minor === null ? "" : (minor / 100).toFixed(2);
 }
+
+/** Day heading for lists grouped by day, in the viewer's zone: "Wednesday 4 November" (C5). */
+export function formatDay(iso: string, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone }).format(new Date(iso));
+}
+
+/** Time of day in the viewer's zone, 24-hour clock: "18:00". */
+export function formatTime(iso: string, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone }).format(new Date(iso));
+}
+
+/** The calendar day of an instant in a zone, "2026-11-04" – the key for grouping by local day. */
+export function localDayKey(iso: string, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone }).format(new Date(iso));
+}

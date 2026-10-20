@@ -8,7 +8,12 @@ import type { AnchorHTMLAttributes, ReactNode } from "react";
 export const navLinkClassName =
   "inline-flex h-control-sm items-center rounded-lg px-2 type-label text-muted-foreground outline-none transition-colors motion-reduce:transition-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=page]:bg-muted aria-[current=page]:text-foreground";
 
-export type LinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children?: ReactNode };
+export type LinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
+  href: string;
+  children?: ReactNode;
+  /** Lets a row link opt in to the dense list row styles (`data-slot="item-link"`). */
+  "data-slot"?: string;
+};
 
 /**
  * Renders a link. The app passes Next.js `Link` (`renderLink={(props) => <Link {...props} />}`), because

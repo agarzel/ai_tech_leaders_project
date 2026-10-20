@@ -9,13 +9,13 @@ Plik roboczy zadania z `lekcja-06/prompt-storybook.md`. Nowa sesja: przeczytaj p
 | 0. Inwentaryzacja i plan | zakończony 2026-10-19 – decyzje właściciela zapisane niżej |
 | 1. Fundamenty | zakończony 2026-10-19 – F1 wdrożone, F2–F6 zapisane; czeka na „dalej” |
 | 2. Komponenty bazowe | **zakończony** 2026-10-19 – partie 1–5, scalone w `main` (PR #41) |
-| 3. Komponenty produktu, wzorce, ekrany | w toku – partie 1–2 zacommitowane; partia 3 gotowa z Q8/Q9 (C41–C53 przyjęte), czeka na commit i „dalej” do partii 4 |
+| 3. Komponenty produktu, wzorce, ekrany | w toku – partie 1–3 zacommitowane; partia 4 gotowa (sloty i lista publiczna), czeka na decyzje C54–C62, Q10 i „dalej” do partii 5 |
 | 4. Strony, które uczą | nie rozpoczęty |
 | 5. Sprawdzenie i raport | nie rozpoczęty |
 
 ## Następny krok
 
-Etap 3, partia 3 gotowa razem z Q8/Q9 (commit robi koordynator). Po „dalej” partia 4: sloty i lista publiczna (SlotTimeField, SlotList, AddSlotForm, MentorCard, ActiveFilters + ResultCount; ekrany `/mentor/slots`, `/mentors`, `/m/[slug]`).
+Etap 3, partia 4 gotowa (commit robi koordynator). Czeka na decyzje C54–C62 i odpowiedź na Q10. Po „dalej” partia 5: E02 rezerwacja i płatność (`SlotBookActions`, `BookingSummary`, `QuestionField`, `BookingForm`, `PaymentPending`, `BookingStatusBadge`, `BookingStatusPanel`; wzorce Płatność, Status i następna akcja, Widok szczegółów; ekrany `/m/[slug]` z *Book*, `/book/[slotId]`, `/bookings/[id]`).
 
 ## Zatwierdzone decyzje (źródła: `lekcja-06/referencje.md`, `lekcja-06/tokeny.md`)
 
@@ -889,3 +889,59 @@ Ekrany `MentorHome` (NewMentor, Listed), `MentorProfile` i długi `MentorProfile
 - **Q8** Zapis profilu wymaga imienia i nagłówka (1–120 znaków); bio, tagi i linki opcjonalne; obecność na liście zależy wyłącznie od cen i rezerwowalnego slotu. W spec E01 (tabela API).
 - **Q9** `SlotDto` z `GET /api/mentor/slots` = `{ id, startsAt, status, bookable }`, `bookable` liczy serwer (ta sama reguła co `listBookable`, D13). W spec E01 (tabela API).
 - Dopasowanie: walidacja `MentorProfileForm` już wymagała imienia i nagłówka (1–120) – bez zmian w kodzie; typ `SlotDto` w ekranie `MentorHome` już miał ten kształt. Zmienione tylko opisy: komentarze `OfferChecklist` i `MentorHome`, strony `MentorProfileForm` i `OfferChecklist` (źródło: spec E01, Q8/Q9 zamiast „propozycja C44/C46”).
+
+
+## Etap 3 – partia 4, wynik (2026-10-20)
+
+Sloty i lista publiczna (E01, #27–#28): `SlotTimeField`, `SlotList`/`SlotRow`, `AddSlotForm`, `DeleteSlotDialog`, `MentorCard`, bloki `ActiveFilters` i `ResultCount`; wzorce „Time with zone and DST”, „Delete confirmation”, „List with filters”; ekrany `/mentor/slots`, `/mentors`, `/m/[slug]` (E01, *Book* wyłączony z widocznym powodem). Nic nie jest zacommitowane. Bez nowych zależności i CLI, bez serwera dev. Użyte i zachowane `formatDay`, `formatTime`, `localDayKey` z poprzedniej sesji.
+
+### Co powstało
+- `src/components/availability/`: `types.ts` (`Slot` = `{ id, startsAt, status, bookable }`, Q9), `SlotTimeField` (data + godzina, strefa, podgląd „Starts … (zone, UTC+n)”, czas nieistniejący odrzucony, dwuznaczny z pierwszym wystąpieniem i zdaniem), `SlotList` (+ `SlotRow`, `SlotListSkeleton`; grupowanie po lokalnym dniu widza, stany ładowanie/błąd/pusty), `AddSlotForm`, `DeleteSlotDialog` (AlertDialog).
+- `src/components/mentors/MentorCard.tsx` (+ Skeleton): wiersz gęstej listy, bez awatara i siatki (C6). `PublicWorkLinks` dostał prop `inline`; `links.tsx` – `LinkProps` przyjmuje `data-slot`; `PageLayout` – `break-words` na `h1` (znalezione na 320 px: najdłuższe imię wychodziło poza ekran).
+- `src/backend/filters/`: `ActiveFilters`, `ResultCount` (C9).
+- Stories i strony 13-sekcyjne: `Product/E01/{SlotTimeField, SlotList, AddSlotForm, DeleteSlotDialog, MentorCard}`, `Primitives/Panel blocks/{ActiveFilters, ResultCount}`; wzorce `Patterns/{Time with zone and DST, Delete confirmation, List with filters}`; ekrany `Screens/MentorSlots` (12 stanów, MSW ze stanem), `PublicMentors` (9), `MentorPage` (9); mapa stanów E01 rozszerzona. Fikstury: `ownerSlots`, `manySlots`, `publicMentors`, `publicMentorLong`, `publicMentorPartial`, `manyMentors`.
+
+### Propozycje C54–C62 (materiały milczą; wdrożone zachowawczo i odwracalnie – do decyzji)
+| # | Propozycja | Źródło / dlaczego |
+|---|---|---|
+| C54 | `SlotTimeField`: natywne `date` + `time` (krok 15 min jako podpowiedź), własny szkic (czyszczenie przez `key`), zwraca ISO UTC lub `null`; błąd „nie istnieje” pojawia się od razu, gdy oba pola wypełnione, i ma pierwszeństwo przed komunikatem z formularza | spec E01 (DST), jeden błąd naraz |
+| C55 | UI nie sprawdza reguł 24 h / 60 dni / siatki / odstępu / duplikatu – pokazuje odpowiedź serwera przy polu (`fieldErrors.startsAt`) lub nad formularzem | spec E01 (reguły w `SlotService`), Q9 („UI nie powtarza reguł”) |
+| C56 | `SlotList`: nagłówki dni `h3` (prop `headingLevel`), czas 24 h + linia „status · strefa, UTC±n” w każdym wierszu, `showStatus` (właściciel: słowa; publicznie: tylko strefa), sortowanie po `startsAt` | C5, WCAG 1.4.1 |
+| C57 | `PublicWorkLinks inline` – linki obok siebie w wierszu `MentorCard` | gęstość (R01.1) |
+| C58 | `DeleteSlotDialog`: „Delete the slot on …?”, *Keep slot* / *Delete slot*, odmowa (`conflict`) zostaje w dialogu, w trakcie żądania nic nie zamyka dialogu; po usunięciu fokus przenosi ekran na nagłówek listy; przy slocie `booked` brak akcji *Delete* | spec E01 (Deleting a slot), B51 |
+| C59 | `ActiveFilters`: przycisk na filtr („Remove filter: Stack: React”) + *Clear filters*; `ResultCount`: „N mentors” w `role="status"`, pusty podczas ładowania | C9, S10 |
+| C60 | `MentorCard`: nazwa jako link rozciągnięty na wiersz, jedna linia nagłówka (ucięta, pełna w `title`), tagi, linki, „Next time: …”, ceny po prawej; brakujące części nie renderują się | C6, C42 |
+| C61 | `/m/[slug]` E01: jedno zdanie „Booking opens soon. For now you can see when {name} is free; times are shown in your time zone.” nad listą, każdy *Book* wyłączony (`outline`, `aria-describedby` na to zdanie, nazwa „Book {czas}”), bez akcentu (Q3) | C11, Q4, B17 |
+| C62 | `/mentors`: filtr stacku jako `NativeSelect` w `Field` nad listą, zmiana filtra wraca na stronę 1, paginacja tylko gdy total > 10; dwa puste stany: „No mentors match this filter” (+ *Clear filters*) i „No mentors here yet” (bez akcji – gość niczego nie tworzy) | plan 3.2, spec E01 |
+
+### Pytania
+- **Q10** Kształt odpowiedzi `GET /api/mentors/[slug]`: spec mówi „`PublicMentorDto` with bookable slots” bez nazwy pola. W ekranie założyłem `{ ...PublicMentorDto, slots: SlotDto[] }` (tylko rezerwowalne). Czy tak, czy osobne `GET /api/mentors/[slug]/slots`?
+
+### Wyniki sprawdzeń
+| Komenda | Wynik |
+|---|---|
+| `npm run lint` | OK |
+| `npm run typecheck` | OK |
+| `npm run test:coverage` | OK – 312 testów (+38), 100% we wszystkich metrykach (817/641/238/720) |
+| `npm run build` | OK |
+| `npm run build-storybook` | OK; wszystkie linki `?path=` w MDX istnieją w indeksie (473 wpisy) |
+| `npm run test:storybook` | OK – 810/810 (405 stories × 2 motywy; +86 stories), a11y bez naruszeń |
+| `npm run lint:tokens` | OK – 0 (215 plików) |
+
+Ekrany `MentorSlots`, `PublicMentors`, `MentorPage` obejrzane w zbudowanym Storybooku przy 1440 i 320 px: bez przewijania w bok (po poprawce `break-words` w `PageLayout`). Znalezione po drodze: aksjomat `aria-required-children` – `MentorCard` w `ItemGroup` ze szkieletem/tabelą (naprawione: osobny `render` zamiast dekoratora).
+
+### Czego nie sprawdzono
+- Aplikacja na żywo (komponenty niepodpięte w app); prawdziwy wybór daty i godziny w natywnych kontrolkach przeglądarki (testy ustawiają wartość zdarzeniem `change`).
+- Klawiatura w managerze Storybooka, czytnik ekranu, urządzenie dotykowe.
+- Przejście DST w przeglądarce w innej strefie niż Europe/Warsaw i America/New_York.
+
+### Do „What is missing” (etap 4)
+- Spec E01: nazwa pola ze slotami w `GET /api/mentors/[slug]` (Q10).
+- Strona `/mentors` w app potrzebuje listy tagów (MENTOR_TAGS) – z core przez app, bez endpointu.
+
+### Decyzje C54–C62 i Q10
+
+Zatwierdzone przez Arkadiusza 2026-10-20.
+
+- C54–C62: wszystkie w wersji wdrożonej w partii 4.
+- Q10: `GET /api/mentors/[slug]` zwraca `{ ...PublicMentorDto, slots: SlotDto[] }` (tylko sloty rezerwowalne). Wpisane do specyfikacji E01.

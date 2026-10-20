@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDateTime, formatPrice, formatPriceInput, formatRelative, formatUtcOffset, formatZoneLabel, parsePrice } from "./format";
+import { formatDateTime, formatDay, formatPrice, formatPriceInput, formatRelative, formatTime, formatUtcOffset, formatZoneLabel, localDayKey, parsePrice } from "./format";
 
 const NBSP = " ";
 
@@ -90,5 +90,17 @@ describe("parsePrice and formatPriceInput", () => {
   it("formats a stored price for editing", () => {
     expect(formatPriceInput(18050)).toBe("180.50");
     expect(formatPriceInput(null)).toBe("");
+  });
+});
+
+describe("formatDay, formatTime and localDayKey", () => {
+  it("formats the local day and time of an instant", () => {
+    expect(formatDay("2026-11-04T17:00:00Z", "Europe/Warsaw")).toBe("Wednesday 4 November");
+    expect(formatTime("2026-11-04T17:00:00Z", "Europe/Warsaw")).toBe("18:00");
+  });
+
+  it("groups by the local day, which can differ from the UTC day", () => {
+    expect(localDayKey("2026-11-04T23:30:00Z", "Europe/Warsaw")).toBe("2026-11-05");
+    expect(localDayKey("2026-11-04T23:30:00Z", "UTC")).toBe("2026-11-04");
   });
 });

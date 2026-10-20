@@ -1,0 +1,104 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./SlotTimeField.stories";
+
+<Meta of={Stories} />
+
+# SlotTimeField
+
+`import { SlotTimeField } from "@devmentor/ui/components/availability/SlotTimeField"`
+
+Product component, concept `availability` (E01, #27). Instance of the pattern [Time with zone and DST](?path=/docs/patterns-time-with-zone-and-dst--docs).
+
+## 1. Purpose
+
+Takes the date and time of a new slot in the mentor's own zone and hands the form a UTC moment – or tells the mentor why that time cannot be used.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| `AddSlotForm` on `/mentor/slots` | spec E01, Phase 3 |
+| Any future field that takes a local date and time (a booking filter, a deadline) | – |
+
+## 3. When not to use
+
+| Instead of `SlotTimeField`… | Use | Why |
+|---|---|---|
+| Showing a time | `formatDateTime` + `formatZoneLabel` | this field is for input |
+| A date range or a recurring rule | not built | spec E01 skips recurrence (Research) |
+
+## 4. Anatomy
+
+Group (`fieldset` + legend), *Date* (`input type="date"`), *Time* (`input type="time"`, 15-minute steps), a line naming the zone, the preview ("Starts Wed 4 Nov, 18:00 (Europe/Warsaw, UTC+1)") and the error.
+
+## 5. Variants
+
+None. The zone comes from `timeZone` (`browserTimeZone()` in the app).
+
+<Canvas of={Stories.Playground} />
+
+## 6. States
+
+| State | What the person sees | Story |
+|---|---|---|
+| Empty | the zone, no preview | [Playground](?path=/story/product-e01-slottimefield--playground) |
+| Valid | "Starts … (zone, UTC offset)" | [Preview](?path=/story/product-e01-slottimefield--preview) |
+| Time the clocks skip | "This time does not exist in your time zone…", field invalid | [NonexistentTime](?path=/story/product-e01-slottimefield--nonexistent-time) |
+| Time that happens twice | preview with the first offset and a sentence saying so | [AmbiguousTime](?path=/story/product-e01-slottimefield--ambiguous-time) |
+| Other zone | same rules for any IANA zone | [OtherTimeZone](?path=/story/product-e01-slottimefield--other-time-zone) |
+| Rule from the server | message under the fields | [ServerError](?path=/story/product-e01-slottimefield--server-error) |
+| Disabled | while the form submits | [Disabled](?path=/story/product-e01-slottimefield--disabled) |
+
+<Canvas of={Stories.ServerError} />
+
+The states after typing appear in the interaction tests; open the stories (C28). Inputs follow `Input`: hover, focus, invalid.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| The local reading is converted and converted back; a time that does not survive the round trip is refused. | spec E01, Edge Cases (DST) |
+| A repeated hour picks the first occurrence and previews its offset before saving. | spec E01, Edge Cases (DST) |
+| Both inputs are described by the zone line, the preview and the error; an error sets `aria-invalid`. | WCAG 1.3.1, 3.3.1 |
+| The preview is a polite live region. | WAI-ARIA status |
+| The field's own DST message wins over a message from the form; no two errors at once. | C54 |
+| Only the conversion lives here. The 24 h, 60-day, 15-minute and spacing rules are the server's. | C55, spec E01 (Slot rules) |
+
+## 8. Content
+
+Messages say what is wrong and what to do: "This time does not exist in your time zone. The clocks skip it on that day – choose another time." The zone is named, never "local time". Words are *date*, *time*, *slot*.
+
+## 9. Responsive
+
+<Canvas of={Stories.Narrow} />
+
+## 10. API
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `timeZone` | `string` | – | IANA zone of the person |
+| `onChange` | `(startsAt: string \| null) => void` | – | ISO UTC when date and time are a real moment, otherwise `null` |
+| `error` | `string` | – | message from the form or the server |
+| `disabled` | `boolean` | `false` | |
+| `id` | `string` | generated | base of the ids; the date input is `{id}-date` |
+
+The field keeps its own draft; remount it with a `key` to clear it (`AddSlotForm` does).
+
+<Controls of={Stories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<SlotTimeField timeZone={browserTimeZone()} onChange={setStartsAt} error={fieldError} />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| Show the start with its zone and UTC offset. | Show "18:00" with no zone. |
+| Refuse a skipped time in words. | Silently move it to 03:30. |
+| Leave the lead time and spacing to the server. | Copy the rules into the browser. |
+
+## 13. Related
+
+- **Confused with:** `Input type="date"` alone – it knows nothing about zones.
+- **Used in:** `AddSlotForm`, `/mentor/slots` ([screen](?path=/story/product-e01-screens-mentorslots--default)).

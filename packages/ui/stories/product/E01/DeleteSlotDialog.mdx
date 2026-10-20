@@ -1,0 +1,96 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./DeleteSlotDialog.stories";
+
+<Meta of={Stories} />
+
+# DeleteSlotDialog
+
+`import { DeleteSlotDialog } from "@devmentor/ui/components/availability/DeleteSlotDialog"`
+
+Product component, concept `availability` (E01, #27). The instance of the pattern [Delete confirmation](?path=/docs/patterns-delete-confirmation--docs), built on [AlertDialog](?path=/docs/primitives-alertdialog--docs).
+
+## 1. Purpose
+
+Asks before a slot is deleted, shows what the server answered, and tells the page when it is done.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| *Delete* on an open slot in `/mentor/slots` | spec E01, Edge Cases (Deleting a slot) |
+
+## 3. When not to use
+
+| Instead of `DeleteSlotDialog`… | Use | Why |
+|---|---|---|
+| A booked slot | no action; the booking is cancelled instead | spec E01: booked → `conflict` "Cancel the booking instead" (R04, #34) |
+| Anything undoable at once | no dialog | a slot can be added again, but mentees may already look at it |
+
+## 4. Anatomy
+
+Trigger (*Delete* in the row), title naming the slot, one sentence of consequence with the zone, an error alert when the server refuses, *Keep slot* and *Delete slot*.
+
+## 5. Variants
+
+None.
+
+<Canvas of={Stories.Open} />
+
+## 6. States
+
+| State | Story |
+|---|---|
+| Closed | [Playground](?path=/story/product-e01-deleteslotdialog--playground) |
+| Open | [Open](?path=/story/product-e01-deleteslotdialog--open) |
+| Deleting | [Deleting](?path=/story/product-e01-deleteslotdialog--deleting) |
+| Booked meanwhile (conflict) | [ErrorBooked](?path=/story/product-e01-deleteslotdialog--error-booked) |
+| Kept | [Keep](?path=/story/product-e01-deleteslotdialog--keep) |
+| Done | [Done](?path=/story/product-e01-deleteslotdialog--done) |
+
+<Canvas of={Stories.ErrorBooked} />
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Focus starts on *Keep slot*, the safe choice. | B51, WAI-ARIA alertdialog |
+| While the request runs both buttons are disabled and Escape does nothing. | one submit at a time |
+| A refusal stays inside the dialog, in words; the person can still back out. | C58 |
+| The trigger's name includes the time (*Delete the slot on Thu 22 Oct, 18:00*). | `AGENTS.md` (unique names) |
+| After `onDeleted` the page moves focus – the row that had it is gone. | WCAG 2.4.3 |
+
+## 8. Content
+
+Title: "Delete the slot on {time}?" Buttons are verbs with the object: *Keep slot*, *Delete slot*. Consequence: "Mentees can no longer book this time (zone). You can add it again later."
+
+## 9. Responsive
+
+<Canvas of={Stories.Narrow} />
+
+## 10. API
+
+| Prop | Type | Description |
+|---|---|---|
+| `slot` | `Slot` | the slot |
+| `timeZone` | `string` | for the time in the title |
+| `onConfirm` | `(slot) => Promise<ApiResult<unknown>>` | `apiCall(".../" + slot.id, { method: "DELETE" })` |
+| `onDeleted` | `(slot) => void` | after the server confirmed |
+| `defaultOpen` | `boolean` | documentation previews and tests |
+
+<Controls of={Stories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<DeleteSlotDialog slot={slot} timeZone={zone} onConfirm={(s) => apiCall(\`/api/mentor/slots/\${s.id}\`, { method: "DELETE" })} onDeleted={reloadAndFocusHeading} />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| Name the slot in the question. | "Are you sure?" |
+| Keep the error in the dialog. | Close the dialog and show a toast. |
+
+## 13. Related
+
+- **Confused with:** `Dialog` (forms and content), `AlertDialog` (the primitive).
+- **Used in:** `SlotList` row actions on `/mentor/slots` ([screen](?path=/story/product-e01-screens-mentorslots--delete-confirm)).

@@ -1,0 +1,42 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as FieldStories from "../product/E01/SlotTimeField.stories";
+import * as ListStories from "../product/E01/SlotList.stories";
+
+<Meta title="Patterns/Time with zone and DST" />
+
+# Time with zone and DST
+
+A slot is one instant. The server stores it in UTC; people read and type it in their own zone, and two people can see different clock times for the same slot, by design (spec E01, Edge Cases). The pattern keeps that honest: the zone is always named, and the two days a year when clocks change are handled in words.
+
+<Canvas of={FieldStories.AmbiguousTime} />
+
+## Rules
+
+| Rule | Source |
+|---|---|
+| Entering: the browser converts the local date and time to an ISO UTC string with `localToUtc`, in the zone shown on the form. The server has no zone logic. | spec E01, Edge Cases |
+| A local time the clocks skip (spring forward) is refused: "This time does not exist in your time zone." | spec E01, Edge Cases |
+| A local time that happens twice (fall back) takes the first occurrence; the preview says "Starts Sun 25 Oct, 02:30 (Europe/Warsaw, UTC+2)" and that the time happens twice. | spec E01, Edge Cases |
+| Showing: every time is in the viewer's zone, with its zone label on the row or next to it ("Europe/Warsaw, UTC+1"). | spec E01, C5 |
+| Format: 24-hour clock, English day and month names ("Wed 4 Nov, 18:00"; day heading "Wednesday 4 November"). | C5 |
+| Grouping by day uses the viewer's local day, so a slot after midnight belongs to the next day. | spec E01 (SlotList) |
+| The lead time, horizon, grid and spacing are the server's rules; the interface shows its messages. | C55 |
+| Tests fix the zone and "now" (`timeZone` prop, deterministic stories) – never the machine's. | C2 |
+
+## States
+
+| State | Story |
+|---|---|
+| Valid time, with preview | [SlotTimeField / Preview](?path=/story/product-e01-slottimefield--preview) |
+| Skipped time | [SlotTimeField / NonexistentTime](?path=/story/product-e01-slottimefield--nonexistent-time) |
+| Repeated time | [SlotTimeField / AmbiguousTime](?path=/story/product-e01-slottimefield--ambiguous-time) |
+| Too soon, from the server | [SlotTimeField / ServerError](?path=/story/product-e01-slottimefield--server-error), [AddSlotForm / TooSoon](?path=/story/product-e01-addslotform--too-soon) |
+| Viewer in another zone | [SlotList / ViewerInOtherZone](?path=/story/product-e01-slotlist--viewer-in-other-zone) |
+| Across midnight | [SlotList / AcrossMidnight](?path=/story/product-e01-slotlist--across-midnight) |
+| Not bookable (starts too soon) | [SlotList / TooSoon](?path=/story/product-e01-slotlist--too-soon) |
+
+<Canvas of={ListStories.ViewerInOtherZone} />
+
+## Related
+
+`SlotTimeField`, `SlotList`, `AddSlotForm`, `formatDateTime`, `formatZoneLabel`, `localToUtc`.

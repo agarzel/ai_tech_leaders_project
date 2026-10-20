@@ -1,0 +1,93 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./ActiveFilters.stories";
+
+<Meta of={Stories} />
+
+# ActiveFilters
+
+`import { ActiveFilters } from "@devmentor/ui/backend/filters/ActiveFilters"`
+
+Panel block (C9), concept-agnostic. Used by [List with filters](?path=/docs/patterns-list-with-filters--docs).
+
+## 1. Purpose
+
+Shows which filters are in effect on a list and lets the person remove one or all of them.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| `/mentors` filtered by stack | spec E01, API (`?tag`) |
+| `/bookings` filtered by status (E02) | spec E02 |
+
+## 3. When not to use
+
+| Instead of `ActiveFilters`… | Use | Why |
+|---|---|---|
+| The control that sets a filter | `NativeSelect`, `Input` in a `Field` | this block only reflects and removes |
+| A saved search | not built | out of scope |
+
+## 4. Anatomy
+
+A group of outline buttons, one per filter, each with its label and a cross icon; then *Clear filters*.
+
+## 5. Variants
+
+None.
+
+<Canvas of={Stories.Several} />
+
+## 6. States
+
+| State | Story |
+|---|---|
+| One filter | [Playground](?path=/story/primitives-panel-blocks-activefilters--playground) |
+| Several | [Several](?path=/story/primitives-panel-blocks-activefilters--several) |
+| None – nothing rendered | [None](?path=/story/primitives-panel-blocks-activefilters--none) |
+| Removing | [Removing](?path=/story/primitives-panel-blocks-activefilters--removing) |
+
+Buttons follow `Button` hover and focus. No loading or error state: it only shows values the page already holds.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| A labelled group of real buttons. | WCAG 1.3.1 |
+| Each button names its filter: *Remove filter: Stack: React* – they repeat. | `AGENTS.md` (unique names) |
+| Removing a filter changes the list; the count (`ResultCount`) announces the new result. | S10 |
+| Nothing renders when no filter is active. | R01.1 |
+
+## 8. Content
+
+Label = what + value ("Stack: React"). *Clear filters* is the only collective action.
+
+## 9. Responsive
+
+<Canvas of={Stories.LongLabelNarrow} />
+
+## 10. API
+
+| Prop | Type | Description |
+|---|---|---|
+| `filters` | `{ key, label }[]` | what is in effect |
+| `onRemove` | `(key) => void` | remove one |
+| `onClearAll` | `() => void` | remove all |
+| `label` | `string` | group name (default "Active filters") |
+
+<Controls of={Stories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<ActiveFilters filters={tag ? [{ key: "tag", label: \`Stack: \${tag}\` }] : []} onRemove={clear} onClearAll={clear} label="Mentor filters" />`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| Name the filter and its value. | A chip that says only "React". |
+| Let one click remove it. | Make the person reopen the control. |
+
+## 13. Related
+
+- **Confused with:** `Badge` (a static label), `TagList`.
+- **Used in:** [/mentors](?path=/story/product-e01-screens-publicmentors--filtered).

@@ -209,3 +209,18 @@ Handoff: owner decisions on C41–C53 and Q8–Q9, then batch 4 (slots and publi
 ### Batch 3 follow-up – Q8/Q9 (2026-10-20)
 
 Owner accepted C41–C53; Q8 (save requires name + headline 1–120; listing depends only on prices + a bookable slot) and Q9 (`SlotDto` = `{ id, startsAt, status, bookable }`, `bookable` computed by the server) are in the E01 spec. Batch 3 already matched both (form validation, SlotDto shape); only comments and docs were re-sourced from "proposal C44/C46" to the spec. Re-run: lint, typecheck, test:coverage (274, 100%), test:storybook (638/638), lint:tokens (0) – all OK. Nothing committed.
+
+
+## Stage 3, batch 4 (2026-10-20)
+
+Goal: slots and the public list (E01 #27–#28). Continued by a fresh agent after the previous one stopped at the start of batch 4; kept its `formatDay`, `formatTime`, `localDayKey`.
+
+Built: `SlotTimeField` (DST: refuse skipped, preview repeated), `SlotList`/`SlotRow`, `AddSlotForm`, `DeleteSlotDialog`, `MentorCard`, `ActiveFilters`, `ResultCount`; patterns Time with zone and DST, Delete confirmation, List with filters; screens `/mentor/slots`, `/mentors`, `/m/[slug]` (E01, disabled Book with reason); state map extended. Proposals C54–C62 and question Q10 in `packages/ui/POSTEP.md`.
+
+Decisions: UI does not re-check server slot rules (C55); no new dependencies; stateful MSW for the slots screen via story `beforeEach`.
+
+Verified: lint, typecheck, test:coverage (312 tests, 100%), build, build-storybook (all MDX links resolve), test:storybook (810/810), lint:tokens (0, 215 files). Visual check at 1440/320 px found one overflow (long name in `PageLayout` h1), fixed with `break-words`; axe found `aria-required-children` in a MentorCard story, fixed.
+
+Open: C54–C62 and Q10 await the owner; nothing committed.
+
+Handoff: next is batch 5 (E02 booking and payment) per `packages/ui/POSTEP.md` "Następny krok". Note for tests of date inputs: jsdom and Chromium accept `fireEvent.change` with a valid ISO value.

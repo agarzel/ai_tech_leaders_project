@@ -4,7 +4,7 @@ import { Meta } from "@storybook/addon-docs/blocks";
 
 # E01 screens – state map
 
-Each screen state has its own full-screen story (C14). Screens are compositions of package components; the pages themselves are app code. Batches 2–3 cover sign-in, admin, the mentor overview and profile; slots and the public pages follow in batch 4.
+Each screen state has its own full-screen story (C14). Screens are compositions of package components; the pages themselves are app code. Batches 2–4 cover sign-in, admin, the mentor overview, profile, slots and the public pages.
 
 ## /login (spec E01, Phase 1)
 
@@ -85,3 +85,48 @@ Each screen state has its own full-screen story (C14). Screens are compositions 
 | 320 px | [Narrow320](?path=/story/product-e01-screens-mentorprofile--narrow-320) |
 
 Field-level states of the form are in [MentorProfileForm](?path=/docs/product-e01-mentorprofileform--docs).
+
+## /mentor/slots (Phase 3)
+
+| State | Story |
+|---|---|
+| Slots by day: open, too soon, booked | [Default](?path=/story/product-e01-screens-mentorslots--default) |
+| No slots yet | [Empty](?path=/story/product-e01-screens-mentorslots--empty) |
+| Only times inside 24 h (not bookable) | [TooSoon](?path=/story/product-e01-screens-mentorslots--too-soon) |
+| Sixty slots | [Many](?path=/story/product-e01-screens-mentorslots--many) |
+| Server refuses the time (24 h, spacing) | [SlotRejected](?path=/story/product-e01-screens-mentorslots--slot-rejected) |
+| Slot added | [SlotAdded](?path=/story/product-e01-screens-mentorslots--slot-added) |
+| Delete asks first | [DeleteConfirm](?path=/story/product-e01-screens-mentorslots--delete-confirm) |
+| Deleted – row gone, focus on the heading | [Deleted](?path=/story/product-e01-screens-mentorslots--deleted) |
+| Slot booked meanwhile (conflict) | [DeleteBooked](?path=/story/product-e01-screens-mentorslots--delete-booked) |
+| Loading | [Loading](?path=/story/product-e01-screens-mentorslots--loading) |
+| Load failed | [LoadError](?path=/story/product-e01-screens-mentorslots--load-error) |
+| 320 px | [Narrow320](?path=/story/product-e01-screens-mentorslots--narrow-320) |
+
+## /mentors (Phase 4)
+
+| State | Story |
+|---|---|
+| List with count | [Default](?path=/story/product-e01-screens-publicmentors--default) |
+| Filtered by stack | [Filtered](?path=/story/product-e01-screens-publicmentors--filtered) |
+| No mentor matches the filter (*Clear filters*) | [NoResults](?path=/story/product-e01-screens-publicmentors--no-results) |
+| Nobody is listed yet | [NobodyListed](?path=/story/product-e01-screens-publicmentors--nobody-listed) |
+| Loading | [Loading](?path=/story/product-e01-screens-publicmentors--loading) |
+| Load failed | [LoadError](?path=/story/product-e01-screens-publicmentors--load-error) |
+| Twenty-five mentors, paged | [Many](?path=/story/product-e01-screens-publicmentors--many) |
+| Longest values and a partial profile | [LongText](?path=/story/product-e01-screens-publicmentors--long-text) |
+| 320 px | [Narrow320](?path=/story/product-e01-screens-publicmentors--narrow-320) |
+
+## /m/[slug] (Phase 4; *Book* arrives with E02)
+
+| State | Story |
+|---|---|
+| Profile, prices, bookable times | [Default](?path=/story/product-e01-screens-mentorpage--default) |
+| *Book* disabled, reason visible (C11, Q4) | [BookingNotYetAvailable](?path=/story/product-e01-screens-mentorpage--booking-not-yet-available) |
+| No bookable times | [NoTimes](?path=/story/product-e01-screens-mentorpage--no-times) |
+| Optional parts missing | [Partial](?path=/story/product-e01-screens-mentorpage--partial) |
+| Longest values, sixty slots | [LongText](?path=/story/product-e01-screens-mentorpage--long-text) |
+| Unknown link | [NotFound](?path=/story/product-e01-screens-mentorpage--not-found) |
+| Loading | [Loading](?path=/story/product-e01-screens-mentorpage--loading) |
+| Load failed | [LoadError](?path=/story/product-e01-screens-mentorpage--load-error) |
+| 320 px | [Narrow320](?path=/story/product-e01-screens-mentorpage--narrow-320) |

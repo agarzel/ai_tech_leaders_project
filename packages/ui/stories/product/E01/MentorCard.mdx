@@ -1,0 +1,97 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./MentorCard.stories";
+
+<Meta of={Stories} />
+
+# MentorCard
+
+`import { MentorCard, MentorCardSkeleton } from "@devmentor/ui/components/mentors/MentorCard"`
+
+Product component, concept `mentors` (E01, #28). The name comes from the spec; the look is a dense list row, not a card (C6).
+
+## 1. Purpose
+
+Shows one mentor in the public list with what a visitor needs to choose: who, what about, proof of work, prices, the next time.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| Each row of `/mentors` | spec E01, UI/UX |
+
+## 3. When not to use
+
+| Instead of `MentorCard`… | Use | Why |
+|---|---|---|
+| The full profile | `MentorProfileHeader` on `/m/[slug]` | the card is a summary |
+| A grid of cards, an avatar wall, ratings | never | A01, A05, N02 |
+
+## 4. Anatomy
+
+One list item: name as the row link (stretched over the row), one line for the headline, stack tags, public-work links side by side, the next time with its zone; both prices on the right.
+
+## 5. Variants
+
+None; the row follows the data.
+
+<Canvas of={Stories.InAList} />
+
+## 6. States
+
+| State | Story |
+|---|---|
+| Complete | [Playground](?path=/story/product-e01-mentorcard--playground) |
+| In a list | [InAList](?path=/story/product-e01-mentorcard--in-a-list) |
+| Optional parts missing | [Partial](?path=/story/product-e01-mentorcard--partial) |
+| Longest values | [LongText](?path=/story/product-e01-mentorcard--long-text) |
+| Hover and focus | [States](?path=/story/product-e01-mentorcard--states) |
+| Loading | [Loading](?path=/story/product-e01-mentorcard--loading) |
+
+Errors and empty are the list's (the screen). Hover underlines the name and shades the row; focus draws the ring around the row.
+
+<Canvas of={Stories.States} />
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| The name is the only link that covers the row; tags and work links stay above it and remain clickable. | `Item`, B36 |
+| Tag and link lists are named after the mentor (*Stack of Marek Zieliński*), because they repeat. | `AGENTS.md` (unique names) |
+| The headline is one line, cut with an ellipsis; the full text is in `title`. | T12 |
+| Prices in tabular figures; a missing price reads "Not set". | D12, C4 |
+| No accent: the whole row is one choice among equals. | P5/K3 |
+
+## 8. Content
+
+Name and headline as the mentor wrote them. "Next time: Wed 4 Nov, 18:00 (Europe/Warsaw, UTC+1)". No "years of experience", no counts of sessions, no stars (A03, A05).
+
+## 9. Responsive
+
+<Canvas of={Stories.Narrow} />
+
+## 10. API
+
+| Prop | Type | Description |
+|---|---|---|
+| `mentor` | `PublicMentor` | `PublicMentorDto` (no email) |
+| `href` | `string` | the share page |
+| `timeZone` | `string` | the viewer's zone |
+| `renderLink` | `(props) => ReactNode` | Next.js `Link` in the app |
+
+<Controls of={Stories.Playground} />
+
+## 11. Code
+
+<Source dark code={`<ItemGroup aria-label="Mentors">{mentors.map((m) => <MentorCard key={m.slug} mentor={m} href={\`/m/\${m.slug}\`} timeZone={zone} />)}</ItemGroup>`} />
+
+## 12. Do and don't
+
+| Do | Don't |
+|---|---|
+| One column of dense rows. | A grid of cards with avatars. |
+| Links to real public work. | A rating or a "top mentor" badge. |
+
+## 13. Related
+
+- **Confused with:** `MentorProfileHeader` (the full profile), `Card`.
+- **Used in:** [/mentors](?path=/story/product-e01-screens-publicmentors--default); pattern [List with filters](?path=/docs/patterns-list-with-filters--docs).
