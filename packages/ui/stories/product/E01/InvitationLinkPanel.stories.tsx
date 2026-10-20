@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, within, waitFor } from "storybook/test";
 
 import { InvitationLinkPanel } from "../../../src/components/mentors/InvitationLinkPanel";
 import { newInvitation, timeZone } from "../../mocks/fixtures";
@@ -56,7 +56,7 @@ export const Dismiss: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByLabelText("Invitation link")).toHaveFocus();
+    await waitFor(() => expect(canvas.getByLabelText("Invitation link")).toHaveFocus());
     await userEvent.click(canvas.getByRole("button", { name: "Done" }));
     await expect(canvas.getByRole("status")).toHaveTextContent("The link is no longer shown.");
     await expect(canvas.queryByLabelText("Invitation link")).not.toBeInTheDocument();

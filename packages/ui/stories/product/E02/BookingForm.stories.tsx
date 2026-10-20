@@ -39,7 +39,7 @@ export const QuestionRequired: Story = {
     const canvas = within(canvasElement);
     await pay(canvas);
     await expect(canvas.getByRole("alert")).toHaveTextContent("Write your question for the mentor.");
-    await expect(canvas.getByLabelText("Your question")).toHaveFocus();
+    await waitFor(() => expect(canvas.getByLabelText("Your question")).toHaveFocus());
   },
 };
 
@@ -126,7 +126,7 @@ export const FieldErrorFromServer: Story = {
     await ask(canvas);
     await pay(canvas);
     await expect(await canvas.findByRole("alert")).toHaveTextContent("2,000 characters or fewer");
-    await expect(canvas.getByLabelText("Your question")).toHaveFocus();
+    await waitFor(() => expect(canvas.getByLabelText("Your question")).toHaveFocus());
   },
 };
 

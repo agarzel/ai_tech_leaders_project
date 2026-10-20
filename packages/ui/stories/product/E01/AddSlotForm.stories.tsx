@@ -38,7 +38,7 @@ export const NothingChosen: Story = {
     const canvas = within(canvasElement);
     await add(canvas);
     await expect(canvas.getByRole("alert")).toHaveTextContent("Choose a date and a time for the slot.");
-    await expect(canvas.getByLabelText("Date")).toHaveFocus();
+    await waitFor(() => expect(canvas.getByLabelText("Date")).toHaveFocus());
   },
 };
 
