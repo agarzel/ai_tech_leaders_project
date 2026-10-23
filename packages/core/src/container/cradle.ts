@@ -1,5 +1,9 @@
 import type { EntityManager, MikroORM } from "@devmentor/db";
+import type { Clock } from "../clock";
+import type { Env } from "../config/env";
 import type { Logger } from "../logger";
+import type { RateLimiter } from "../rate-limiter";
+import type { AuthService } from "../services/auth/auth.service";
 import type { UserService } from "../services/auth/user.service";
 import type { HealthService } from "../services/system/health.service";
 
@@ -8,6 +12,10 @@ export type Cradle = {
   orm: MikroORM;
   em: EntityManager;
   logger: Logger;
+  env: Env;
+  clock: Clock;
+  rateLimiter: RateLimiter;
   healthService: HealthService;
   userService: UserService;
+  authService: AuthService;
 };

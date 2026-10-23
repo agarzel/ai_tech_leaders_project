@@ -1,16 +1,21 @@
 import { defineEntity, p, type InferEntity } from "@mikro-orm/core";
 import { baseProperties } from "../base.entity";
+import { defineSingletonEntity } from "../define";
 import { USER_ROLES } from "./user.constants";
 
-export const User = defineEntity({
-  name: "User",
-  tableName: "users",
-  properties: {
-    ...baseProperties(),
-    email: p.string().unique(),
-    name: p.string(),
-    role: p.enum(USER_ROLES).default("mentee"),
-  },
-});
+export const User = defineSingletonEntity("User", () =>
+  defineEntity({
+    name: "User",
+    tableName: "users",
+    properties: {
+      ...baseProperties(),
+      email: p.string().unique(),
+      name: p.string(),
+      role: p.enum(USER_ROLES).default("mentee"),
+      // Nullable: pre-existing and invited users have no password yet. Never expose it in a DTO.
+      passwordHash: p.string().nullable(),
+    },
+  }),
+);
 
 export type IUser = InferEntity<typeof User>;

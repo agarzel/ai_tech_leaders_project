@@ -3,6 +3,8 @@ import { z } from "zod";
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   DATABASE_URL: z.url(),
+  // Signs session tokens. Required, no default (fail closed); generate with `openssl rand -base64 32`.
+  AUTH_SECRET: z.string().min(32),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
 });
 

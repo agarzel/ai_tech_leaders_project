@@ -8,16 +8,20 @@
     "./validators/*": "./src/validators/*.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "auth:set-password": "tsx scripts/auth-set-password.ts"
   },
   "dependencies": {
     "@devmentor/db": "0.1.0",
     "awilix": "^13.0.5",
+    "bcryptjs": "3.0.3",
+    "jose": "6.2.12",
     "pino": "^10.4.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^20",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }

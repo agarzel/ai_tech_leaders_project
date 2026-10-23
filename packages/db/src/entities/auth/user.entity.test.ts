@@ -58,6 +58,13 @@ describe("User entity", () => {
     expect(properties.role.default).toBe("mentee");
   });
 
+  it("has a nullable password_hash column", () => {
+    const { properties } = userMeta();
+
+    expect(properties.passwordHash.nullable).toBe(true);
+    expect(properties.passwordHash.fieldNames).toEqual(["password_hash"]);
+  });
+
   it("exports every entity for explicit discovery", () => {
     expect(entities).toContain(User);
   });

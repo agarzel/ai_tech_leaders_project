@@ -1,7 +1,10 @@
 import { asClass, asValue, createContainer, InjectionMode, type AwilixContainer } from "awilix";
 import { getOrm } from "@devmentor/db";
+import { realClock } from "../clock";
 import { getEnv } from "../config/env";
 import { logger } from "../logger";
+import { RateLimiter } from "../rate-limiter";
+import { AuthService, LOGIN_RATE_LIMIT } from "../services/auth/auth.service";
 import { UserService } from "../services/auth/user.service";
 import { HealthService } from "../services/system/health.service";
 import type { Cradle } from "./cradle";
@@ -12,7 +15,7 @@ const globalForContainer = globalThis as unknown as { container?: Promise<AppCon
 
 // Every dependency is registered here by hand – no auto-discovery, so each binding is greppable.
 async function createAppContainer(): Promise<AppContainer> {
-  getEnv(); // fail fast on missing/invalid environment variables
+  const env = getEnv(); // fail fast on missing/invalid environment variables
 
   const container = createContainer<Cradle>({
     injectionMode: InjectionMode.PROXY,
@@ -22,8 +25,13 @@ async function createAppContainer(): Promise<AppContainer> {
   container.register({
     orm: asValue(await getOrm()),
     logger: asValue(logger),
+    env: asValue(env),
+    clock: asValue(realClock),
+    // One process-wide instance: the limiter's counters must outlive a single request.
+    rateLimiter: asValue(new RateLimiter({ clock: realClock }, LOGIN_RATE_LIMIT)),
     healthService: asClass(HealthService).scoped(),
     userService: asClass(UserService).scoped(),
+    authService: asClass(AuthService).scoped(),
   });
 
   return container;

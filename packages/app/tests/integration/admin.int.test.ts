@@ -1,17 +1,20 @@
-import { afterAll, describe, expect, inject, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, inject, it } from "vitest";
+import { loginAs } from "./support/auth";
 import { Browser } from "./support/browser";
 
 const browser = new Browser("devmentor-it-admin", inject("baseUrl"));
 
 describe("admin panel", () => {
-  afterAll(async () => {
-    await browser.close();
+  beforeAll(async () => {
+    await loginAs(browser, "admin");
   });
 
   it("shows the sections and a live database status", async () => {
     await browser.open("/admin");
 
     expect(await browser.title()).toBe("Admin – DevMentor");
+    // The panel sits behind the session gate (Suspense): wait until it has streamed in.
+    await browser.waitForText("Admin panel");
     expect(await browser.textOf("heading", "Admin panel")).toBe("Admin panel");
     // Streamed in after the static shell (Suspense + connection()).
     await browser.waitForText("Database: connected");
@@ -28,6 +31,7 @@ describe("admin panel", () => {
   });
 });
 
+// One browser session (and one sign-in) for both blocks: the session is closed once, after the last test.
 describe("admin users – CRUD through the UI", () => {
   afterAll(async () => {
     await browser.close();

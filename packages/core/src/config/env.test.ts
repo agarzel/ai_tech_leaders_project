@@ -10,6 +10,7 @@ describe("getEnv", () => {
     vi.stubEnv("DATABASE_URL", "postgres://devmentor:secret@localhost:5432/devmentor");
     vi.stubEnv("NODE_ENV", "test");
     vi.stubEnv("LOG_LEVEL", "debug");
+    vi.stubEnv("AUTH_SECRET", "a".repeat(32));
   });
 
   afterEach(() => {
@@ -22,6 +23,7 @@ describe("getEnv", () => {
     expect(getEnv()).toEqual({
       NODE_ENV: "test",
       DATABASE_URL: "postgres://devmentor:secret@localhost:5432/devmentor",
+      AUTH_SECRET: "a".repeat(32),
       LOG_LEVEL: "debug",
     });
   });
@@ -32,6 +34,28 @@ describe("getEnv", () => {
     const getEnv = await loadGetEnv();
 
     expect(getEnv()).toMatchObject({ NODE_ENV: "development", LOG_LEVEL: "info" });
+  });
+
+  it("accepts an AUTH_SECRET of exactly 32 characters", async () => {
+    vi.stubEnv("AUTH_SECRET", "s".repeat(32));
+    const getEnv = await loadGetEnv();
+
+    expect(getEnv().AUTH_SECRET).toBe("s".repeat(32));
+  });
+
+  it("rejects a missing AUTH_SECRET", async () => {
+    vi.stubEnv("AUTH_SECRET", undefined);
+    const getEnv = await loadGetEnv();
+
+    expect(() => getEnv()).toThrow(/AUTH_SECRET/);
+  });
+
+  it("rejects an AUTH_SECRET shorter than 32 characters without printing it", async () => {
+    vi.stubEnv("AUTH_SECRET", "short-secret-value-31-character");
+    const getEnv = await loadGetEnv();
+
+    expect(() => getEnv()).toThrow(/AUTH_SECRET/);
+    expect(() => getEnv()).not.toThrow(/short-secret-value/);
   });
 
   it("caches the parsed environment", async () => {

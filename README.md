@@ -104,10 +104,23 @@ npm run dev
 </details>
 
 - app: [http://localhost:3000](http://localhost:3000)
-- admin panel: [http://localhost:3000/admin](http://localhost:3000/admin) (user management at `/admin/users` – development mode only until login exists)
+- admin panel: [http://localhost:3000/admin](http://localhost:3000/admin) (user management at `/admin/users` – requires an admin session, see below)
 - database connection: [http://localhost:3000/api/health](http://localhost:3000/api/health) – `{"status":"ok","database":"ok"}` means the app can reach the database (it returns HTTP 503 when the database is down)
 
 The database listens on `localhost:5432`; the connection string is `DATABASE_URL` in `.env`.
+
+`AUTH_SECRET` in `.env` is required (at least 32 characters; the app refuses to start without it). Generate one with `openssl rand -base64 32`; never commit a real value.
+
+### First admin
+
+Admin pages and `/api/users` need an admin session. Once after `npm run setup`, create your admin (or reset any account's password) against the database in `.env`:
+
+```bash
+read -rs DEVMENTOR_PASSWORD && export DEVMENTOR_PASSWORD   # 12-128 characters; typed silently, never logged
+npm run auth:set-password -- --email you@example.com --admin
+```
+
+Without `--admin` the script only sets the password of an existing account and keeps its role. It reads the password from `DEVMENTOR_PASSWORD`, never from an argument.
 
 ### Database migrations
 

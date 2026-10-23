@@ -22,6 +22,7 @@
     "db:down": "docker compose down",
     "db:migration:create": "npm run db:migration:create -w @devmentor/db",
     "db:migration:check": "npm run db:migration:check -w @devmentor/db",
+    "auth:set-password": "npm run auth:set-password -w @devmentor/core --",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

@@ -59,7 +59,7 @@ Every route and every page reuses two shared layers instead of re-implementing f
 - `packages/core/src/http/` – `errors.ts` (typed `AppError` hierarchy), `apiHandler.ts` (wraps a route: catches `AppError`s, maps to status + JSON envelope, logs unexpected failures), `makeCrudRoute.ts` (schema + service in, `{ GET, POST, PUT, DELETE }` out, for plain CRUD resources), `auth.ts` (`requireSession`, `requireRole`, ownership assertions).
 - `packages/ui/src/backend/` – `api/apiCall.ts` (the only sanctioned `fetch()` call site), `forms/CrudForm.tsx`, `tables/DataTable.tsx`, `feedback/{LoadingMessage,ErrorMessage,EmptyState}.tsx`.
 
-Implemented. `auth.ts` currently has only a temporary `requireAdmin()` (open in development, 403 in production) – real `requireSession`/`requireRole` arrive with the `auth` concept.
+Implemented. `auth.ts` has `requireSession`, `requireRole`, `assertOwner` and `requireAdmin(request, authService)` (valid admin session or 401/403 – no development bypass). `makeCrudRoute` guards receive the request and the request-scoped cradle.
 
 **Reference example – copy it for every new resource:** `UserService` (`core/src/services/auth/user.service.ts`) + validators (`core/src/validators/auth/`) → `api/users/users.crud.ts` (`makeCrudRoute`) re-exported by `api/users/route.ts` and `api/users/[id]/route.ts` → `admin/users/` page using `apiCall`, `DataTable` and `CrudForm`.
 
@@ -168,6 +168,7 @@ npm run docs:design-system:check  # fail when those tables are stale (CI "Design
 npm run db:migrate             # apply pending migrations
 npm run db:migration:create    # generate a migration from entity changes
 npm run db:migration:check     # fail if entities and migrations are out of sync
+npm run auth:set-password -- --email you@example.com --admin   # sets/resets a password (--admin: create or promote to admin); run once after `npm run setup` – admin pages need it. The password is read from DEVMENTOR_PASSWORD (e.g. `read -rs DEVMENTOR_PASSWORD && export DEVMENTOR_PASSWORD`), never an argument
 npm run db:up                  # PostgreSQL only (docker compose up -d db), for npm run dev
 npm run db:down                # stop the compose stack (docker compose down)
 docker compose up --build      # app + PostgreSQL in containers
