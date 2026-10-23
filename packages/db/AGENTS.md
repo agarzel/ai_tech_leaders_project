@@ -21,6 +21,8 @@ mikro-orm.config.ts            CLI config (adds the Migrator)
 
 - The only package that imports `@mikro-orm/*`. Never imports `@devmentor/core`, `ui`, `app`, `next` or `react`.
 - Entities: `defineEntity` + `p` (no decorators), spread `...baseProperties()`, PascalCase singular `name`, plural snake_case `tableName` (`users`). Columns are snake_case automatically.
+- Create every entity through `defineSingletonEntity(name, () => defineEntity({...}))` (`entities/define.ts`), never a bare `defineEntity`. It caches the schema on `globalThis`, so every Next.js module graph (RSC, SSR, route handlers) shares one instance; otherwise the ORM discovers the schema of whichever graph ran first and `populate` from another graph fails with `TypeError: Cannot read properties of undefined (reading 'filter')` in `EntityLoader`.
+- Relations: make the **whole property** a thunk and pass the target schema directly – `user: () => p.oneToOne(User)`, never `p.oneToOne(() => User)`. The double-wrapped form fails discovery with `Entity '' was not discovered`.
 - After changing an entity: `npm run db:migration:create` (repo root) and **review the generated SQL** – a rename is generated as drop + create, which loses data; rewrite it as `alter table ... rename` (see `Migration20261013124642`). Commit the migration with the snapshot.
 - Never edit an already merged migration – add a new one. CI fails if entities and migrations are out of sync.
 - MikroORM 7 is ESM-only and uses Kysely (no Knex). No raw SQL with interpolated user input.
