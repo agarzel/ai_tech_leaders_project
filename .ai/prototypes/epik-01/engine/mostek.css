@@ -1,0 +1,15 @@
+/* Mostek (DevMentor, G08): names used by the review bar and comments, mapped to DS tokens only.
+   No colour literals, no shadows (lint:tokens). */
+:root, .dark {
+  --font-geist-sans: "Geist Variable";
+  --font-geist-mono: "Geist Mono Variable";
+  --accent-indigo: var(--primary);
+  --accent-indigo-foreground: var(--primary-foreground);
+  --status-success-icon: var(--foreground);
+  --status-warning-icon: var(--foreground);
+  --status-warning-border: var(--border);
+  --status-warning-bg: var(--muted);
+  --status-warning-text: var(--foreground);
+  --z-index-sticky: 100; --z-index-dropdown: 200; --z-index-overlay: 300;
+  --z-index-modal: 400; --z-index-toast: 500; --z-index-top: 600;
+}

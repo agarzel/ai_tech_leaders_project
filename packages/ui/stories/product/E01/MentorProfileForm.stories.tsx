@@ -53,6 +53,7 @@ export const Save: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: "Save profile" }));
     await expect(await canvas.findByText("Profile saved.")).toBeInTheDocument();
+    await waitFor(() => expect(canvas.getByRole("status")).toHaveFocus());
   },
 };
 

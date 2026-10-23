@@ -71,6 +71,7 @@ describe("MentorProfileForm", () => {
       listed: true,
     });
     expect(screen.getByRole("status")).toHaveTextContent("Profile saved.");
+    expect(screen.getByRole("status")).toHaveFocus();
     expect(onSaved).toHaveBeenCalled();
   });
 
