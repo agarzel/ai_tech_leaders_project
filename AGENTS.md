@@ -168,7 +168,8 @@ npm run docs:design-system:check  # fail when those tables are stale (CI "Design
 npm run db:migrate             # apply pending migrations
 npm run db:migration:create    # generate a migration from entity changes
 npm run db:migration:check     # fail if entities and migrations are out of sync
-docker compose up -d db        # PostgreSQL only (for npm run dev)
+npm run db:up                  # PostgreSQL only (docker compose up -d db), for npm run dev
+npm run db:down                # stop the compose stack (docker compose down)
 docker compose up --build      # app + PostgreSQL in containers
 ```
 

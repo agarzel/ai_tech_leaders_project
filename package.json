@@ -18,6 +18,8 @@
     "docs:design-system:check": "node --disable-warning=ExperimentalWarning scripts/design-system-doc.mjs --check",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "db:migrate": "npm run db:migrate -w @devmentor/db",
+    "db:up": "docker compose up -d db",
+    "db:down": "docker compose down",
     "db:migration:create": "npm run db:migration:create -w @devmentor/db",
     "db:migration:check": "npm run db:migration:check -w @devmentor/db",
     "test": "vitest run",
