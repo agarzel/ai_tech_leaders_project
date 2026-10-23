@@ -45,7 +45,7 @@ Import paths are under `@devmentor/ui/`. Use by path, never a barrel. Base UI pa
 | NativeSelect | `components/ui/native-select` | Stack filter, role, time zone, rows per page; more than about five options or tight space. | Two to four options worth comparing: RadioGroup. Several values: Checkbox group. A long searchable list: not built. |
 | Checkbox | `components/ui/checkbox` | The mentor's stack tags; a yes/no option saved with a form. | A setting that acts at once: Switch. Exactly one option: RadioGroup. An action: Button. |
 | RadioGroup | `components/ui/radio-group` | Session length with prices, before the question box; two to five options worth comparing. | More than about five options: NativeSelect. Several answers: Checkbox group. One on/off: Switch. |
-| Switch | `components/ui/switch` | Show me on the public list; any setting saved the moment it changes. | An option saved later with the form: Checkbox. Two named options: RadioGroup. Starting an action: Button. |
+| Switch | `components/ui/switch` | Any setting that takes effect the moment it changes, not one saved with a form. | An option saved later with the form: Checkbox. Two named options: RadioGroup. Starting an action: Button. |
 | CrudForm | `backend/forms/CrudForm` | Sign-in, registration, invitations, admin forms: text, email, number, password or one choice. | Tags, a list of links, prices, a switch: a bespoke form from Field parts (MentorProfileForm). A single action: Button. |
 | CopyField | `backend/forms/CopyField` | The invitation link (shown once), the mentor's share link. | A value the person types: Input. A secret: never shown. |
 

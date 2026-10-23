@@ -153,7 +153,7 @@ export const COMPONENTS: ComponentEntry[] = [
     section: "Primitives",
     importLine: `import { Switch } from "${ui("switch")}"`,
     purpose: "Turns a setting on or off with immediate effect.",
-    when: "Show me on the public list; any setting saved the moment it changes.",
+    when: "Any setting that takes effect the moment it changes, not one saved with a form.",
     whenNot: "An option saved later with the form: Checkbox. Two named options: RadioGroup. Starting an action: Button.",
   },
   {
