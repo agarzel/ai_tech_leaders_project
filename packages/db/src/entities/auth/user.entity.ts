@@ -12,6 +12,8 @@ export const User = defineSingletonEntity("User", () =>
       email: p.string().unique(),
       name: p.string(),
       role: p.enum(USER_ROLES).default("mentee"),
+      // Nullable: pre-existing and invited users have no password yet. Never expose it in a DTO.
+      passwordHash: p.string().nullable(),
     },
   }),
 );

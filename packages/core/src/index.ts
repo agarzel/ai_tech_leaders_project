@@ -1,10 +1,12 @@
 export { getEnv, type Env } from "./config/env";
 export { createRequestScope, getContainer, type AppContainer } from "./container/container";
 export type { Cradle } from "./container/cradle";
+export { realClock, type Clock } from "./clock";
 export { apiHandler, CLIENT_HEADER, type ApiResult, type HandlerArgs, type RouteContext } from "./http/apiHandler";
 export type { CrudService, Page, PageQuery } from "./http/crud";
 export * from "./http/errors";
 export { makeCrudRoute } from "./http/makeCrudRoute";
 export { logger, type Logger } from "./logger";
+export { RateLimiter, type RateLimitCheck, type RateLimiterOptions } from "./rate-limiter";
 export { UserService, type UserDto } from "./services/auth/user.service";
 export { HealthService, type HealthStatus } from "./services/system/health.service";
