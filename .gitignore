@@ -61,3 +61,6 @@ packages/app/tests/integration/.artifacts/
 # Storybook build output and Vitest browser-mode failure screenshots
 storybook-static/
 packages/ui/stories/**/__screenshots__/
+
+# Built clickable prototypes served by Storybook (build output, not design-system code)
+packages/ui/.storybook/public/prototypes/

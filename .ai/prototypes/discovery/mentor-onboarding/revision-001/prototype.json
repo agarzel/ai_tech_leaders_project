@@ -1,0 +1,158 @@
+{
+  "format": "discovery-prototype-v1",
+  "skill": "om-mockup-prototype",
+  "slug": "mentor-onboarding",
+  "revision": 1,
+  "revisionPath": ".ai/prototypes/discovery/mentor-onboarding/revision-001",
+  "previousRevision": null,
+  "brief": ".ai/specs/product-brief.md",
+  "flow": "Key flows, future state, step (1) mentor publishes slots and prices (mentor onboarding, with admin invitation and registration entry screens)",
+  "panelReport": null,
+  "verification": "passed",
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "47e2691605822b5ebbf5edf6a6b2b1355037d78039c801e19145f27824a28db3"
+    },
+    {
+      "path": "evidence/01-entry.png",
+      "sha256": "4923bcec53331646b5052550761028e847ea3ddc122a28c22e2d7a5535d31a07"
+    },
+    {
+      "path": "evidence/03-login-invalid.png",
+      "sha256": "0675981bb44552ae02fb520f4a90bba4290ec6086943893516773d580093ce6d"
+    },
+    {
+      "path": "evidence/04-invite-validation.png",
+      "sha256": "8ee3f96028a11aded49f1ba52ae1780aee4ecf70bcdbc29227f38cb2e8a79706"
+    },
+    {
+      "path": "evidence/05-invite-link-once.png",
+      "sha256": "388c69d8166e92cc9d31fac05db31aa87c25079f2f43daf79ea1d2b5cdba0b40"
+    },
+    {
+      "path": "evidence/06-old-link-invalid.png",
+      "sha256": "fb0545e1e9cc16b491357b65eadce560857f93d2a8b6cd2b09743edfb62c25d4"
+    },
+    {
+      "path": "evidence/07-register-entry.png",
+      "sha256": "21ad10a5e2cd80a5b45efbe2b9678d9bf7482527b14a4137b706c89f4c80a116"
+    },
+    {
+      "path": "evidence/08-link-closed.png",
+      "sha256": "f0e3c487f59118d3fd71b2e2836bc2f44e29bc0ee886edb7e703e90056d1ccce"
+    },
+    {
+      "path": "evidence/09-register-validation.png",
+      "sha256": "4d64d3f34485b4632f74b1a8ec18f54311f71f78642e551f361b7a72d95a895f"
+    },
+    {
+      "path": "evidence/10-register-network-error.png",
+      "sha256": "95bbc92607bfb8f1a185b46328437a9732f41d940c56e1804c93262893d695d8"
+    },
+    {
+      "path": "evidence/11-register-used-meanwhile.png",
+      "sha256": "0b67a923cde270c16a05554197ff6d2d25bc24145e95422d908eedb21159485e"
+    },
+    {
+      "path": "evidence/12-register-email-has-account.png",
+      "sha256": "6e92f32c47c575c1f1f68b8a9355fc12a4b58df5cb312379c08658c11d4a07e4"
+    },
+    {
+      "path": "evidence/13-mentor-dashboard-new.png",
+      "sha256": "97a81e9a64c3d073c9006930953eb443ce649f8715a44582cf281e3d8a87071e"
+    },
+    {
+      "path": "evidence/14-slots-empty-no-prices.png",
+      "sha256": "2024e18d334d6ada8b71475f675c48acf1ac8adeffd68061e7c47d170ca1882d"
+    },
+    {
+      "path": "evidence/15-slot-rejected.png",
+      "sha256": "e924694fbe988aed86c4ce5d563c293213a00f1981bb4ab9ac6236b318fc3f17"
+    },
+    {
+      "path": "evidence/16-slot-added.png",
+      "sha256": "086a586fdb218177d6a823cd276b04dd9cf4ab7a7abb0303c763dcddd8bb4406"
+    },
+    {
+      "path": "evidence/17-slot-delete-confirm.png",
+      "sha256": "0a82aa4f594bd679d533fd1fa930be15162923e37e6ac6a32934e85fed4436fc"
+    },
+    {
+      "path": "evidence/18-marek-ready-offer-not-listed-check.png",
+      "sha256": "6fd789aeac433741f5b2a162e6be5f9ead24847edda990c95d3f28d9b68caa6b"
+    },
+    {
+      "path": "evidence/19-slots-marek.png",
+      "sha256": "48f14c096e5d4b0ba7e9a1135ae756a17515d82e32ab768530c227640a4095cc"
+    },
+    {
+      "path": "evidence/20-slot-deleted.png",
+      "sha256": "e966616a860641fc8792716c58d6cb73ab5b5c898fda07855114e50e35a5fd04"
+    },
+    {
+      "path": "evidence/21-session-ended-login.png",
+      "sha256": "320e8e14b12efd5c4de4612e1a25b907dd2d47ac270a3be1fc69656b5c90716a"
+    },
+    {
+      "path": "evidence/22-profile-validation.png",
+      "sha256": "79c2c8360dbeb77a6e1f97755553a04ad24fd9b1c4cf7fc2b23047c03ff045de"
+    },
+    {
+      "path": "evidence/23-profile-saved-no-prices.png",
+      "sha256": "b9736a16a83581df28fec16acca322b9ee94d37c8b152bd34ebd0504a0f0da67"
+    },
+    {
+      "path": "evidence/24-dashboard-optin-missing.png",
+      "sha256": "7f24c59b21ae856d417ef1c5f65aaf31909ccbea3de35cf65ce3a5fe9d67a8bc"
+    },
+    {
+      "path": "evidence/25-public-no-times.png",
+      "sha256": "b0ffa9a69a0f9d7b1514e14cb2932325a0fe8bae04cbb9ed477482c7b75fd752"
+    },
+    {
+      "path": "evidence/26-dashboard-on-list.png",
+      "sha256": "7131be2709a3aaad0c9a1e823b149f376d86a8bac3f10b723f553c9cbcd999ff"
+    },
+    {
+      "path": "evidence/27-public-book-disabled.png",
+      "sha256": "2babdb2bdbe2ae9e2b419c63d278a2c31a09973660ef926b47bcc124134895e5"
+    },
+    {
+      "path": "evidence/28-unknown-fragment.png",
+      "sha256": "9166b06676579859e8218cab3b5996fc6be844b80b5a15e22332c10786df5b92"
+    },
+    {
+      "path": "evidence/29-mentee-outside.png",
+      "sha256": "5992f12124f5f1021a89f6e08715cea057490f2f5c479d8ad99cf7ad3ac66bd3"
+    },
+    {
+      "path": "evidence/30-wrong-role.png",
+      "sha256": "518e7c6ee667d524289376fc60c96f570d4cc9db764519302fea40a0df8fa8b6"
+    },
+    {
+      "path": "evidence/31-invitations-empty.png",
+      "sha256": "c7d4175d4a56ff55ab3a699df3a8538e9f6d6f717eae55430b069e0356d98643"
+    },
+    {
+      "path": "evidence/32-invitations-error.png",
+      "sha256": "1f43d82661d3adc3ff3d1f51fcf913ee4c3fca2795fd0be636db6b4d8580d67a"
+    },
+    {
+      "path": "evidence/33-narrow-320-profile.png",
+      "sha256": "7898e27ba0634dd06167824ec5952deaa37fa43c2eaf2e5efb28b7cb5eea1777"
+    },
+    {
+      "path": "evidence/34-after-reset.png",
+      "sha256": "73d2a9897f6bf46ec7d59057a8d5a0054b2c51522fe8f1e0338b9b63b5128a97"
+    },
+    {
+      "path": "evidence/k-profile-saved.png",
+      "sha256": "ae94ae0b114d71b24b50521b13684ea1e733b63affa243124ca1c8f092fee8ab"
+    },
+    {
+      "path": "index.html",
+      "sha256": "c8bfbf2ca602fba37a8cd4d300c0c2c6a7b90c7e27547d42ee13093ba01d66ee"
+    }
+  ]
+}

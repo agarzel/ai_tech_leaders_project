@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DevMentor mentor onboarding prototype</title>
+<style>
+:root { --bg:#f4f4f4; --panel:#fff; --line:#8a8a8a; --text:#1a1a1a; --muted:#555; --soft:#e6e6e6; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--bg); color:var(--text); line-height:1.45; }
+a { color:#111; }
+:focus-visible { outline:3px solid #000; outline-offset:2px; }
+.banner { background:#222; color:#fff; padding:6px 16px; font-size:14px; }
+header.top { background:var(--panel); border-bottom:1px solid var(--line); padding:10px 16px; display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; }
+header.top nav { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+.wrap { max-width:1000px; margin:0 auto; padding:16px; display:grid; gap:16px; }
+main { background:var(--panel); border:1px solid var(--line); padding:16px; min-width:0; }
+main h1 { margin-top:0; font-size:24px; }
+h2 { font-size:18px; margin:20px 0 8px; }
+.card { border:1px solid var(--line); padding:12px; margin:12px 0; background:#fafafa; }
+.field { margin:12px 0; }
+label, .lbl { display:block; font-weight:600; margin-bottom:4px; }
+input[type=text], input[type=password], input[type=email], textarea, select { width:100%; max-width:480px; padding:8px; border:1px solid var(--line); background:#fff; font:inherit; }
+input[type=checkbox] { margin-right:6px; }
+.hint { color:var(--muted); font-size:14px; }
+.err { color:#000; font-weight:600; border-left:4px solid #000; padding-left:8px; margin-top:4px; }
+.alert { border:2px solid #000; padding:10px; margin:12px 0; background:#fff; }
+.alert.info { border-style:dashed; }
+button, .btn { font:inherit; padding:8px 14px; border:1px solid #000; background:var(--soft); cursor:pointer; text-decoration:none; color:#000; display:inline-block; }
+button.primary { background:#222; color:#fff; }
+button[disabled], button[aria-disabled=true] { border-style:dashed; color:#666; cursor:not-allowed; background:#eee; }
+table { border-collapse:collapse; width:100%; }
+th, td { border:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:top; }
+.badge { border:1px solid #000; padding:1px 6px; font-size:13px; }
+.checklist { list-style:none; padding:0; }
+.checklist li { padding:6px 0; border-bottom:1px solid var(--soft); }
+.row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.scroll { overflow-x:auto; }
+aside.test { background:#eee; border:1px dashed #000; padding:12px; }
+aside.test summary { font-weight:700; cursor:pointer; }
+aside.test .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; margin-top:10px; }
+aside.test select { max-width:none; }
+.mono { font-family:ui-monospace,Menlo,monospace; word-break:break-all; }
+@media (max-width:480px) { main { padding:12px; } th, td { padding:4px; } }
+</style>
+</head>
+<body>
+<div class="banner">Discovery prototype. Simulated data.</div>
+<header class="top"><strong>DevMentor</strong><nav id="nav" aria-label="Main"></nav></header>
+<div class="wrap">
+  <div id="status" role="status" aria-live="polite" class="hint"></div>
+  <main id="app" aria-label="Screen"></main>
+  <aside class="test" id="test" aria-label="Test state"></aside>
+</div>
+<script>
+"use strict";
+(function () {
+  var T0 = Date.UTC(2026, 9, 23, 10, 0);
+  var HOUR = 3600000;
+  var DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var TAGS = ["Python","TypeScript","AI agents"];
+  var S, working = false;
+
+  function slot(id, y, m, d, hh, mm, booked) { return { id: id, t: Date.UTC(y, m - 1, d, hh, mm), booked: !!booked }; }
+  function fresh() {
+    return {
+      session: null, next: null, offsetH: 0, expired: false, net: "ok", invList: "full",
+      dupAccount: false, usedMeanwhile: false, values: {}, errs: {}, banner: null, flash: null,
+      shownLink: null, tokenSeq: 1, slotSeq: 100, confirmDelete: null,
+      accounts: {
+        "marek.zielinski@example.com": { name: "Marek Zielinski", pw: "helm-chart-rollback-2", role: "mentor" },
+        "oliwia.nowak@example.com": { name: "Oliwia Nowak", pw: "demo-admin-passphrase-1", role: "admin" },
+        "ola.wisniewska@example.com": { name: "Ola Wisniewska", pw: "ingress-1-28-upgrade", role: "mentee" }
+      },
+      mentors: {
+        "marek.zielinski@example.com": {
+          slug: "marek-zielinski-k3x9q2", name: "Marek Zielinski",
+          headline: "Platform engineer - Kubernetes, Helm, CI pipelines", bio: "Ten years of running clusters.",
+          tags: ["Python", "AI agents"], links: "https://github.com/marek-zielinski\nhttps://kubecon.example/talks/helm-rollbacks-without-tears",
+          p25: "180", p50: "320", listed: true, saved: true,
+          slots: [slot(1,2026,10,23,16,0), slot(2,2026,10,24,9,30), slot(3,2026,10,24,12,0), slot(4,2026,10,26,18,0),
+                  slot(5,2026,10,26,19,30), slot(6,2026,10,28,18,0,true), slot(7,2026,10,30,17,0), slot(8,2026,11,2,18,0)]
+        }
+      },
+      invitations: [
+        { email: "anna.maj@example.com", token: "anna-maj-4f2k", status: "pending", note: "valid until 2026-11-06" },
+        { email: "marek.zielinski@example.com", token: "marek-used-7q", status: "used", note: "used 2026-10-10" },
+        { email: "jan.sowa@example.com", token: "jan-expired-2z", status: "expired", note: "expired 2026-10-04" }
+      ]
+    };
+  }
+  S = fresh();
+
+  /* ---------- helpers ---------- */
+  function h(tag, attrs) {
+    var el = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) {
+      var v = attrs[k];
+      if (v === false || v == null) return;
+      if (k === "text") el.textContent = v;
+      else if (k.slice(0, 2) === "on") el.addEventListener(k.slice(2), v);
+      else if (k === "value" || k === "checked" || k === "disabled") el[k] = v;
+      else el.setAttribute(k, v === true ? "" : v);
+    });
+    for (var i = 2; i < arguments.length; i++) add(el, arguments[i]);
+    return el;
+  }
+  function add(el, c) {
+    if (c == null || c === false) return;
+    if (Array.isArray(c)) c.forEach(function (x) { add(el, x); });
+    else el.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  }
+  function now() { return T0 + S.offsetH * HOUR; }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function fmtDay(t) { var d = new Date(t); return DAYS[d.getUTCDay()] + " " + d.getUTCDate() + " " + MONTHS[d.getUTCMonth()] + " " + d.getUTCFullYear(); }
+  function fmtTime(t) { var d = new Date(t); return pad(d.getUTCHours()) + ":" + pad(d.getUTCMinutes()); }
+  function say(msg) { document.getElementById("status").textContent = ""; setTimeout(function () { document.getElementById("status").textContent = msg; }, 20); }
+  function go(hash) { if (location.hash === hash) render(true); else location.hash = hash; }
+  function me() { return S.session ? S.accounts[S.session] : null; }
+  function mentorOf(email) { return S.mentors[email]; }
+  function bookable(s) { return !s.booked && s.t - now() >= 24 * HOUR; }
+  function pricesSet(m) { return !!(m.p25 && m.p50); }
+  function offer(m) {
+    var n = m.slots.filter(bookable).length;
+    return { saved: m.saved, prices: pricesSet(m), bookableCount: n, ready: m.saved && pricesSet(m) && n > 0, onList: m.listed && m.saved && pricesSet(m) && n > 0 };
+  }
+  function shareUrl(m) { return "https://devmentor.example/m/" + m.slug; }
+  function vals(form, defaults) { return S.values[form] || defaults || {}; }
+  function fieldErr(form, name) { return (S.errs[form] || {})[name]; }
+  function field(form, name, label, opts) {
+    opts = opts || {};
+    var v = vals(form)[name]; if (v == null) v = (opts.def == null ? "" : opts.def);
+    var err = fieldErr(form, name), id = form + "-" + name, eid = id + "-err";
+    var input = opts.textarea
+      ? h("textarea", { id: id, name: name, rows: 3, "aria-invalid": err ? "true" : false, "aria-describedby": err ? eid : false }, v)
+      : h("input", { id: id, name: name, type: opts.type || "text", value: v, autocomplete: opts.ac || "off", "aria-invalid": err ? "true" : false, "aria-describedby": err ? eid : false });
+    return h("div", { class: "field" }, h("label", { for: id, text: label }), opts.hint ? h("div", { class: "hint", text: opts.hint }) : null, input, err ? h("div", { class: "err", id: eid, text: err }) : null);
+  }
+  function readForm(f) {
+    var o = {};
+    Array.prototype.forEach.call(f.elements, function (e) {
+      if (!e.name) return;
+      if (e.type === "checkbox") { if (e.name === "tags") { (o.tags = o.tags || []); if (e.checked) o.tags.push(e.value); } else o[e.name] = e.checked; }
+      else o[e.name] = e.value;
+    });
+    return o;
+  }
+  function serverGate(form, done) {
+    if (working) return;
+    working = true; rerenderBusy(true);
+    setTimeout(function () {
+      working = false; rerenderBusy(false);
+      if (S.net === "net") { S.flash = { form: form, kind: "alert", text: "Could not reach the server. Your entries are kept. Try again." }; render(true, form); return; }
+      if (S.net === "429") { S.flash = { form: form, kind: "alert", text: "Too many attempts. Try again in 15 minutes." }; render(true, form); return; }
+      S.flash = null; done();
+    }, 250);
+  }
+  function rerenderBusy(b) {
+    Array.prototype.forEach.call(document.querySelectorAll("#app button[type=submit]"), function (x) {
+      x.disabled = b; if (b) x.setAttribute("data-label", x.textContent);
+      x.textContent = b ? x.getAttribute("data-busy") || "Working..." : x.getAttribute("data-label") || x.textContent;
+    });
+  }
+  function sessionGuard(form, values) {
+    if (S.expired) {
+      S.values[form] = values; S.next = location.hash; S.session = null; S.expired = false;
+      S.banner = "Your session has ended";
+      go("#/login"); return false;
+    }
+    return true;
+  }
+  function flashFor(form) { return S.flash && S.flash.form === form ? h("div", { class: "alert", role: "alert", tabindex: "-1", id: "flash-alert", text: S.flash.text }) : null; }
+  function summary(form) {
+    var e = S.errs[form]; if (!e || !Object.keys(e).filter(function (k) { return k !== "_form"; }).length) return null;
+    return h("div", { class: "alert", role: "alert", text: "Fix the highlighted fields and try again." });
+  }
+  function focusFirstError(form) {
+    var e = S.errs[form]; if (!e) return;
+    var first = document.querySelector("#app [aria-invalid=true]") || document.getElementById("flash-alert") || document.querySelector("#app .alert[role=alert]"); if (first) first.focus();
+  }
+
+  /* ---------- chrome ---------- */
+  function renderNav() {
+    var nav = document.getElementById("nav"); nav.textContent = "";
+    var u = me();
+    add(nav, h("a", { href: "#/", text: "Start" }));
+    if (!u) add(nav, h("a", { href: "#/login", text: "Log in" }));
+    else {
+      if (u.role === "mentor") add(nav, [h("a", { href: "#/mentor", text: "Dashboard" }), h("a", { href: "#/mentor/profile", text: "Profile" }), h("a", { href: "#/mentor/slots", text: "Slots" })]);
+      if (u.role === "admin") add(nav, [h("a", { href: "#/admin", text: "Admin" }), h("a", { href: "#/admin/invitations", text: "Invitations" })]);
+      add(nav, h("span", { text: u.name + " (" + u.role + ")" }));
+      add(nav, h("button", { type: "button", text: "Log out", onclick: function () { S.session = null; S.next = null; S.banner = null; go("#/"); say("You have been logged out."); } }));
+    }
+  }
+  function sel(label, key, opts, onchange) {
+    var s = h("select", { id: "t-" + key, onchange: function (e) { onchange(e.target.value); } },
+      opts.map(function (o) { return h("option", { value: o[0], text: o[1], selected: String(S[key]) === o[0] }); }));
+    return h("div", null, h("label", { for: "t-" + key, text: label }), s);
+  }
+  function renderTest() {
+    var t = document.getElementById("test");
+    var open = t.querySelector("details") ? t.querySelector("details").open : true;
+    t.textContent = "";
+    var tokens = [["Valid invitation (anna.maj@example.com)", "anna-maj-4f2k"], ["Used invitation", "marek-used-7q"], ["Expired invitation", "jan-expired-2z"], ["Unknown token", "zzz-unknown"]];
+    var d = h("details", { open: open },
+      h("summary", { text: "Test state (prototype controls, not product features)" }),
+      h("div", { class: "grid" },
+        sel("Server response", "net", [["ok", "Normal"], ["net", "Network error"], ["429", "Too many attempts"]], function (v) { S.net = v; S.flash = null; }),
+        sel("Invitation list", "invList", [["full", "Full"], ["empty", "Empty"], ["error", "Load error"]], function (v) { S.invList = v; render(true); }),
+        sel("Demo clock (now = Fri 23 Oct 2026 10:00 Europe/Warsaw)", "offsetH", [["0", "+0 h"], ["6", "+6 h"], ["24", "+24 h"]], function (v) { S.offsetH = Number(v); render(true); }),
+        h("div", null, h("label", null, h("input", { type: "checkbox", checked: S.usedMeanwhile, onchange: function (e) { S.usedMeanwhile = e.target.checked; } }), "Invitation used in the meantime")),
+        h("div", null, h("label", null, h("input", { type: "checkbox", checked: S.dupAccount, onchange: function (e) { S.dupAccount = e.target.checked; } }), "Invited e-mail already has an account (mentor sign-up)")),
+        h("div", null, h("button", { type: "button", id: "t-expire", disabled: !S.session, text: "Expire session now", onclick: function () { S.expired = true; say("Session marked as expired. The next save will end it."); } }))
+      ),
+      h("div", { class: "row", style: "margin-top:10px" }, [
+        h("button", { type: "button", id: "t-as-admin", text: "Shortcut: log in as demo admin", onclick: function () { S.session = "oliwia.nowak@example.com"; S.banner = null; go("#/admin"); } }),
+        h("button", { type: "button", id: "t-as-mentor", text: "Shortcut: log in as demo mentor (Marek, ready offer)", onclick: function () { S.session = "marek.zielinski@example.com"; S.banner = null; go("#/mentor"); } }),
+        h("button", { type: "button", id: "t-as-mentee", text: "Shortcut: log in as demo mentee", onclick: function () { S.session = "ola.wisniewska@example.com"; S.banner = null; go("#/mentors"); } })
+      ]),
+      h("p", { class: "hint", text: "Open an invitation link:" }),
+      h("div", { class: "row" }, tokens.map(function (x) { return h("a", { href: "#/register/" + x[1], text: x[0] }); }).concat([h("a", { href: "#/register", text: "No token" })])),
+      h("div", { style: "margin-top:10px" }, h("button", { type: "button", id: "t-reset", text: "Reset simulation", onclick: function () { S = fresh(); working = false; go("#/"); renderTest(); renderNav(); say("Simulation reset to the start."); } }))
+    );
+    t.appendChild(d);
+  }
+
+  /* ---------- screens ---------- */
+  var screens = {};
+  function heading(text) { return h("h1", { tabindex: "-1", id: "page-h1", text: text }); }
+  function protectedGuard(role) {
+    var u = me();
+    if (!u) { S.next = location.hash; S.banner = "Log in to continue."; go("#/login"); return false; }
+    if (u.role !== role) { S.next = location.hash; S.banner = "This page is for " + role + " accounts. Log in with a different account."; go("#/login"); return false; }
+    return true;
+  }
+
+  screens.start = function () {
+    return h("div", null, heading("Mentor onboarding (prototype start)"),
+      h("p", { text: "Flow: the founder invites a mentor, the mentor registers, sets a profile and prices, adds slots, and gets a share link." }),
+      h("ol", null,
+        h("li", null, h("a", { href: "#/login", text: "Log in" }), " (any role)"),
+        h("li", null, "As admin: ", h("a", { href: "#/admin/invitations", text: "Invitations" })),
+        h("li", null, "As the invited mentor: open the valid invitation link from the Test state area"),
+        h("li", null, "Public page of a mentor: ", h("a", { href: "#/m/marek-zielinski-k3x9q2", text: "marek-zielinski-k3x9q2" }))),
+      h("p", { class: "hint", text: "Outside this prototype: the mentor list, bookings, payments, acceptance, sessions, cancellation and notes." }));
+  };
+
+  screens.outside = function () {
+    return h("div", null, heading("Outside this prototype"),
+      h("p", { text: "This destination belongs to a later part of the product and is not simulated here." }),
+      h("p", null, h("a", { href: "#/", text: "Back to the start" })));
+  };
+  screens.notfound = function () {
+    return h("div", null, heading("Page not found"), h("p", { text: "This address does not exist." }), h("a", { href: "#/", text: "Back to the start" }));
+  };
+
+  screens.login = function () {
+    var f = "login", u = me();
+    var form = h("form", { novalidate: true, id: "login-form", onsubmit: function (e) {
+      e.preventDefault(); var v = readForm(e.target); S.values[f] = v; S.errs[f] = {}; S.flash = null;
+      serverGate(f, function () {
+        var acc = S.accounts[(v.email || "").trim().toLowerCase()];
+        if (!acc || acc.pw !== v.password) { S.errs[f] = { _form: "Invalid email or password" }; S.values[f] = { email: v.email, password: "" }; render(true, f); return; }
+        S.session = (v.email || "").trim().toLowerCase(); S.values[f] = null; S.errs[f] = {}; S.banner = null; S.expired = false;
+        var role = acc.role, dest = S.next; S.next = null;
+        if (!dest) dest = role === "mentor" ? "#/mentor" : role === "admin" ? "#/admin" : "#/mentors";
+        go(dest); say("Logged in as " + acc.name + ".");
+      });
+    } },
+      S.errs[f] && S.errs[f]._form ? h("div", { class: "alert", role: "alert", tabindex: "-1", text: S.errs[f]._form }) : null,
+      flashFor(f),
+      field(f, "email", "Email", { type: "email", ac: "username" }),
+      field(f, "password", "Password", { type: "password", ac: "current-password" }),
+      h("button", { type: "submit", class: "primary", "data-busy": "Logging in...", text: "Log in" }));
+    return h("div", null, heading("Log in"),
+      S.banner ? h("div", { class: "alert info", role: "status", text: S.banner }) : null,
+      u ? h("p", { class: "hint", text: "You are currently logged in as " + u.name + ". Logging in replaces this session." }) : null,
+      form,
+      h("p", { class: "hint", text: "Forgot your password? Ask the founders to reset it." }));
+  };
+
+  screens.register = function (token) {
+    var f = "register";
+    var inv = S.invitations.filter(function (i) { return i.token === token; })[0];
+    if (!inv || inv.status !== "pending") {
+      return h("div", null, heading("This invitation is no longer valid"),
+        h("p", { text: "Ask the founders for a new link." }), h("a", { href: "#/login", text: "Go to log in" }));
+    }
+    var form = h("form", { novalidate: true, id: "register-form", onsubmit: function (e) {
+      e.preventDefault(); var v = readForm(e.target); S.values[f] = v; var errs = {};
+      if (!v.name.trim()) errs.name = "Enter your name.";
+      if (v.password.length < 12 || v.password.length > 128) errs.password = "Use 12 to 128 characters.";
+      S.errs[f] = errs; S.flash = null;
+      if (Object.keys(errs).length) { render(true, f); return; }
+      serverGate(f, function () {
+        if (S.usedMeanwhile) { inv.status = "used"; inv.note = "used just now"; S.usedMeanwhile = false; S.values[f] = null; render(true); return; }
+        if (S.dupAccount || S.accounts[inv.email]) { S.errs[f] = { _form: "This address already has an account. Log in, or ask the founders to promote the account." }; render(true, f); return; }
+        S.accounts[inv.email] = { name: v.name.trim(), pw: v.password, role: "mentor" };
+        S.mentors[inv.email] = { slug: v.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-n3w1x7", name: v.name.trim(), headline: "", bio: "", tags: [], links: "", p25: "", p50: "", listed: false, saved: false, slots: [] };
+        inv.status = "used"; inv.note = "used just now"; S.session = inv.email; S.values[f] = null; S.errs[f] = {}; S.expired = false;
+        go("#/mentor"); say("Mentor account created.");
+      });
+    } },
+      S.errs[f] && S.errs[f]._form ? h("div", { class: "alert", role: "alert", tabindex: "-1", text: S.errs[f]._form }) : null,
+      summary(f), flashFor(f),
+      h("div", { class: "field" }, h("span", { class: "lbl", text: "Registering email" }), h("span", { id: "reg-email", text: inv.email }), h("div", { class: "hint", text: "This address comes from the invitation and cannot be changed." })),
+      field(f, "name", "Name", { ac: "name" }),
+      field(f, "password", "Password", { type: "password", ac: "new-password", hint: "12 to 128 characters." }),
+      h("button", { type: "submit", class: "primary", "data-busy": "Creating account...", text: "Create mentor account" }));
+    return h("div", null, heading("Create your mentor account"), form);
+  };
+
+  screens.admin = function () {
+    if (!protectedGuard("admin")) return null;
+    return h("div", null, heading("Admin"), h("ul", null, h("li", null, h("a", { href: "#/admin/invitations", text: "Invitations" })), h("li", { class: "hint", text: "Users (outside this prototype)" })));
+  };
+
+  screens.invitations = function () {
+    if (!protectedGuard("admin")) return null;
+    var f = "invite";
+    var form = h("form", { novalidate: true, id: "invite-form", onsubmit: function (e) {
+      e.preventDefault(); var v = readForm(e.target); S.values[f] = v; var errs = {}; var email = v.email.trim().toLowerCase();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) errs.email = "Enter a valid email address.";
+      else if (S.accounts[email]) errs.email = "This address already has an account – log in";
+      S.errs[f] = errs; S.flash = null;
+      if (Object.keys(errs).length) { render(true, f); return; }
+      if (!sessionGuard(f, v)) return;
+      serverGate(f, function () {
+        S.invitations.forEach(function (i) { if (i.email === email && i.status === "pending") { i.status = "revoked"; i.note = "replaced by a newer invitation"; } });
+        var tok = "tok-" + (S.tokenSeq++) + "-x9";
+        S.invitations.unshift({ email: email, token: tok, status: "pending", note: "valid until 2026-11-06" });
+        S.shownLink = tok; S.values[f] = null; S.errs[f] = {};
+        render(true); say("Invitation created. The link is shown once.");
+        var lp = document.getElementById("link-panel"); if (lp) lp.focus();
+      });
+    } },
+      summary(f), flashFor(f),
+      field(f, "email", "Invitee email", { type: "email" }),
+      h("button", { type: "submit", class: "primary", "data-busy": "Inviting...", text: "Invite mentor" }));
+    var link = null;
+    if (S.shownLink) {
+      var url = "https://devmentor.example/register/mentor?token=" + S.shownLink;
+      link = h("div", { class: "card", id: "link-panel", tabindex: "-1", role: "group", "aria-label": "Invitation link" },
+        h("strong", { text: "Invitation link (shown once)" }),
+        h("p", { class: "mono", id: "invite-link", text: url }),
+        h("p", { class: "hint", text: "Copy it now and send it to the mentor yourself. After you click Done it cannot be shown again." }),
+        h("div", { class: "row" },
+          h("button", { type: "button", id: "copy-link", text: "Copy link", onclick: function () { say("Link copied (simulated)."); } }),
+          h("a", { class: "btn", href: "#/register/" + S.shownLink, text: "Open this link in the prototype" }),
+          h("button", { type: "button", id: "link-done", class: "primary", text: "Done", onclick: function () { S.shownLink = null; render(true); say("Link closed. It cannot be shown again."); } })));
+    }
+    var list;
+    if (S.invList === "error") list = h("div", { class: "alert", role: "alert" }, "Could not load invitations. ", h("button", { type: "button", text: "Try again", onclick: function () { S.invList = "full"; render(true); say("Invitations loaded."); } }));
+    else if (S.invList === "empty" || !S.invitations.length) list = h("p", { id: "inv-empty", text: "No invitations yet. Invite your first mentor above." });
+    else list = h("div", { class: "scroll" }, h("table", { id: "inv-table" },
+      h("thead", null, h("tr", null, h("th", { text: "Email" }), h("th", { text: "Status" }), h("th", { text: "Details" }))),
+      h("tbody", null, S.invitations.map(function (i) { return h("tr", null, h("td", { text: i.email }), h("td", null, h("span", { class: "badge", text: i.status.charAt(0).toUpperCase() + i.status.slice(1) })), h("td", { text: i.note })); }))));
+    return h("div", null, heading("Invitations"), form, link, h("h2", { text: "Sent invitations" }), list);
+  };
+
+  function checklistItem(done, text, missing) {
+    return h("li", null, h("span", { class: "badge", text: done ? "Done" : "To do" }), " ", text, !done && missing ? h("div", { class: "hint", text: missing }) : null);
+  }
+  function shareBlock(m) {
+    if (!m.saved) return null;
+    return h("div", { class: "card", id: "share" }, h("strong", { text: "Your share link" }),
+      h("p", { class: "mono", id: "share-url", text: shareUrl(m) }),
+      h("div", { class: "row" },
+        h("button", { type: "button", text: "Copy link", onclick: function () { say("Link copied (simulated)."); } }),
+        h("a", { class: "btn", href: "#/m/" + m.slug, text: "Open your public page" })));
+  }
+  screens.mentor = function () {
+    if (!protectedGuard("mentor")) return null;
+    var m = mentorOf(S.session), o = offer(m);
+    var soon = m.slots.some(function (s) { return !s.booked; }) && o.bookableCount === 0;
+    var items = h("ul", { class: "checklist", id: "checklist" },
+      checklistItem(o.saved, "Profile saved (name and headline)", "Add your headline on the profile page."),
+      checklistItem(o.prices, "Prices set for 25 and 50 minutes", "Set both prices on the profile page."),
+      checklistItem(o.bookableCount > 0, "At least one slot that can be booked", soon ? "Your slots start in less than 24 hours, so nobody can book them yet." : "Add a slot at least 24 hours ahead."),
+      checklistItem(o.saved, "Share link ready", "Save your profile to get your link."),
+      checklistItem(m.listed, "Show me on the public list", "Switch this on in your profile. You are listed only when everything above is done."));
+    var state = o.onList ? "Your offer is ready and you are on the public list." : o.ready ? "Your offer is ready. Anyone with your link can book. You are not on the public list." : m.listed ? "Public list is on, but you are not visible yet. Missing: " + [!o.saved && "profile", !o.prices && "prices", o.bookableCount === 0 && "a slot that can be booked"].filter(Boolean).join(", ") + "." : "Your offer is not ready yet.";
+    return h("div", null, heading("Your mentor dashboard"), h("p", { id: "offer-state", text: state }), items, shareBlock(m),
+      h("div", { class: "row" }, h("a", { class: "btn", href: "#/mentor/profile", text: "Edit profile and prices" }), h("a", { class: "btn", href: "#/mentor/slots", text: "Manage slots" })));
+  };
+
+  screens.profile = function () {
+    if (!protectedGuard("mentor")) return null;
+    var m = mentorOf(S.session), f = "profile";
+    var v = vals(f, { name: m.name, headline: m.headline, bio: m.bio, tags: m.tags, links: m.links, p25: m.p25, p50: m.p50, listed: m.listed });
+    S.values[f] = S.values[f] || null;
+    function fv(k) { return v[k]; }
+    var form = h("form", { novalidate: true, id: "profile-form", onsubmit: function (e) {
+      e.preventDefault(); var x = readForm(e.target); x.tags = x.tags || []; S.values[f] = x; var errs = {};
+      if (!x.name.trim()) errs.name = "Enter your name.";
+      if (!x.headline.trim()) errs.headline = "Enter a headline."; else if (x.headline.length > 120) errs.headline = "Use at most 120 characters.";
+      var links = x.links.split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+      if (links.length > 5) errs.links = "Add at most 5 links."; else if (links.some(function (s) { return s.indexOf("https://") !== 0; })) errs.links = "Every link must start with https://";
+      ["p25", "p50"].forEach(function (k) { var s = x[k].trim(); if (s === "") return; var n = Number(s); if (!isFinite(n) || n < 10 || n > 10000) errs[k] = "Enter a price from 10 to 10,000 PLN."; });
+      S.errs[f] = errs; S.flash = null;
+      if (Object.keys(errs).length) { render(true, f); return; }
+      if (!sessionGuard(f, x)) return;
+      serverGate(f, function () {
+        m.name = x.name.trim(); m.headline = x.headline.trim(); m.bio = x.bio; m.tags = x.tags; m.links = links.join("\n");
+        m.p25 = x.p25.trim(); m.p50 = x.p50.trim(); m.listed = !!x.listed; m.saved = true; S.values[f] = null; S.errs[f] = {};
+        S.flash = { form: f, kind: "ok", text: "Profile saved." }; render(true); say("Profile saved."); var sm = document.getElementById("saved-msg"); if (sm) sm.focus();
+      });
+    } },
+      summary(f),
+      S.flash && S.flash.form === f && S.flash.kind === "ok" ? h("div", { class: "alert info", role: "status", id: "saved-msg", tabindex: "-1", text: S.flash.text }) : flashFor(f),
+      field(f, "name", "Name", { def: fv("name") }),
+      field(f, "headline", "Headline", { def: fv("headline"), hint: "Up to 120 characters." }),
+      field(f, "bio", "Bio (optional)", { def: fv("bio"), textarea: true }),
+      h("div", { class: "field" }, h("span", { class: "lbl", text: "Topics (optional)" }),
+        TAGS.map(function (t) { return h("label", { style: "font-weight:400" }, h("input", { type: "checkbox", name: "tags", value: t, checked: (fv("tags") || []).indexOf(t) >= 0 }), t); })),
+      field(f, "links", "Public work links (optional)", { def: fv("links"), textarea: true, hint: "One link per line, https only, up to 5." }),
+      h("h2", { text: "Prices (PLN)" }),
+      field(f, "p25", "25 minutes", { def: fv("p25"), hint: "Leave empty for Not set." }),
+      field(f, "p50", "50 minutes", { def: fv("p50"), hint: "Leave empty for Not set." }),
+      h("div", { class: "field" }, h("label", { style: "font-weight:400" }, h("input", { type: "checkbox", name: "listed", checked: !!fv("listed") }), "Show me on the public list"),
+        h("div", { class: "hint", text: "You appear on the list only when your profile, both prices and at least one slot that can be booked are in place. Your share link works either way." })),
+      h("button", { type: "submit", class: "primary", "data-busy": "Saving...", text: "Save profile" }));
+    return h("div", null, heading("Profile and prices"), form, shareBlock(m));
+  };
+
+  function parseSlot(d, t) {
+    var dm = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d.trim()), tm = /^(\d{1,2}):(\d{2})$/.exec(t.trim());
+    if (!dm || !tm) return null;
+    var ms = Date.UTC(+dm[1], +dm[2] - 1, +dm[3], +tm[1], +tm[2]);
+    var chk = new Date(ms);
+    if (chk.getUTCMonth() !== +dm[2] - 1 || +tm[1] > 23 || +tm[2] > 59) return null;
+    return ms;
+  }
+  function cancelDelete(id) { S.confirmDelete = null; render(true); var d = document.getElementById("del-" + id); if (d) d.focus(); say("Delete cancelled."); }
+  screens.slots = function () {
+    if (!protectedGuard("mentor")) return null;
+    var m = mentorOf(S.session), f = "slot";
+    var form = h("form", { novalidate: true, id: "slot-form", onsubmit: function (e) {
+      e.preventDefault(); var x = readForm(e.target); S.values[f] = x; var errs = {}; S.flash = null;
+      var t = parseSlot(x.date, x.time);
+      if (t === null) errs.date = "Enter a date as YYYY-MM-DD and a time as HH:MM.";
+      else if (t - now() < 24 * HOUR) errs.date = "A slot must start at least 24 hours from now.";
+      else if (t - now() > 60 * 24 * HOUR) errs.date = "A slot can be at most 60 days ahead.";
+      else if (new Date(t).getUTCMinutes() % 15 !== 0) errs.time = "Use a start time on a 15-minute step.";
+      else if (m.slots.some(function (s) { return s.t === t; })) errs.date = "You already have a slot at this time.";
+      else if (m.slots.some(function (s) { return Math.abs(s.t - t) < 50 * 60000; })) errs.date = "Slots must be at least 50 minutes apart.";
+      S.errs[f] = errs;
+      if (Object.keys(errs).length) { render(true, f); return; }
+      if (!sessionGuard(f, x)) return;
+      serverGate(f, function () {
+        m.slots.push({ id: S.slotSeq++, t: t, booked: false }); m.slots.sort(function (a, b) { return a.t - b.t; });
+        S.values[f] = null; S.errs[f] = {}; render(true); say("Slot added: " + fmtDay(t) + ", " + fmtTime(t) + ".");
+        var hh = document.getElementById("page-h1"); if (hh) hh.focus();
+      });
+    } },
+      summary(f), flashFor(f),
+      h("div", { class: "hint", text: "Times are in Europe/Warsaw. A slot must start at least 24 hours from now." }),
+      field(f, "date", "Date", { hint: "YYYY-MM-DD" }),
+      field(f, "time", "Start time", { hint: "HH:MM" }),
+      h("button", { type: "submit", class: "primary", "data-busy": "Adding...", text: "Add slot" }));
+    var notice = !pricesSet(m) ? h("div", { class: "alert info", id: "no-prices", role: "status", text: "You can add slots now, but they are not listed for booking until you set both prices." }) : null;
+    var list;
+    if (!m.slots.length) list = h("div", null, h("p", { id: "slots-empty", text: "No slots yet. Add your first slot above." }));
+    else {
+      var groups = {}, order = [];
+      m.slots.slice().sort(function (a, b) { return a.t - b.t; }).forEach(function (s) { var k = fmtDay(s.t); if (!groups[k]) { groups[k] = []; order.push(k); } groups[k].push(s); });
+      list = h("div", { id: "slot-list" }, order.map(function (k) {
+        return h("section", { "aria-label": k }, h("h3", { text: k }), h("ul", null, groups[k].map(function (s) {
+          var status = s.booked ? "Booked" : bookable(s) ? "Open" : "Not bookable - starts too soon";
+          var del = s.booked ? h("span", { class: "hint", text: "Cancel the booking instead (outside this prototype)." })
+            : S.confirmDelete === s.id ? h("span", { role: "group", "aria-label": "Confirm delete", onkeydown: function (e) { if (e.key === "Escape") cancelDelete(s.id); } }, "Delete this slot? ",
+                h("button", { type: "button", id: "keep-slot", text: "Keep slot", onclick: function () { cancelDelete(s.id); } }), " ",
+                h("button", { type: "button", class: "primary", text: "Yes, delete this slot", onclick: function () { m.slots = m.slots.filter(function (z) { return z.id !== s.id; }); S.confirmDelete = null; render(true); say("Slot deleted."); var hh = document.getElementById("page-h1"); if (hh) hh.focus(); } }))
+            : h("button", { type: "button", id: "del-" + s.id, "aria-label": "Delete slot " + fmtDay(s.t) + " " + fmtTime(s.t), text: "Delete", onclick: function () { S.confirmDelete = s.id; render(true); var k = document.getElementById("keep-slot"); if (k) k.focus(); } });
+          return h("li", null, fmtTime(s.t) + " (Europe/Warsaw) ", h("span", { class: "badge", text: status }), " ", del);
+        })));
+      }));
+    }
+    return h("div", null, heading("Slots"), notice, form, h("h2", { text: "Your slots" }), list);
+  };
+
+  screens.public = function (slug) {
+    var email = Object.keys(S.mentors).filter(function (e) { return S.mentors[e].slug === slug; })[0];
+    if (!email || !S.mentors[email].saved) return h("div", null, heading("Not found"), h("p", { text: "We could not find this page." }), h("a", { href: "#/", text: "Back to the start" }));
+    var m = S.mentors[email], open = m.slots.filter(bookable), links = m.links ? m.links.split("\n") : [];
+    var groups = {}, order = [];
+    open.sort(function (a, b) { return a.t - b.t; }).forEach(function (s) { var k = fmtDay(s.t); if (!groups[k]) { groups[k] = []; order.push(k); } groups[k].push(s); });
+    var times = (!pricesSet(m) || !open.length)
+      ? h("div", { id: "no-times" }, h("p", { text: "No times available right now." }), h("p", { class: "hint", text: "A session can be booked at least 24 hours ahead." }))
+      : h("div", null, h("p", { class: "hint", text: "A session can be booked at least 24 hours ahead. Times are in Europe/Warsaw." }),
+          order.map(function (k) { return h("section", { "aria-label": k }, h("h3", { text: k }), h("ul", null, groups[k].map(function (s) { return h("li", { text: fmtTime(s.t) }); }))); }),
+          h("div", { class: "row" }, h("button", { type: "button", id: "book", "aria-disabled": "true", "aria-describedby": "book-reason", onclick: function (e) { e.preventDefault(); } }, "Book"),
+            h("span", { id: "book-reason", class: "hint", text: "Booking is not available yet. It arrives in a later release." })));
+    return h("div", null, heading(m.name), h("p", { text: m.headline }), m.bio ? h("p", { text: m.bio }) : null,
+      m.tags.length ? h("p", { text: "Topics: " + m.tags.join(", ") }) : null,
+      links.length ? h("ul", null, links.map(function (l) { return h("li", null, h("span", { class: "mono", text: l })); })) : null,
+      h("h2", { text: "Prices" }),
+      pricesSet(m) ? h("ul", null, h("li", { text: "25 minutes: " + m.p25 + " PLN" }), h("li", { text: "50 minutes: " + m.p50 + " PLN" })) : h("p", { text: "Prices not set." }),
+      h("h2", { text: "Available times" }), times);
+  };
+
+  /* ---------- router ---------- */
+  function render(keep, formId) {
+    renderNav(); renderTest();
+    var app = document.getElementById("app");
+    var path = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
+    var node;
+    var key = path.join("/");
+    if (key !== "login") S.next = null;
+    if (key === "") node = screens.start();
+    else if (key === "login") node = screens.login();
+    else if (path[0] === "register") node = screens.register(path[1] || "");
+    else if (key === "admin") node = screens.admin();
+    else if (key === "admin/invitations") node = screens.invitations();
+    else if (key === "mentor") node = screens.mentor();
+    else if (key === "mentor/profile") node = screens.profile();
+    else if (key === "mentor/slots") node = screens.slots();
+    else if (path[0] === "m" && path[1]) node = screens.public(path[1]);
+    else if (key === "mentors") node = screens.outside();
+    else node = screens.notfound();
+    if (node === null) return;
+    app.textContent = ""; app.appendChild(node);
+    if (formId) focusFirstError(formId);
+    else if (!keep) { var h1 = document.getElementById("page-h1"); if (h1) h1.focus(); }
+    if (S.flash && S.flash.kind === "ok" && !formId) S.flash = null;
+    document.title = (document.getElementById("page-h1") ? document.getElementById("page-h1").textContent + " - " : "") + "DevMentor prototype";
+  }
+  window.addEventListener("hashchange", function () { S.confirmDelete = null; S.flash = S.flash && S.flash.kind === "ok" ? S.flash : null; render(false); });
+  render(false);
+})();
+</script>
+</body>
+</html>

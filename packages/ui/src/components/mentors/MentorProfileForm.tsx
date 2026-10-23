@@ -51,7 +51,8 @@ type Errors = Record<string, string>;
  * Profile, prices and list visibility in one form (spec E01, `/mentor/profile`). A bespoke form on the
  * `Field` parts because `CrudForm` cannot infer tags, a list of links, a price with its currency or a
  * switch (C7). Behaviour follows the Form pattern: changed fields checked on blur, focus on the first
- * error, values kept, one submit at a time, "saved" only after the server confirms.
+ * error, values kept, one submit at a time, "saved" only after the server confirms, and focus moves to the
+ * "Profile saved." status so keyboard and screen-reader users know it worked.
  */
 export function MentorProfileForm({ initialValues, tagOptions, currency, onSubmit, onSaved }: MentorProfileFormProps) {
   const id = useId();
@@ -158,6 +159,7 @@ export function MentorProfileForm({ initialValues, tagOptions, currency, onSubmi
     if (result.ok) {
       setErrors({});
       setSaved(true);
+      pendingFocus.current = `${id}-saved`;
       onSaved?.();
       return;
     }
@@ -381,7 +383,7 @@ export function MentorProfileForm({ initialValues, tagOptions, currency, onSubmi
           {isSaving && <Spinner role="presentation" aria-hidden="true" aria-label={undefined} data-icon="inline-start" />}
           {isSaving ? "Saving…" : "Save profile"}
         </Button>
-        <p role="status" className="type-body text-muted-foreground">
+        <p id={`${id}-saved`} role="status" tabIndex={-1} className="type-body text-muted-foreground outline-none">
           {saved ? "Profile saved." : ""}
         </p>
       </div>
