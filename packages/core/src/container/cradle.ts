@@ -5,6 +5,7 @@ import type { Logger } from "../logger";
 import type { RateLimiter } from "../rate-limiter";
 import type { AuthService } from "../services/auth/auth.service";
 import type { UserService } from "../services/auth/user.service";
+import type { InvitationService } from "../services/mentors/invitation.service";
 import type { HealthService } from "../services/system/health.service";
 
 // Every dependency registered in container.ts, by its camelCase key.
@@ -18,4 +19,5 @@ export type Cradle = {
   healthService: HealthService;
   userService: UserService;
   authService: AuthService;
+  invitationService: InvitationService;
 };

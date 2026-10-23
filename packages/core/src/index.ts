@@ -13,4 +13,10 @@ export { logger, type Logger } from "./logger";
 export { RateLimiter, type RateLimitCheck, type RateLimiterOptions } from "./rate-limiter";
 export { AuthService, LOGIN_RATE_LIMIT, PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH, type SessionUserDto } from "./services/auth/auth.service";
 export { UserService, type UserDto } from "./services/auth/user.service";
+export {
+  INVITATION_TTL_MS,
+  InvitationService,
+  type CreatedInvitationDto,
+  type InvitationPreviewDto,
+} from "./services/mentors/invitation.service";
 export { HealthService, type HealthStatus } from "./services/system/health.service";
