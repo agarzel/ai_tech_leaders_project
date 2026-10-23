@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { loginSchema } from "./login.schema";
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "./password.constants";
-import { registerMentorFormSchema, registerMentorSchema } from "./register-mentor.schema";
+import { invitationPreviewSchema, registerMentorFormSchema, registerMentorSchema } from "./register-mentor.schema";
 import { registerSchema } from "./register.schema";
 
 const issuesByField = (error: { issues: { path: PropertyKey[]; message: string }[] }) =>
@@ -89,5 +89,16 @@ describe("registerMentorSchema", () => {
 
   it("has a form variant without the token", () => {
     expect(Object.keys(registerMentorFormSchema.shape)).toEqual(["name", "password"]);
+  });
+});
+
+describe("invitationPreviewSchema", () => {
+  it("accepts a token in the body", () => {
+    expect(invitationPreviewSchema.safeParse({ token: "abc" }).success).toBe(true);
+  });
+
+  it("rejects a missing or empty token", () => {
+    expect(invitationPreviewSchema.safeParse({}).success).toBe(false);
+    expect(invitationPreviewSchema.safeParse({ token: "" }).success).toBe(false);
   });
 });

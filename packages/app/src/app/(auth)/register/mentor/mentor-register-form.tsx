@@ -21,7 +21,7 @@ export function MentorRegisterForm() {
   useEffect(() => {
     if (!token) return;
     const controller = new AbortController();
-    apiCall<InvitationPreviewDto>(`/api/auth/invitations/${encodeURIComponent(token)}`, { signal: controller.signal })
+    apiCall<InvitationPreviewDto>("/api/auth/invitations/preview", { method: "POST", body: { token }, signal: controller.signal })
       .then((result) => setPreview(result.ok ? { status: "valid", email: result.data.email } : { status: "invalid" }))
       .catch(() => undefined);
     return () => controller.abort();

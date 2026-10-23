@@ -10,3 +10,8 @@ export const registerMentorSchema = registerMentorFormSchema.extend({
 });
 
 export type RegisterMentorInput = z.infer<typeof registerMentorSchema>;
+
+// The preview takes the token in the body, not the URL: request paths end up in logs (see apiHandler).
+export const invitationPreviewSchema = z.object({
+  token: z.string().min(1, "Invitation token is required").max(512),
+});
