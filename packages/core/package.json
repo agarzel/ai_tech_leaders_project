@@ -8,7 +8,8 @@
     "./validators/*": "./src/validators/*.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "auth:set-password": "tsx scripts/auth-set-password.ts"
   },
   "dependencies": {
     "@devmentor/db": "0.1.0",
@@ -20,6 +21,7 @@
   },
   "devDependencies": {
     "@types/node": "^20",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }

@@ -1,5 +1,4 @@
 import type { UserRole } from "@devmentor/db";
-import { getEnv } from "../config/env";
 import type { AuthService, SessionUserDto } from "../services/auth/auth.service";
 import { ForbiddenError, UnauthorizedError } from "./errors";
 import { SESSION_COOKIE_NAME } from "./session-cookie";
@@ -27,13 +26,9 @@ function readCookie(header: string | null, name: string): string | undefined {
   return pair?.trim().slice(name.length + 1) || undefined;
 }
 
-/**
- * TEMPORARY until the `auth` concept exists (sessions, roles).
- * Admin endpoints are open in development/test and closed (403) in production – fail closed, never open.
- * Replace with `requireSession(req)` + `requireRole(session, "admin")` when auth is implemented.
- */
-export function requireAdmin(): void {
-  if (getEnv().NODE_ENV === "production") {
-    throw new ForbiddenError("Admin access requires authentication, which is not implemented yet");
-  }
+/** Admin-only access: a valid session whose role is `admin`. No bypass in any environment – anything else fails closed. */
+export async function requireAdmin(request: Request, authService: Pick<AuthService, "authenticate">): Promise<Session> {
+  const session = await requireSession(request, authService);
+  requireRole(session, "admin");
+  return session;
 }

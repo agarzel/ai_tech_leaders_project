@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import { SignJWT } from "jose";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { UniqueConstraintViolationException, User, type EntityManager } from "@devmentor/db";
-import { ConflictError, TooManyRequestsError, UnauthorizedError } from "../../http/errors";
+import { ConflictError, NotFoundError, TooManyRequestsError, UnauthorizedError, ValidationError } from "../../http/errors";
 import { RateLimiter } from "../../rate-limiter";
 import { FakeClock } from "../../testing/fake-clock";
 import { AuthService, LOGIN_RATE_LIMIT } from "./auth.service";
@@ -69,6 +69,53 @@ describe("AuthService", () => {
       em.flush.mockRejectedValue(new Error("connection lost"));
 
       await expect(service.register("ada@example.com", "Ada", PASSWORD)).rejects.toThrow("connection lost");
+    });
+  });
+
+  describe("setPassword", () => {
+    it("resets the password of an existing account without changing its role", async () => {
+      const user = storedUser({ passwordHash: null });
+      em.findOne.mockResolvedValue(user);
+
+      const result = await service.setPassword(" Ada@Example.com ", PASSWORD, { admin: false });
+
+      expect(result).toEqual({ id: "u1", email: "ada@example.com", name: "Ada", role: "mentee" });
+      expect(em.findOne).toHaveBeenCalledWith(User, { email: "ada@example.com" });
+      expect(user.passwordHash).toMatch(/^\$2[aby]\$12\$/);
+      expect(await bcrypt.compare(PASSWORD, user.passwordHash as string)).toBe(true);
+      expect(em.flush).toHaveBeenCalledOnce();
+    });
+
+    it("promotes an existing account to admin with the admin option", async () => {
+      em.findOne.mockResolvedValue(storedUser());
+
+      const result = await service.setPassword("ada@example.com", PASSWORD, { admin: true });
+
+      expect(result.role).toBe("admin");
+    });
+
+    it("creates an admin account for an unknown e-mail with the admin option", async () => {
+      em.findOne.mockResolvedValue(null);
+      em.create.mockImplementation((_entity, data) => ({ id: "u2", ...data }));
+
+      const result = await service.setPassword("Root@Example.com", PASSWORD, { admin: true });
+
+      expect(result).toEqual({ id: "u2", email: "root@example.com", name: "root", role: "admin" });
+      expect(em.create).toHaveBeenCalledWith(User, expect.objectContaining({ role: "admin" }));
+      expect(em.flush).toHaveBeenCalledOnce();
+    });
+
+    it("never creates a non-admin account", async () => {
+      em.findOne.mockResolvedValue(null);
+
+      await expect(service.setPassword("nobody@example.com", PASSWORD, { admin: false })).rejects.toBeInstanceOf(NotFoundError);
+      expect(em.create).not.toHaveBeenCalled();
+      expect(em.flush).not.toHaveBeenCalled();
+    });
+
+    it.each(["x".repeat(11), "x".repeat(129)])("rejects a password of %s characters outside 12-128", async (password) => {
+      await expect(service.setPassword("ada@example.com", password, { admin: true })).rejects.toBeInstanceOf(ValidationError);
+      expect(em.findOne).not.toHaveBeenCalled();
     });
   });
 

@@ -1,4 +1,5 @@
 import { spawn, type ChildProcess } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import { createWriteStream, mkdirSync } from "node:fs";
 import path from "node:path";
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
@@ -13,6 +14,8 @@ const SERVER_READY_TIMEOUT_MS = 180_000;
 declare module "vitest" {
   export interface ProvidedContext {
     baseUrl: string;
+    /** Sign-in credentials of the accounts created by the setup (generated per run, never committed). */
+    accounts: { admin: { email: string; password: string } };
   }
 }
 
@@ -32,6 +35,8 @@ export default async function setup(project: TestProject) {
 
   await run("npm", ["run", "db:migrate"], { DATABASE_URL: databaseUrl });
   await seed(database);
+  const admin = { email: "admin@devmentor.test", password: randomBytes(18).toString("base64url") };
+  await createAdmin(admin, databaseUrl);
 
   const server = startApp(databaseUrl);
   const baseUrl = `http://localhost:${APP_PORT}`;
@@ -44,6 +49,7 @@ export default async function setup(project: TestProject) {
   }
 
   project.provide("baseUrl", baseUrl);
+  project.provide("accounts", { admin });
 
   return async () => {
     await stopApp(server);
@@ -57,6 +63,15 @@ async function seed(database: StartedPostgreSqlContainer) {
     (gen_random_uuid(), 'seeded.mentor@devmentor.test', 'Seeded Mentor', 'mentor', now(), now());`;
   const result = await database.exec(["psql", "-U", "devmentor", "-d", "devmentor", "-v", "ON_ERROR_STOP=1", "-c", sql]);
   if (result.exitCode !== 0) throw new Error(`Seeding failed: ${result.output}`);
+}
+
+// Same path as local development: the `auth:set-password` script, which goes through AuthService.
+async function createAdmin(admin: { email: string; password: string }, databaseUrl: string) {
+  await run("npm", ["run", "auth:set-password", "--", "--email", admin.email, "--admin"], {
+    DATABASE_URL: databaseUrl,
+    AUTH_SECRET: INTEGRATION_AUTH_SECRET,
+    DEVMENTOR_PASSWORD: admin.password,
+  });
 }
 
 function startApp(databaseUrl: string): ChildProcess {

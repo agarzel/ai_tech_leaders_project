@@ -1,9 +1,14 @@
-import { afterAll, describe, expect, inject, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, inject, it } from "vitest";
+import { loginAs } from "./support/auth";
 import { Browser } from "./support/browser";
 
 const browser = new Browser("devmentor-it-admin", inject("baseUrl"));
 
 describe("admin panel", () => {
+  beforeAll(async () => {
+    await loginAs(browser, "admin");
+  });
+
   afterAll(async () => {
     await browser.close();
   });

@@ -3,7 +3,7 @@ import { jwtVerify, SignJWT } from "jose";
 import { UniqueConstraintViolationException, User, type EntityManager, type IUser, type UserRole } from "@devmentor/db";
 import type { Clock } from "../../clock";
 import type { Env } from "../../config/env";
-import { ConflictError, TooManyRequestsError, UnauthorizedError } from "../../http/errors";
+import { ConflictError, NotFoundError, TooManyRequestsError, UnauthorizedError, ValidationError } from "../../http/errors";
 import { SESSION_MAX_AGE_SECONDS } from "../../http/session-cookie";
 import type { RateLimiter, RateLimiterOptions } from "../../rate-limiter";
 
@@ -11,6 +11,9 @@ const BCRYPT_COST = 12;
 
 /** Login policy: 5 failed attempts per e-mail within 15 minutes. The shared `rateLimiter` is built with it. */
 export const LOGIN_RATE_LIMIT: RateLimiterOptions = { maxAttempts: 5, windowMs: 15 * 60_000 };
+
+export const PASSWORD_MIN_LENGTH = 12;
+export const PASSWORD_MAX_LENGTH = 128;
 
 const INVALID_CREDENTIALS = "Invalid email or password";
 
@@ -65,6 +68,31 @@ export class AuthService {
     }
 
     this.deps.rateLimiter.reset(key);
+    return toSessionUser(user);
+  }
+
+  /**
+   * Operator path (the `auth:set-password` script, integration setup) – never reachable over HTTP.
+   * Sets or resets the password of an existing account; with `admin` it also promotes it, or creates it as an admin.
+   * Without `admin` an unknown e-mail is `NotFoundError` – this path never creates non-admin accounts.
+   */
+  async setPassword(email: string, password: string, { admin }: { admin: boolean }): Promise<SessionUserDto> {
+    if (password.length < PASSWORD_MIN_LENGTH || password.length > PASSWORD_MAX_LENGTH) {
+      const message = `Password must be ${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH} characters long`;
+      throw new ValidationError(message, { password: [message] });
+    }
+    const key = normalizeEmail(email);
+    const passwordHash = await bcrypt.hash(password, BCRYPT_COST);
+
+    let user = await this.deps.em.findOne(User, { email: key });
+    if (!user) {
+      if (!admin) throw new NotFoundError("No user with this email");
+      user = this.deps.em.create(User, { email: key, name: key.split("@")[0]!, role: "admin", passwordHash });
+    } else {
+      user.passwordHash = passwordHash;
+      if (admin) user.role = "admin";
+    }
+    await this.deps.em.flush();
     return toSessionUser(user);
   }
 

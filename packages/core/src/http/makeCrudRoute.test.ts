@@ -4,7 +4,7 @@ import { createRequestScope } from "../container/container";
 import { CLIENT_HEADER } from "./apiHandler";
 import { requireAdmin } from "./auth";
 import type { CrudService } from "./crud";
-import { ForbiddenError } from "./errors";
+import { ForbiddenError, UnauthorizedError } from "./errors";
 import { makeCrudRoute } from "./makeCrudRoute";
 
 vi.mock("../container/container", () => ({ createRequestScope: vi.fn() }));
@@ -35,6 +35,8 @@ const routes = makeCrudRoute({
   access: "admin",
 });
 
+const authService = { authenticate: vi.fn() };
+
 const withId = { params: Promise.resolve({ id: ID }) };
 
 type Envelope = { ok: boolean; data?: unknown; error?: { message: string; fieldErrors?: Record<string, string[]> } };
@@ -53,18 +55,34 @@ function send(method: string, url: string, body?: string) {
 
 describe("makeCrudRoute", () => {
   beforeEach(() => {
-    vi.mocked(createRequestScope).mockResolvedValue({ cradle: { thingService: service } } as never);
+    vi.mocked(createRequestScope).mockResolvedValue({ cradle: { thingService: service, authService } } as never);
   });
 
-  it("checks access before resolving the service", async () => {
-    vi.mocked(requireAdmin).mockImplementationOnce(() => {
-      throw new ForbiddenError();
-    });
+  it("checks access with the request before touching the service", async () => {
+    vi.mocked(requireAdmin).mockRejectedValueOnce(new ForbiddenError());
 
     const response = await routes.GET(new Request(BASE));
 
     expect(response.status).toBe(403);
-    expect(createRequestScope).not.toHaveBeenCalled();
+    expect(service.list).not.toHaveBeenCalled();
+  });
+
+  it("answers 401 for an anonymous caller", async () => {
+    vi.mocked(requireAdmin).mockRejectedValueOnce(new UnauthorizedError());
+
+    const response = await routes.GET(new Request(BASE));
+
+    expect(response.status).toBe(401);
+    expect(service.list).not.toHaveBeenCalled();
+  });
+
+  it("passes the request and the cradle's auth service to the admin guard", async () => {
+    service.list.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
+    const request = new Request(BASE);
+
+    await routes.GET(request);
+
+    expect(requireAdmin).toHaveBeenCalledWith(request, authService);
   });
 
   describe("GET", () => {
