@@ -19,4 +19,5 @@ export {
   type CreatedInvitationDto,
   type InvitationPreviewDto,
 } from "./services/mentors/invitation.service";
+export { MentorService, SLUG_MAX_ATTEMPTS, type MentorProfileDto } from "./services/mentors/mentor.service";
 export { HealthService, type HealthStatus } from "./services/system/health.service";
