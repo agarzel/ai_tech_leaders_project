@@ -82,11 +82,13 @@ export function OfferChecklist({
     {
       key: "share",
       title: "Share link",
-      status: "done",
-      text: bookable
-        ? "Anyone with this link can see your profile and book your open times."
-        : "Works now; it shows “No times available” until you are bookable.",
-      extra: <CopyField label="Your share link" value={shareUrl} />,
+      status: profileComplete ? "done" : "todo",
+      text: !profileComplete
+        ? "Your link appears here once you save your profile."
+        : bookable
+          ? "Anyone with this link can see your profile and book your open times."
+          : "Works now; it shows “No times available” until you are bookable.",
+      extra: profileComplete ? <CopyField label="Your share link" value={shareUrl} /> : undefined,
     },
     {
       key: "list",

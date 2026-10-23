@@ -91,8 +91,17 @@ describe("OfferChecklist", () => {
     expect(within(step("Profile")).getByRole("link", { name: "Complete profile: Profile" })).toHaveClass("bg-primary");
     expect(within(step("Prices")).getByRole("link", { name: "Set prices: Prices" })).toHaveAttribute("href", "/mentor/profile");
     expect(step("A time mentees can book")).toHaveTextContent("Add at least one time");
-    expect(step("Share link")).toHaveTextContent("No times available");
+    expect(step("Share link")).toHaveTextContent("To do");
+    expect(step("Share link")).toHaveTextContent("once you save your profile");
+    expect(screen.queryByLabelText("Your share link")).not.toBeInTheDocument();
     expect(step("Public list")).toHaveTextContent("Optional");
+  });
+
+  it("shows the share link as done once the profile is saved, even before the mentor is bookable", () => {
+    render(<OfferChecklist {...base} profileComplete pricesSet={false} bookableSlots={0} slotsTooSoon={0} listed={false} />);
+
+    expect(step("Share link")).toHaveTextContent("Done");
+    expect(step("Share link")).toHaveTextContent("No times available");
     expect(screen.getByLabelText("Your share link")).toHaveValue(base.shareUrl);
   });
 

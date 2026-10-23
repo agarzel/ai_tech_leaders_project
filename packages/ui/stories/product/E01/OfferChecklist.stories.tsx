@@ -21,7 +21,14 @@ type Story = StoryObj<typeof meta>;
 export const Playground: Story = {};
 
 /** First visit after the invitation: everything to do; *Complete profile* is the one accent. */
-export const NewMentor: Story = { args: { profileComplete: false, pricesSet: false, bookableSlots: 0, slotsTooSoon: 0 } };
+export const NewMentor: Story = {
+  args: { profileComplete: false, pricesSet: false, bookableSlots: 0, slotsTooSoon: 0 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText("Your link appears here once you save your profile.")).toBeInTheDocument();
+    await expect(canvas.queryByLabelText("Your share link")).not.toBeInTheDocument();
+  },
+};
 
 /** Profile and prices set, no times yet. */
 export const NoTimes: Story = { args: { bookableSlots: 0 } };
@@ -61,7 +68,7 @@ export const States: Story = {
 };
 
 /** At 320 px the action moves under the text; the share link scrolls inside its field. */
-export const Narrow: Story = { globals: { viewport: { value: "mobile320", isRotated: false } }, args: { profileComplete: false } };
+export const Narrow: Story = { globals: { viewport: { value: "mobile320", isRotated: false } }, args: { pricesSet: false } };
 
 /** Only the first unfinished step gets the accent; each action names its step for screen readers. */
 export const OneAccent: Story = {
