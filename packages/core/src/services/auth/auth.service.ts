@@ -6,14 +6,14 @@ import type { Env } from "../../config/env";
 import { ConflictError, NotFoundError, TooManyRequestsError, UnauthorizedError, ValidationError } from "../../http/errors";
 import { SESSION_MAX_AGE_SECONDS } from "../../http/session-cookie";
 import type { RateLimiter, RateLimiterOptions } from "../../rate-limiter";
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "../../validators/auth/password.constants";
 
 const BCRYPT_COST = 12;
 
 /** Login policy: 5 failed attempts per e-mail within 15 minutes. The shared `rateLimiter` is built with it. */
 export const LOGIN_RATE_LIMIT: RateLimiterOptions = { maxAttempts: 5, windowMs: 15 * 60_000 };
 
-export const PASSWORD_MIN_LENGTH = 12;
-export const PASSWORD_MAX_LENGTH = 128;
+export { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH };
 
 const INVALID_CREDENTIALS = "Invalid email or password";
 

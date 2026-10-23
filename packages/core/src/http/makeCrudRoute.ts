@@ -2,9 +2,10 @@ import { z } from "zod";
 import { createRequestScope } from "../container/container";
 import type { Cradle } from "../container/cradle";
 import { apiHandler, type HandlerArgs } from "./apiHandler";
+import { parseOrThrow, readJsonBody } from "./body";
 import { requireAdmin } from "./auth";
 import type { CrudService } from "./crud";
-import { NotFoundError, ValidationError } from "./errors";
+import { NotFoundError } from "./errors";
 
 const MAX_PAGE_SIZE = 100;
 const DEFAULT_PAGE_SIZE = 20;
@@ -73,26 +74,9 @@ export function makeCrudRoute<TDto, TCreate, TUpdate>(config: CrudRouteConfig<TD
   };
 }
 
-function parseOrThrow<T>(schema: z.ZodType<T>, input: unknown): T {
-  const result = schema.safeParse(input);
-  if (!result.success) {
-    const { fieldErrors } = z.flattenError(result.error);
-    throw new ValidationError("Invalid input", fieldErrors as Record<string, string[]>);
-  }
-  return result.data;
-}
-
 function parseId(params: HandlerArgs["params"]): string {
   // A malformed id can never match a record – answer 404 instead of letting the database reject it.
   const result = z.uuid().safeParse(params.id);
   if (!result.success) throw new NotFoundError();
   return result.data;
-}
-
-async function readJsonBody(req: Request): Promise<unknown> {
-  try {
-    return await req.json();
-  } catch {
-    throw new ValidationError("Request body must be valid JSON");
-  }
 }

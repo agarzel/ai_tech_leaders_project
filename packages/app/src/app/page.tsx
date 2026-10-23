@@ -1,10 +1,10 @@
-import { AppHeader } from "@devmentor/ui/backend/layout/AppHeader";
+import { SiteHeader } from "../components/site-header";
 import { PageLayout } from "@devmentor/ui/backend/layout/PageLayout";
 
 export default function HomePage() {
   return (
     <PageLayout
-      header={<AppHeader />}
+      header={<SiteHeader />}
       title="Book a senior engineer for one problem"
       description="A paid text session of 25 or 50 minutes with an experienced developer, about one specific problem."
     >
