@@ -1,0 +1,2 @@
+
+Wynik (e01-review): PASS=87 FAIL=0

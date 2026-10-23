@@ -1,0 +1,2 @@
+
+Wynik (e01-auth): PASS=71 FAIL=0

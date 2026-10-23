@@ -1,0 +1,42 @@
+[agent-browser] launched browser
+PASS  s01 start (gość)
+PASS  bramka: gość na s06 trafia na Log in
+PASS  bramka: komunikat
+PASS  s03 błędne dane
+PASS  s03 sukces: powrót na s06
+PASS  s06 walidacja e-maila
+PASS  s06 link pokazany raz
+PASS  s06 token w linku
+PASS  s06 po Done link zamknięty, stary wiersz Revoked
+PASS  wylogowanie -> s01
+PASS  s04 formularz z zaproszonym adresem
+PASS  s04 walidacja hasła
+PASS  s04 sukces -> s07
+PASS  s07 nowy mentor: kroki do zrobienia
+PASS  s08 profil
+PASS  s08 walidacja: brak nagłówka
+PASS  s08 walidacja: cena poza zakresem
+PASS  s08 zapisano
+PASS  s08 link do udostępniania po zapisie
+PASS  s09 pusty
+PASS  s09 slot <24 h odrzucony
+PASS  s09 slot dodany
+PASS  s09 slot otwarty
+PASS  s09 odstęp 50 min
+PASS  s07 oferta gotowa i na liście
+PASS  s11 strona mentora
+PASS  s11 Book wyłączony z powodem
+PASS  s11 cena
+PASS  s11 24 h wprost
+PASS  s11 bez ocen
+PASS  c01 mentee ląduje na s10
+PASS  s10 Anna na liście po opt-in
+PASS  s10 Marek na liście
+PASS  s10 liczba
+PASS  s10 -> s11 po kliknięciu karty
+PASS  bramka: mentee na s07 -> Log in
+PASS  bramka: zła rola komunikat
+PASS  powrót po logowaniu na s07 (Marek)
+PASS  Marek: oferta gotowa
+
+Wynik: PASS=39 FAIL=0

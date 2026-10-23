@@ -1,0 +1,2 @@
+
+Wynik (e01-mentor): PASS=90 FAIL=0

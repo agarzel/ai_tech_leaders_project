@@ -1,0 +1,2 @@
+
+Wynik (e01-invite): PASS=63 FAIL=0

@@ -17,13 +17,13 @@ Zadanie: `lekcja-07/klikalny-prototyp-devmentor.txt` (ćwiczenie 2b), dostosowan
 | Etap | Stan |
 |---|---|
 | 0. Plan | zatwierdzony 2026-10-23 (P1–P5 jak rekomendowano, E1–E14 przyjęte) |
-| 1. Szkielet i ścieżka bez błędów | **zakończony 2026-10-23**, czeka na przegląd właściciela i „dalej” |
-| 2. Stany, role, scenariusze | zadanie domowe |
-| 3. Uczciwość i sprawdzenie | zadanie domowe |
+| 1. Szkielet i ścieżka bez błędów | **zakończony 2026-10-23** (PR #47) |
+| 2. Stany, role, scenariusze | **zakończony 2026-10-23** (zadanie domowe, sekcja 12) |
+| 3. Uczciwość i sprawdzenie | **zakończony 2026-10-23** (sekcja 13); wyniki w `evidence/results-*.txt` |
 
 ## Następny krok
 
-Przegląd etapu 1 przez właściciela (komentarze w prototypie: Comment → Export), potem „dalej” = etap 2 (zadanie domowe): stany, role, scenariusze c02–c16, c20, c21, DST. Wznowienie w nowej sesji: `cd .ai/prototypes/epik-01 && npx vite build` (wynik w `packages/ui/.storybook/public/prototypes/epik-01/`), sprawdzenie: `evidence/walk-stage1.sh` i `evidence/walk-keyboard.sh` (wymagają serwera plików na porcie 4175: `python3 -m http.server 4175 -d packages/ui/.storybook/public`).
+Przegląd etapów 2 i 3 przez właściciela (komentarze w prototypie: Comment → Export for repository), potem decyzje o lukach z sekcji 13 (G13–G17 i pytania do specyfikacji). Wznowienie w nowej sesji: `cd .ai/prototypes/epik-01 && npx vite build` (wynik w `packages/ui/.storybook/public/prototypes/epik-01/`), serwer plików `python3 -m http.server 4175 -d packages/ui/.storybook/public`, sprawdzenie: `zsh .ai/prototypes/epik-01/evidence/run-all.sh` (około 10 minut) i osobno `walk-views.sh` (okna 1440/1280/320, kontrast, około 15 minut). Instrukcja dla użytkownika prototypu: `README.md` w tym katalogu.
 
 ---
 
@@ -198,3 +198,129 @@ Decyzja właściciela: po udanym zapisie fokus przechodzi na komunikat „Profil
 - Zmiana w DS: `MentorProfileForm.tsx`: komunikat ma `id` i `tabIndex={-1}` (`outline-none`), a po sukcesie `pendingFocus` wskazuje na niego (istniejący mechanizm formularza). Tekst i strefa live bez zmian.
 - Testy i dokumentacja: `MentorProfileForm.test.tsx` (fokus na statusie po zapisie), story `Save` (play sprawdza fokus), `MentorProfileForm.mdx` (wiersz o zapisie).
 - Prototyp: przebudowany `npx vite build`; `walk-keyboard.sh` dostał dodatkową kontrolę K12b (fokus na „Profile saved.”): PASS=16 FAIL=0 (15 dotychczasowych + K12b); `walk-stage1.sh` PASS=39 FAIL=0. Zrzut 19-keyboard-profile-saved.png zrobiony ponownie.
+
+## 12. Etap 2: wykonane (2026-10-23)
+
+Zadanie domowe lekcji 7. Decyzje właściciela z 2026-10-23 wdrożone: **A07** (format e-maila sprawdzany przy zapraszaniu; „ma już konto” także przy rejestracji mentee i mentora), **A08** (czasy w Europe/Warsaw, DST s09.8 i s09.9 symulowane przez `SlotTimeField`), **A09** (opt-in = pole wyboru zapisywane z profilem; „Public list is on, but you are not visible yet. Missing: …” na `/mentor` i `/mentor/profile`), **A10** (zalogowany na /login, /register i linku zaproszenia nie jest blokowany, notatka „A new login replaces the session”). L01–L14 i decyzje etapu 1 bez zmian.
+
+**Zbudowane** (`src/`): `sim/store.ts` (przepisany: scenariusze, zegar demo, błędy jednorazowe, limity, rezerwacja w międzyczasie), `load.ts` (stany ładowania i błędu z Try again), `scenarios.tsx` (panel kontrolek), `notes.ts` (notatki), ekrany s01–s12 dopełnione o wszystkie stany, bramka na s05 (brakowała w etapie 1), s02 jako pełny ekran (w etapie 1 był oznaczonym placeholderem), usuwanie slotów (`DeleteSlotDialog`), filtr stosu i paginacja na s10.
+
+**Stany z mapy (sekcja 1b): 104 z 104 osiągalne i sprawdzone w przeglądarce** (tabela w sekcji 13). Stany s05.2, s05.3, s06.12, s07.8, s08.12, s09.16, s12.1, s12.2 to wg decyzji L02 przekierowanie na /login z komunikatem (nie osobna strona); s12.4 to /login z „Your session has ended”.
+
+**Kontrolki scenariuszy** (panel „Scenario controls” pod paskiem przeglądu, osobno od nawigacji produktu): c01 rola (pasek główny), c02–c17, c19, c20, c21 (wszystkie wartości z mapy), c22 (stage 1). Dodane poza mapą, oznaczone jako takie: **x01–x03** (nieznany link mentora, nieznany adres, link rejestracji bez tokenu; bez nich s11.4, s12.3 i s04.10 nie mają jak być osiągnięte klikiem), trzecia wartość c15 „60 slots” (s09.14, s11.6), przycisk „End the session now” obok c07 (s03.7 od razu). **c18 (strefa czasowa widza) nie zbudowana**: A08 mówi, że czasy są w Europe/Warsaw, mapa nie wymaga c18 w etapie 2.
+
+**Role i konta demo:** gość, Ola (mentee), Marek (mentor), Oliwia (admin), Anna Maj (zaproszona, rejestruje się własnym hasłem), nowo zarejestrowani (mentee przez s02, mentor przez s04); przełączanie c01 bez hasła albo logowaniem z formularza (hasła demo na ekranie logowania).
+
+**Założenia dopisane w etapie 2 (do zatwierdzenia):**
+- **E20.** Po rejestracji mentee (s02.7) ląduje na `/mentors`, jak po logowaniu (L04); mapa (U12) mówi `/`.
+- **E21.** Ogólny komunikat konfliktu e-maila przy rejestracji mentee: „We could not create an account with this email. If it is yours, log in instead.” (U2: nie potwierdza istnienia konta); przy zapraszaniu i rejestracji mentora: „This address already has an account – log in.” (L11).
+- **E22.** Limity: 5 nieudanych logowań na ten sam e-mail blokuje logowanie (429, także poprawnym hasłem, bez upływu czasu w prototypie); limity rejestracji tylko przez c06 (nie ma licznika).
+- **E23.** c08 działa na **następne żądanie** (ładowanie ekranu albo zapis), potem wraca do „Succeeds”; c10 „Error” jest trwały do przełączenia.
+- **E24.** c09 „Slow” wydłuża ładowania i zapisy do 3,5 s (inaczej „wysyłanie” i „ładowanie” trwają ułamek sekundy). Normalnie ekrany ładują się natychmiast (jeden takt).
+- **E25.** c13 i c15 nadpisują profil/sloty mentora (sesja mentora, a bez niej Marka) do Resetu; c15 „Normal” przywraca sloty sprzed pierwszej zmiany. c16: wiersz zmienia się na „Booked” dopiero przy następnym wczytaniu ekranu terminów, żeby okno usuwania zdążyło pokazać powód.
+- **E26.** Link zaproszenia pokazany raz znika także po opuszczeniu ekranu (nie wraca po powrocie).
+- **E27.** Na `/login` dopisek „Forgot your password? Ask the founders to reset it. There is no reset page.” (spec: reset robi założyciel; L12) i na `/mentor/slots` komunikat o braku cen (L06): to teksty, nie nowe funkcje.
+- **E28.** Przejście paskiem przeglądu (hash) na stronę chronioną jako gość kończy na /login (bramka działa tak samo jak kliknięcie w produkcie).
+- **E29.** Trzech mentorów stałych + 22 wygenerowanych (fikcyjne imiona, bez ocen) dla c20 „25 mentors”; mentor „Aleksandra …” (120-znakowy nagłówek, 5 linków, 4 tagi, 60 slotów) i „Tomasz Kowalczyk” (bez nagłówka, tagów i linków) dla c20 „long values”.
+
+**Trzy luki znane z etapu 1:** G10 i G12 były zamknięte w sekcjach 10 i 11 (nadal zamknięte: weryfikacja w skryptach: `walk-stage1` i `walk-keyboard` K12b). **G11** (`InvitationLinkPanel` bez akcji „otwórz link”) pozostaje: prototyp dokłada link tekstowy „open this link as the mentor (simulated)”. G01–G03, G05 pozostają jako `// LUKA DS` w kodzie (s12, s03/s12.4, s01, s09).
+
+## 13. Etap 3: uczciwość i sprawdzenie (2026-10-23)
+
+### Co uruchomiono
+
+Skrypty w `evidence/` (agent-browser, sesje izolowane, serwer plików na porcie 4175; mysz i klawiatura jak w etapie 1). Każdy zapisuje `results-*.txt`; `run-all.sh` uruchamia wszystkie poza `walk-views.sh`.
+
+| Skrypt | Zakres | Kontroli | Wynik |
+|---|---|---|---|
+| `walk-auth.sh` | s01, s02, s03, s05, s12, bramki, c01, c04–c09 | 71 | PASS=71 FAIL=0 |
+| `walk-invite.sh` | s04, s06, c02, c03, c04, c06, c08–c12 | 63 | PASS=63 FAIL=0 |
+| `walk-mentor.sh` | s07, s08, s09, c07–c09, c13–c17, c19 | 89 | PASS=89 FAIL=0 |
+| `walk-public.sh` | s10, s11, c08, c09, c13, c15, c20, c21, role | 70 | PASS=70 FAIL=0 |
+| `walk-review.sh` | notatki, tryb Comment, eksport, mapa ekranów, Back, prezentacja | 87 | PASS=87 FAIL=0 |
+| `walk-keys.sh` | klawiatura (Tab, Shift+Tab, Enter, Space, Escape, okno dialogowe) | 15 | PASS=15 FAIL=0 |
+| `walk-views.sh` | okna 1440/1280/320 px, jasny i ciemny motyw, kontrast | 61 | PASS=61 FAIL=0 |
+| `walk-stage1.sh`, `walk-keyboard.sh` | etap 1 (ścieżka bez błędów, klawiatura), powtórzone na etapie 2 | 39 + 16 | PASS=39, PASS=16, FAIL=0 |
+| **Razem** | | **511** | **511 passed, 0 failed** |
+
+Zrzuty: 139 plików PNG w `evidence/` (etap 1: 01–19 odświeżone przy ponownym uruchomieniu, etap 2/3: 20–160), przykładowy eksport komentarzy w `evidence/exports/`.
+
+### Tabela weryfikacji (stany z mapy, sekcja 1b)
+
+„passed” = stan osiągnięty zgodnie z kolumną „jak” i sprawdzony skryptem w przeglądarce (nazwa kontroli w wyniku skryptu zaczyna się od ID stanu). Nic nie jest „passed” bez uruchomienia.
+
+| Ekran | Stany | Jak osiągnięte | Skrypt | Wynik |
+|---|---|---|---|---|
+| s01 | .1 .2 .3 .4 | c01 rola, wejście na ekran z paska | walk-auth | passed |
+| s01 | .5 ładowanie sesji, .6 błąd sesji | c09 „Slow”; c08 „Network error” + Try again | walk-auth | passed |
+| s02 | .1 .2 .3 .4 .5 .6 .7 .8 | formularz; c09; c04 i istniejący e-mail; c06; c08; zalogowany na /register | walk-auth | passed |
+| s03 | .1 .2 .3 .4 .5 .6 .7 .8 | formularz; c09; c05 i błędne hasło; 5 błędnych prób i c06; c08; role admin/mentee/mentor; c07 „now”; zalogowany na /login | walk-auth | passed |
+| s04 | .1 .2 .3 .4 .5 .6 .7 .8 .9 .10 .11 | c09 + c02 „Valid”; c02 used/expired/revoked/unknown (identyczny komunikat); c03; walidacja; c04 i konto mentee na ten adres; c06; c08; x03; zalogowany | walk-invite | passed |
+| s05 | .1, .2, .3 | admin; mentee/mentor i gość: przekierowanie na /login (L02) | walk-auth | passed |
+| s06 | .1 .2 .3 .4 .5 .6 .7 .8 .9 .10 .11 .12 | lista; c09; c10 empty/error; c08; zaproszenie (Saving…); link raz + Done + c12; błąd wysyłki; walidacja; zaproszenie Anny drugi raz i c11; e-mail Oli; nie-admin | walk-invite, walk-auth | passed |
+| s07 | .1 .2 .3 .4 .5 .6 .7 .8 | c13 (5 wartości); c09; c08 500 + Try again; admin na /mentor | walk-mentor, walk-auth | passed |
+| s08 | .1 .2 .3 .4 .5 .6 .7 .8 .9 .10 .11 .12 | Marek; c13 „New mentor”; c09; c08; zapis; walidacja (nagłówek, cena 5, link http); opt-in/opt-out z komunikatem A09; ceny wyczyszczone; admin | walk-mentor, walk-auth | passed |
+| s09 | .1 .2 .3 .4 .5 .6 .7 .8 .9 .10 .11 .12 .13 .14 .15 .16 | Marek; c15 None/60; c09; c08; dodanie; 5 odrzuceń (<24 h, >60 dni, siatka, duplikat, odstęp); c19 gap i ambiguous; usuwanie; c16; c13 „soon”; c13 „new”; mentee/admin | walk-mentor, walk-auth | passed |
+| s10 | .1 .2 .3 .4 .5 .6 .7 .8 | c20 few/empty/25/long; c21 TypeScript/React (z pola Stack)/No results; c09; c08; role | walk-public | passed |
+| s11 | .1 .2 .3 .4 .5 .6 .7 .8 | Marek; c15 None; x01; c20 long (Tomasz, Aleksandra); c09; c08 | walk-public | passed |
+| s12 | .1 .2 .3 .4 | bramki (przekierowanie na /login z komunikatem, L02); x02; c07 „next save” + powrót po logowaniu (L03) | walk-auth | passed |
+
+**104 z 104 stanów: passed.** Odstępstwa od brzmienia w mapie (stan jest, tekst inny): przycisk wysyłania pokazuje „Saving…” zamiast „Logging in…” / „Inviting…” / „Adding…” (CrudForm i `AddSlotForm` mają jedną etykietę; „Adding…” jest, „Saving…” zamiast „Logging in…”/„Inviting…”: luka G16); s12.1/s12.2/s05.2/s05.3 to /login z komunikatem, nie strona z błędem (decyzja L02).
+
+### Kontrolki scenariuszy
+
+| Kontrolka | Wynik |
+|---|---|
+| c01–c17, c19, c20, c21 (wszystkie wartości z mapy; c06 trzy wartości; c19 obie) | passed |
+| c21: wartości Python i AI agents osobno | not-run (ta sama ścieżka kodu co TypeScript i React) |
+| c22 szerokość kontenera 320 | passed w etapie 1 (`walk-stage1`), w etapie 3 sprawdzone prawdziwym oknem zamiast tego |
+| c18 strefa czasowa widza | not-run: kontrolka nie zbudowana (A08: czasy w Europe/Warsaw) |
+| c08 zmieniana klawiaturą (natywny `<select>`) | not-run: agent-browser nie zmienia wartości pola przez klawisze (zmiana myszą: passed) |
+
+### Okna, motywy, klawiatura, komentarze
+
+| Obszar | Wynik |
+|---|---|
+| Okna 1440, 1280 i 320 px (prawdziwy rozmiar okna), 12 ekranów: zawartość mieści się w oknie | passed (tabela zaproszeń na 320 przewija się we własnym kontenerze, zob. G13) |
+| Motyw jasny i ciemny, 12 ekranów × 2: przybliżony kontrast tekstu WCAG AA (skrypt `contrast.js`, canvas) | passed (bez tekstu poniżej progu); to nie audyt: nie mierzy stanów hover/focus, obrazów, półprzezroczystości |
+| Klawiatura: Tab, Shift+Tab, Enter, Space, Escape; okno usuwania (fokus na Keep slot, pułapka fokusu, Escape zwraca fokus); fokus po błędzie; stage-1 K1–K14 | passed |
+| Notatki do ekranów: 12 ekranów, 3 pola, numery #25–#28 | passed |
+| Tryb Comment: komentarz na s03, s06, s09, s10, s11 przypina się do ID własnego ekranu; Threads grupuje wg ekranów; pin pojawia się po wejściu na ekran | passed |
+| Eksport „Export for repository”: plik się ładuje jako JS, `version: 2`, `prototypeId: epik-01`, każdy wątek ma ID ekranu z mapy; „Export Markdown” grupuje wg ekranów | passed (próbka w `evidence/exports/`; `engine/comments.js` pozostaje pusty) |
+| Mapa ekranów (12 linków), Back, tryb prezentacji | passed |
+| Czytnik ekranu (VoiceOver/NVDA) | not-run (brak narzędzia w tej sesji) |
+| Dotyk i prawdziwe urządzenie 320 px | not-run (tylko Chrome na komputerze z oknem 320 px) |
+| Firefox, Safari | not-run |
+| Testy nawigacji w Vitest | not-run: zamiast nich skrypty przeglądarkowe (prototyp poza workspace'ami i poza pokryciem 100%) |
+| Storybook serwuje `/prototypes/epik-01/index.html` | passed w etapie 1; w etapie 3 sprawdzano przez `python3 -m http.server` (te same pliki statyczne), `npm run storybook` nie uruchamiany ponownie |
+
+### Luki w design systemie i silniku, które wyszły przy etapie 2/3
+
+- **G13 (DS, DataTable):** na 320 px kolumny Status i daty na liście zaproszeń są poza widokiem (przewijanie poziome w kontenerze, bez wskazówki); najważniejsza informacja (status) jest niewidoczna.
+- **G14 (DS, SlotList):** na 320 px opis wiersza slotu („Not bookable – starts too soon · Europe/Warsaw, UTC+2”) jest ucięty wielokropkiem.
+- **G15 (DS, CrudForm):** błąd pola, który znika przy opuszczeniu pola, przesuwa przycisk wysyłania między naciśnięciem a puszczeniem myszy; pierwsze kliknięcie „Create account” po błędzie konfliktu było ignorowane (powtarzalne w agent-browser). Skrypty używają Enter.
+- **G16 (DS, CrudForm):** etykieta wysyłania to zawsze „Saving…”; mapa wymaga „Logging in…”, „Inviting…”. Brak propsu na etykietę trwającej akcji.
+- **G17 (silnik przeglądu):** React renderuje tylko bieżący ekran, więc komentarze innych ekranów są w panelu Threads jako „Orphaned” do czasu wejścia na ich ekran; ich ID ekranu w eksporcie jest poprawny. Piny przerysowuje zdarzenie `resize` wysyłane po renderze ekranu. Tryb Comment wyłącza nawigację produktu (żeby wejść na s11, przełącz na Clickable). Zakotwiczenie komentarza zależy od stanu ekranu (np. błąd w formularzu zmienia ścieżkę elementu).
+- **G18 (DS, CrudForm):** brak propsu z wartościami początkowymi, więc po „Your session has ended” nie da się przywrócić e-maila w formularzu logowania (Q4). Decyzja właściciela: zapisać jako lukę, bez zmiany `packages/ui` w tym PR.
+- G01–G03, G05, G11 jak wyżej (nadal otwarte).
+
+### Pytania do specyfikacji (wyszły przy budowie)
+
+1. Po rejestracji mentee: `/` (U12) czy `/mentors` (L04)? Prototyp: `/mentors` (E20).
+2. Co widzi mentor, gdy slot staje się „starts too soon” w trakcie dnia (zegar c17 +24 h). **Zatwierdzone (właściciel):** przeszłe sloty zostają na liście oznaczone „Past: this time has passed” bez przycisku Delete (prototyp; `walk-mentor.sh` sprawdza).
+3. Czy blokada logowania po 5 próbach (U4) ma blokować także poprawne hasło do końca okna 15 minut (prototyp: tak). **Zatwierdzone:** tak, z czasem ponowienia w komunikacie (15 minut).
+4. L03: czy po „Your session has ended” wpisane dane formularza mają być odtworzone? **Zatwierdzone:** tak, bez haseł; wymaga propsu w `CrudForm`, więc zapisane jako G18.
+5. Treść błędu przy konflikcie e-maila przy rejestracji mentee (U2 vs A07): **zatwierdzone** (E21).
+
+### Weryfikacja bram repozytorium (2026-10-23)
+
+| Brama | Wynik |
+|---|---|
+| `npm run lint` | bez błędów |
+| `npm run typecheck` | bez błędów (prototyp: `tsc --noEmit -p .ai/prototypes/epik-01` też) |
+| `npm run test:coverage` | 100% (statements 1099/1099, branches 880/880, functions 292/292, lines 966/966) |
+| `npm run lint:tokens` | 290 plików, bez wartości poza tokenami (wynik budowania prototypu nie łamie bramki) |
+| `npm run docs:design-system:check` | aktualne |
+| `npm run build`, `build-storybook`, `test:storybook`, `test:integration` | not-run: `packages/ui`, `packages/app`, `core` i `db` nie zostały zmienione w etapach 2 i 3 (zmiany wyłącznie w `.ai/prototypes/epik-01/`) |
+
+Dotknięte pliki: tylko `.ai/prototypes/epik-01/` (kod, `README.md`, `POSTEP.md`, `evidence/`). `engine/` bez zmian, `engine/comments.js` pusty. Zrzuty 01–19 z etapu 1 zostały nadpisane przy ponownym uruchomieniu skryptów etapu 1 na UI z etapu 2.

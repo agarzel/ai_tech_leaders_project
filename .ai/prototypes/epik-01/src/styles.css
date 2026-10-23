@@ -58,3 +58,17 @@ body.proto-focus .screen.is-current { padding: 0; }
 .proto-note { font-size: 0.75rem; color: var(--muted-foreground); }
 .btn, .segmented button, .doc-toolbar label { white-space: nowrap; }
 .doc-toolbar { align-items: center; }
+
+/* Panel scenariuszy i notatki (tokeny DS). */
+.doc-scenarios { padding: var(--space-in-group) var(--space-panel); border-bottom: 1px solid var(--border); background: var(--card); }
+.doc-scenarios summary { cursor: pointer; font-size: 0.8125rem; font-weight: 600; }
+.doc-scenarios .scenario-groups { display: flex; flex-wrap: wrap; gap: var(--space-in-group); margin-top: var(--space-in-group); }
+.scenario-group { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-in-group); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-in-group); }
+.scenario-group legend { font-size: 0.75rem; font-weight: 600; padding: 0 0.25rem; color: var(--muted-foreground); }
+.scenario-control { display: inline-flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; }
+.scenario-control select { height: var(--control-height-sm); border-radius: var(--radius); border: 1px solid var(--input); background: var(--background); color: var(--foreground); font-size: 0.8125rem; padding: 0 var(--space-in-group); }
+.scenario-control input[type="checkbox"] { width: 1rem; height: 1rem; accent-color: var(--primary); }
+.doc-scenarios select:focus-visible, .scenario-control input:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
+.notes { max-width: 64rem; margin: 0 auto; padding: var(--space-in-group) var(--space-panel) 0; }
+.note { border-left: 2px solid var(--border); padding-left: var(--space-in-group); font-size: 0.8125rem; color: var(--muted-foreground); display: flex; flex-direction: column; gap: 0.25rem; }
+.note strong { color: var(--foreground); }
