@@ -32,6 +32,15 @@ describe("logger", () => {
     });
   });
 
+  it("redacts AUTH_SECRET and authSecret", () => {
+    const { lines, stream } = capture();
+    const logger = createLogger(stream);
+
+    logger.info({ AUTH_SECRET: "a", config: { authSecret: "b", name: "x" } }, "boot");
+
+    expect(lines[0]).toMatchObject({ AUTH_SECRET: "[redacted]", config: { authSecret: "[redacted]", name: "x" } });
+  });
+
   it("uses LOG_LEVEL", () => {
     vi.stubEnv("LOG_LEVEL", "warn");
 

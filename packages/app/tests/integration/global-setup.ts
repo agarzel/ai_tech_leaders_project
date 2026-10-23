@@ -5,6 +5,8 @@ import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testconta
 import type { TestProject } from "vitest/node";
 import { ARTIFACTS_DIR, REPO_ROOT, run } from "./support/process";
 
+// Throw-away value for the ephemeral test app only; not a real secret.
+const INTEGRATION_AUTH_SECRET = "integration-test-auth-secret-0123456789abcdef";
 const APP_PORT = Number(process.env.INTEGRATION_APP_PORT ?? 3100);
 const SERVER_READY_TIMEOUT_MS = 180_000;
 
@@ -61,7 +63,7 @@ function startApp(databaseUrl: string): ChildProcess {
   const log = createWriteStream(path.join(ARTIFACTS_DIR, "app-server.log"));
   const server = spawn("npm", ["run", "dev"], {
     cwd: REPO_ROOT,
-    env: { ...process.env, DATABASE_URL: databaseUrl, PORT: String(APP_PORT), NEXT_DIST_DIR: ".next-test" },
+    env: { ...process.env, DATABASE_URL: databaseUrl, AUTH_SECRET: INTEGRATION_AUTH_SECRET, PORT: String(APP_PORT), NEXT_DIST_DIR: ".next-test" },
     // Own process group, so the whole tree (npm → next) can be stopped at once.
     detached: true,
     stdio: ["ignore", "pipe", "pipe"],

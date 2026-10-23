@@ -6,7 +6,7 @@ import { ForbiddenError } from "./errors";
 vi.mock("../config/env", () => ({ getEnv: vi.fn() }));
 
 function withNodeEnv(nodeEnv: "development" | "test" | "production") {
-  vi.mocked(getEnv).mockReturnValue({ NODE_ENV: nodeEnv, DATABASE_URL: "postgres://x", LOG_LEVEL: "info" });
+  vi.mocked(getEnv).mockReturnValue({ NODE_ENV: nodeEnv, DATABASE_URL: "postgres://x", AUTH_SECRET: "x".repeat(32), LOG_LEVEL: "info" });
 }
 
 describe("requireAdmin (temporary, until auth exists)", () => {

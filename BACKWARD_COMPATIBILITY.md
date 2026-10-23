@@ -36,7 +36,7 @@ Each package exposes only what its `package.json` `exports` map lists:
 
 ### 4. Configuration and environment
 
-- Environment variables: `DATABASE_URL`, `NODE_ENV`, `LOG_LEVEL` (validated in `packages/core/src/config/env.ts`), `POSTGRES_USER`/`POSTGRES_PASSWORD`/`POSTGRES_DB` (compose), `NEXT_DIST_DIR`, `INTEGRATION_APP_PORT`, `PORT`.
+- Environment variables: `DATABASE_URL`, `AUTH_SECRET`, `NODE_ENV`, `LOG_LEVEL` (validated in `packages/core/src/config/env.ts`), `POSTGRES_USER`/`POSTGRES_PASSWORD`/`POSTGRES_DB` (compose), `NEXT_DIST_DIR`, `INTEGRATION_APP_PORT`, `PORT`.
 - `.env.example`, `docker-compose.yml` service names (`app`, `db`) and the single root `.env` convention.
 - `.ai/agentic.config.json` – read by every `om-*` skill.
 - **Breaking:** renaming or removing a variable, making an optional one required, changing defaults that alter behaviour, renaming compose services.

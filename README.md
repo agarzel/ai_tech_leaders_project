@@ -109,6 +109,8 @@ npm run dev
 
 The database listens on `localhost:5432`; the connection string is `DATABASE_URL` in `.env`.
 
+`AUTH_SECRET` in `.env` is required (at least 32 characters; the app refuses to start without it). Generate one with `openssl rand -base64 32`; never commit a real value.
+
 ### Database migrations
 
 ```bash

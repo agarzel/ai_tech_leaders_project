@@ -1,7 +1,7 @@
 import pino, { type DestinationStream } from "pino";
 
 // Never log secrets: these fields are replaced wherever they appear (top level or one level deep).
-const REDACTED_FIELDS = ["password", "token", "jwt", "authorization", "cookie", "secret"];
+const REDACTED_FIELDS = ["password", "token", "jwt", "authorization", "cookie", "secret", "authSecret", "AUTH_SECRET"];
 
 export function createLogger(destination?: DestinationStream) {
   return pino(
