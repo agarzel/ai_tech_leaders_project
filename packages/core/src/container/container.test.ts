@@ -3,6 +3,7 @@ import { getOrm } from "@devmentor/db";
 import { getEnv } from "../config/env";
 import { UserService } from "../services/auth/user.service";
 import { InvitationService } from "../services/mentors/invitation.service";
+import { MentorService } from "../services/mentors/mentor.service";
 import { HealthService } from "../services/system/health.service";
 import { createRequestScope, getContainer } from "./container";
 
@@ -43,6 +44,7 @@ describe("container", () => {
     expect(scopeA.cradle.userService).toBeInstanceOf(UserService);
     expect(scopeA.cradle.healthService).toBeInstanceOf(HealthService);
     expect(scopeA.cradle.invitationService).toBeInstanceOf(InvitationService);
+    expect(scopeA.cradle.mentorService).toBeInstanceOf(MentorService);
     // Scoped: one instance per scope. Compared by reference – services hold Awilix proxies that break pretty-printing.
     expect(scopeA.cradle.userService === scopeA.cradle.userService).toBe(true);
     expect(scopeA.cradle.userService === scopeB.cradle.userService).toBe(false);
