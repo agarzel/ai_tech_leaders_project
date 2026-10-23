@@ -1,0 +1,2 @@
+
+Wynik (e01-keys): PASS=15 FAIL=0

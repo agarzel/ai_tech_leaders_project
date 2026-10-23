@@ -43,7 +43,7 @@ function resolve(path: string): { screen: ScreenId; slug?: string; token?: strin
 /** Przejście produktu: ustawia parametry trasy i prosi silnik przeglądu o przejście do ekranu. */
 export function go(path: string) {
   const { screen, slug, token } = resolve(path);
-  setRoute({ slug, token });
+  setRoute({ slug, token, path });
   document.dispatchEvent(new CustomEvent("prototype:navigate", { detail: screen }));
 }
 
@@ -62,6 +62,12 @@ let current: string = (typeof location !== "undefined" && location.hash.slice(1)
 const listeners = new Set<() => void>();
 document.addEventListener("prototype:screen-change", (event) => {
   current = (event as CustomEvent<string>).detail;
+  // Przejście paskiem przeglądu (hash) omija go(): ścieżka produktu ma wtedy wskazywać ten ekran, żeby powrót po logowaniu był poprawny.
+  const route = getState().route;
+  if (resolve(route.path ?? "/").screen !== current) {
+    const screen = SCREENS.find((entry) => entry.id === current);
+    setRoute({ ...route, path: screen && screen.id !== "s11" && screen.id !== "s12" ? screen.path : "/" });
+  }
   listeners.forEach((listener) => listener());
 });
 export function useCurrentScreen(): string {

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import { AppHeader } from "@devmentor/ui/backend/layout/AppHeader";
 import { PageLayout } from "@devmentor/ui/backend/layout/PageLayout";
-import { AccountMenu } from "@devmentor/ui/components/auth/AccountMenu";
+import { AccountMenu, AccountMenuSkeleton } from "@devmentor/ui/components/auth/AccountMenu";
 
 import { go, renderLink } from "./nav";
 import { logout, sessionAccount, useStore, type Role } from "./sim/store";
@@ -22,11 +22,22 @@ const NAV: Record<Role | "guest", { label: string; href: string }[]> = {
   ],
 };
 
-type PageProps = { current: string; title: string; description?: string; width?: "content" | "narrow"; children: ReactNode };
+type PageProps = {
+  current: string;
+  title: string;
+  description?: string;
+  width?: "content" | "narrow";
+  /** s01.5: sesja się ładuje (AccountMenuSkeleton). */
+  sessionLoading?: boolean;
+  /** s01.6: sesji nie udało się sprawdzić, strona zachowuje się jak dla gościa. */
+  asGuest?: boolean;
+  children: ReactNode;
+};
 
 /** PageLayout + AppHeader + AccountMenu + RoleNav dla bieżącej roli: wspólna rama każdego ekranu. */
-export function Page({ current, title, description, width, children }: PageProps) {
-  const me = sessionAccount(useStore());
+export function Page({ current, title, description, width, sessionLoading, asGuest, children }: PageProps) {
+  const session = sessionAccount(useStore());
+  const me = asGuest || sessionLoading ? null : session;
   const role = me?.role ?? "guest";
   return (
     <PageLayout
@@ -38,12 +49,16 @@ export function Page({ current, title, description, width, children }: PageProps
           navLabel="Main"
           renderLink={renderLink}
           account={
-            <AccountMenu
+            sessionLoading ? (
+              <AccountMenuSkeleton />
+            ) : (
+              <AccountMenu
               user={me ? { id: me.id, name: me.name, role: me.role } : null}
               onLogout={logout}
               onLoggedOut={() => go("/")}
               renderLink={renderLink}
-            />
+              />
+            )
           }
         />
       }

@@ -1,0 +1,2 @@
+
+Wynik (e01-public): PASS=70 FAIL=0

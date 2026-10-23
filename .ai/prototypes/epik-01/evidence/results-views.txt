@@ -1,0 +1,2 @@
+
+Wynik (e01-views): PASS=61 FAIL=0

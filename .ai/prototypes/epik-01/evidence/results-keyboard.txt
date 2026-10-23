@@ -1,0 +1,19 @@
+[agent-browser] launched browser
+PASS  K1 Tab do linku Log in (nagłówek produktu)
+PASS  K2 Enter otwiera s03
+PASS  K3 logowanie klawiaturą -> s05 (admin)
+PASS  K4 nawigacja admina klawiaturą -> s06
+PASS  K5 błędny e-mail: fokus zostaje na polu z komunikatem
+PASS  K6 link pokazany raz dostaje fokus
+PASS  K7 Space na Copy link: potwierdzenie słowami
+PASS  K8 Enter otwiera s04
+PASS  K9 rejestracja mentorki klawiaturą -> s07
+PASS  K10 akcja z listy kontrolnej -> s08
+PASS  K11 Space zaznacza opt-in
+PASS  K12 Enter zapisuje profil
+PASS  K12b fokus na komunikacie Profile saved. (G12)
+PASS  K13 nawigacja mentora klawiaturą -> s09
+PASS  K14 błąd slotu: fokus wraca na pole daty
+PASS  K14b komunikat <24 h przy polu
+
+Wynik klawiatury: PASS=16 FAIL=0
