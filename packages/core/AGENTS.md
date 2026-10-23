@@ -12,11 +12,12 @@ src/
     cradle.ts           Cradle type – every registered dependency by camelCase key
     container.ts        Awilix container, getContainer(), createRequestScope()
   http/
-    errors.ts           AppError + ValidationError, UnauthorizedError, ForbiddenError, NotFoundError, ConflictError
+    errors.ts           AppError + ValidationError, UnauthorizedError, ForbiddenError, NotFoundError, ConflictError, TooManyRequestsError
     apiHandler.ts       wraps route handlers: CSRF header check, envelope, error → status, logging
     makeCrudRoute.ts    CRUD handlers from a CrudService + Zod schemas (+ explicit `access`)
     crud.ts             CrudService, Page, PageQuery
-    auth.ts             requireAdmin() – TEMPORARY until the auth concept exists
+    auth.ts             requireSession, requireRole, assertOwner; requireAdmin() – TEMPORARY, rebuilt on the session in task 1.5
+    session-cookie.ts   session cookie name and attributes (one place)
   services/<concept>/   <name>.service.ts – one concept's business rules
   validators/<concept>/ <name>-<action>.schema.ts – Zod schemas shared by routes and forms
   index.ts              Public API (server only)
