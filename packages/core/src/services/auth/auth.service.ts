@@ -39,20 +39,17 @@ export class AuthService {
   ) {}
 
   async register(email: string, name: string, password: string): Promise<SessionUserDto> {
-    const passwordHash = await bcrypt.hash(password, BCRYPT_COST);
     // Explicit fields only; the role is never taken from the caller (self-registration is always a mentee).
-    const user = this.deps.em.create(User, { email: normalizeEmail(email), name, role: "mentee", passwordHash });
-    try {
-      await this.deps.em.flush();
-    } catch (error) {
-      if (error instanceof UniqueConstraintViolationException) {
-        throw new ConflictError("A user with this email already exists", {
-          email: ["A user with this email already exists"],
-        });
-      }
-      throw error;
-    }
-    return toSessionUser(user);
+    return this.createUser(this.deps.em, { email, name, role: "mentee", password });
+  }
+
+  /**
+   * Creates the mentor account for an accepted invitation. Runs on the `em` of the invitation transaction
+   * (see `InvitationService.consume`), so a refused account leaves the invitation open. The caller supplies the
+   * e-mail from the invitation, never from the request.
+   */
+  async createMentorAccount(em: EntityManager, email: string, name: string, password: string): Promise<SessionUserDto> {
+    return this.createUser(em, { email, name, role: "mentor", password });
   }
 
   async login(email: string, password: string): Promise<SessionUserDto> {
@@ -126,6 +123,26 @@ export class AuthService {
     const id = await this.verifyToken(token);
     const user = await this.deps.em.findOne(User, { id });
     if (!user) throw new UnauthorizedError();
+    return toSessionUser(user);
+  }
+
+  /** The one place a self-service account is hashed and inserted; a taken e-mail is a `ConflictError`. */
+  private async createUser(
+    em: EntityManager,
+    { email, name, role, password }: { email: string; name: string; role: UserRole; password: string },
+  ): Promise<SessionUserDto> {
+    const passwordHash = await bcrypt.hash(password, BCRYPT_COST);
+    const user = em.create(User, { email: normalizeEmail(email), name, role, passwordHash });
+    try {
+      await em.flush();
+    } catch (error) {
+      if (error instanceof UniqueConstraintViolationException) {
+        throw new ConflictError("A user with this email already exists", {
+          email: ["A user with this email already exists"],
+        });
+      }
+      throw error;
+    }
     return toSessionUser(user);
   }
 
