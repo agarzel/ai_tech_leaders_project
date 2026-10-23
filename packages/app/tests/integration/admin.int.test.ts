@@ -9,14 +9,12 @@ describe("admin panel", () => {
     await loginAs(browser, "admin");
   });
 
-  afterAll(async () => {
-    await browser.close();
-  });
-
   it("shows the sections and a live database status", async () => {
     await browser.open("/admin");
 
     expect(await browser.title()).toBe("Admin – DevMentor");
+    // The panel sits behind the session gate (Suspense): wait until it has streamed in.
+    await browser.waitForText("Admin panel");
     expect(await browser.textOf("heading", "Admin panel")).toBe("Admin panel");
     // Streamed in after the static shell (Suspense + connection()).
     await browser.waitForText("Database: connected");
@@ -33,6 +31,7 @@ describe("admin panel", () => {
   });
 });
 
+// One browser session (and one sign-in) for both blocks: the session is closed once, after the last test.
 describe("admin users – CRUD through the UI", () => {
   afterAll(async () => {
     await browser.close();

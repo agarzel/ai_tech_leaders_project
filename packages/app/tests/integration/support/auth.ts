@@ -12,6 +12,8 @@ export async function loginAs(browser: Browser, role: TestRole) {
   const { email, password } = inject("accounts")[role];
 
   await browser.open("/login");
+  // The form streams in after the document load: wait until it is visible before using it.
+  await browser.waitForText("Sign in");
   await browser.fill("Email", email);
   await browser.fill("Password", password);
   await browser.click("button", "Sign in");

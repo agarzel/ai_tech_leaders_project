@@ -42,6 +42,7 @@ export default async function setup(project: TestProject) {
   const baseUrl = `http://localhost:${APP_PORT}`;
   try {
     await waitForHealthy(`${baseUrl}/api/health`, server);
+    await warmUp(baseUrl);
   } catch (error) {
     await stopApp(server);
     await database.stop();
@@ -101,6 +102,14 @@ async function waitForHealthy(url: string, server: ChildProcess) {
     await new Promise((resolve) => setTimeout(resolve, 1_000));
   }
   throw new Error(`App did not become healthy at ${url} within ${SERVER_READY_TIMEOUT_MS / 1000}s, see app-server.log`);
+}
+
+// `next dev` compiles a page on its first request. A browser that opens a cold page meanwhile gets caught in a
+// rebuild-and-reload loop, so every page the tests open is compiled once here, before any browser starts.
+async function warmUp(baseUrl: string) {
+  for (const pathname of ["/", "/login", "/register", "/admin", "/admin/users"]) {
+    await fetch(`${baseUrl}${pathname}`, { redirect: "manual" });
+  }
 }
 
 async function stopApp(server: ChildProcess) {
