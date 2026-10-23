@@ -135,3 +135,23 @@ describe("OfferChecklist", () => {
     render(<OfferChecklistSkeleton />);
   });
 });
+
+describe("OfferChecklist show", () => {
+  it("lists only the steps asked for", () => {
+    render(
+      <OfferChecklist
+        profileComplete
+        pricesSet={false}
+        bookableSlots={0}
+        slotsTooSoon={0}
+        shareUrl="https://devmentor.test/m/x"
+        listed={false}
+        hrefs={{ profile: "/mentor/profile", slots: "/mentor/slots" }}
+        show={["profile", "prices"]}
+      />,
+    );
+
+    expect(screen.getAllByRole("listitem")).toHaveLength(2);
+    expect(screen.getByRole("link", { name: "Set prices: Prices" })).toHaveAttribute("href", "/mentor/profile");
+  });
+});

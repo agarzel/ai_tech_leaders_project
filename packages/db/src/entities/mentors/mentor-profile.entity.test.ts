@@ -72,4 +72,11 @@ describe("MentorProfile entity", () => {
   it("is exported for discovery", () => {
     expect(entities).toContain(MentorProfile);
   });
+
+  it("starts tags and links as real empty arrays, not the string \"[]\" that the column default would be stored as", () => {
+    const { tags, links } = meta().properties;
+
+    expect(tags.onCreate?.({} as never, {} as never)).toEqual([]);
+    expect(links.onCreate?.({} as never, {} as never)).toEqual([]);
+  });
 });

@@ -9,6 +9,7 @@ import { apiCall } from "@devmentor/ui/backend/api/apiCall";
 import { CrudForm } from "@devmentor/ui/backend/forms/CrudForm";
 import { ErrorMessage } from "@devmentor/ui/backend/feedback/ErrorMessage";
 import { LoadingMessage } from "@devmentor/ui/backend/feedback/LoadingMessage";
+import { homePathFor } from "../../../../lib/home-path";
 
 type Preview = { status: "loading" } | { status: "invalid" } | { status: "valid"; email: string };
 
@@ -62,8 +63,7 @@ export function MentorRegisterForm() {
         errorTitle="Could not create the account"
         onSubmit={(values) => apiCall("/api/auth/register/mentor", { method: "POST", body: { ...values, token } })}
         onSuccess={() => {
-          // Mentors will land on /mentor once it exists (spec Phase 2); until then the home page.
-          router.push("/");
+          router.push(homePathFor("mentor"));
           // The header reads the new cookie on the server.
           router.refresh();
         }}
