@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { loginSchema } from "./login.schema";
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "./password.constants";
+import { registerMentorFormSchema, registerMentorSchema } from "./register-mentor.schema";
 import { registerSchema } from "./register.schema";
 
 const issuesByField = (error: { issues: { path: PropertyKey[]; message: string }[] }) =>
@@ -65,5 +66,28 @@ describe("loginSchema", () => {
 
   it("marks the password field so forms render a password input", () => {
     expect(loginSchema.shape.password.meta()?.input).toBe("password");
+  });
+});
+
+describe("registerMentorSchema", () => {
+  it("accepts a token, a trimmed name and a password, and strips an email or a role", () => {
+    const password = "x".repeat(PASSWORD_MIN_LENGTH);
+
+    const parsed = registerMentorSchema.parse({ token: "abc", name: "  Mia ", password, email: "a@b.co", role: "admin" });
+
+    expect(parsed).toEqual({ token: "abc", name: "Mia", password });
+  });
+
+  it("rejects a missing token, an empty name and a short password", () => {
+    const result = registerMentorSchema.safeParse({ token: "", name: " ", password: "short" });
+
+    const issues = issuesByField(result.error!);
+    expect(issues.token).toBe("Invitation token is required");
+    expect(issues.name).toBe("Name is required");
+    expect(issues.password).toBe(`Password must be at least ${PASSWORD_MIN_LENGTH} characters long`);
+  });
+
+  it("has a form variant without the token", () => {
+    expect(Object.keys(registerMentorFormSchema.shape)).toEqual(["name", "password"]);
   });
 });

@@ -72,6 +72,32 @@ describe("AuthService", () => {
     });
   });
 
+  describe("createMentorAccount", () => {
+    it("creates a mentor with a hashed password on the em it is given and returns no hash", async () => {
+      const otherEm = makeEm();
+      otherEm.create.mockImplementation((_entity, data) => ({ id: "m1", ...data }));
+
+      const result = await service.createMentorAccount(otherEm as unknown as EntityManager, " Mentor@Example.COM ", "Mia", PASSWORD);
+
+      expect(result).toEqual({ id: "m1", email: "mentor@example.com", name: "Mia", role: "mentor" });
+      const data = otherEm.create.mock.calls[0]![1];
+      expect(data.passwordHash).toMatch(/^\$2[aby]\$12\$/);
+      expect(await bcrypt.compare(PASSWORD, data.passwordHash)).toBe(true);
+      expect(otherEm.flush).toHaveBeenCalledOnce();
+      expect(em.create).not.toHaveBeenCalled();
+    });
+
+    it("refuses an e-mail that already has an account with a conflict error", async () => {
+      const otherEm = makeEm();
+      otherEm.create.mockReturnValue({});
+      otherEm.flush.mockRejectedValue(new UniqueConstraintViolationException(new Error("duplicate")));
+
+      await expect(
+        service.createMentorAccount(otherEm as unknown as EntityManager, "ada@example.com", "Ada", PASSWORD),
+      ).rejects.toBeInstanceOf(ConflictError);
+    });
+  });
+
   describe("setPassword", () => {
     it("resets the password of an existing account without changing its role", async () => {
       const user = storedUser({ passwordHash: null });
