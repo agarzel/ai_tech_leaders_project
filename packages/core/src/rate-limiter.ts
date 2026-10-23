@@ -27,9 +27,15 @@ export class RateLimiter {
     private readonly options: RateLimiterOptions,
   ) {}
 
+  /** Number of keys currently tracked (expired keys are dropped on the next `record`). */
+  get size(): number {
+    return this.windows.size;
+  }
+
   /** Records one attempt (call it for each failed attempt). */
   record(key: string): void {
     const now = this.deps.clock.now().getTime();
+    this.dropExpired(now);
     const current = this.activeWindow(key, now);
     if (current) {
       current.count += 1;
@@ -48,6 +54,13 @@ export class RateLimiter {
   /** Forgets a key, e.g. after a successful login. */
   reset(key: string): void {
     this.windows.delete(key);
+  }
+
+  /** Without this, every distinct key stays in memory forever after its window ends. */
+  private dropExpired(now: number): void {
+    for (const [key, window] of this.windows) {
+      if (window.resetAt <= now) this.windows.delete(key);
+    }
   }
 
   private activeWindow(key: string, now: number): Window | undefined {

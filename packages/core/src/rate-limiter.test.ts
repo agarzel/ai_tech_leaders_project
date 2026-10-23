@@ -82,4 +82,15 @@ describe("RateLimiter", () => {
 
     expect(limiter.check("a@example.com").allowed).toBe(true);
   });
+
+  it("drops keys whose window has ended when another attempt is recorded", () => {
+    const { clock, limiter } = setup({ maxAttempts: 5, windowMs: MINUTE });
+    limiter.record("a@example.com");
+    limiter.record("b@example.com");
+
+    clock.advance(2 * MINUTE);
+    limiter.record("c@example.com");
+
+    expect(limiter.size).toBe(1);
+  });
 });
