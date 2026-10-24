@@ -1,0 +1,4 @@
+# Agent configuration: changes need the owner's review (enable "Require review from Code Owners" in branch protection).
+/.claude/        @agarzel
+/.mcp.json       @agarzel
+/.github/CODEOWNERS @agarzel
