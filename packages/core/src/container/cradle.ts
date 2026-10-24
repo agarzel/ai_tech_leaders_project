@@ -5,6 +5,7 @@ import type { Logger } from "../logger";
 import type { RateLimiter } from "../rate-limiter";
 import type { AuthService } from "../services/auth/auth.service";
 import type { UserService } from "../services/auth/user.service";
+import type { SlotService } from "../services/availability/slot.service";
 import type { InvitationService } from "../services/mentors/invitation.service";
 import type { MentorService } from "../services/mentors/mentor.service";
 import type { HealthService } from "../services/system/health.service";
@@ -22,4 +23,5 @@ export type Cradle = {
   authService: AuthService;
   invitationService: InvitationService;
   mentorService: MentorService;
+  slotService: SlotService;
 };

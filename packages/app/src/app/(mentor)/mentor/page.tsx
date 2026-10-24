@@ -11,22 +11,26 @@ export const metadata: Metadata = {
   title: "Your offer – DevMentor",
 };
 
-// Phase 2 shows the profile and prices steps only; times and the share link arrive with their own pages.
+// Phase 3 shows profile, prices and times; the share link and the public list arrive with phase 4.
 async function Checklist() {
   await connection();
   const user = await getSessionUser();
   // The layout already refused everyone else; this keeps the page fail-closed on its own.
   if (user?.role !== "mentor") return null;
-  const { mentorService } = (await createRequestScope()).cradle;
+  const { mentorService, slotService } = (await createRequestScope()).cradle;
   const profile = await mentorService.getOrCreateOwn(user.id);
+  // `bookable` is the server's own rule (open and at least 24 h ahead); the checklist never recomputes it.
+  const slots = await slotService.listForOwner(user.id);
+  const bookableSlots = slots.filter((slot) => slot.bookable).length;
+  const slotsTooSoon = slots.filter((slot) => slot.status === "open" && !slot.bookable && new Date(slot.startsAt) > new Date()).length;
 
   return (
     <OfferChecklist
-      show={["profile", "prices"]}
+      show={["profile", "prices", "slots"]}
       profileComplete={Boolean(profile.name && profile.headline)}
       pricesSet={profile.price25 !== null && profile.price50 !== null}
-      bookableSlots={0}
-      slotsTooSoon={0}
+      bookableSlots={bookableSlots}
+      slotsTooSoon={slotsTooSoon}
       shareUrl=""
       listed={profile.listed}
       hrefs={{ profile: "/mentor/profile", slots: "/mentor/slots" }}
