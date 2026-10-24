@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import { headers } from "next/headers";
 import { Suspense } from "react";
 import { createRequestScope } from "@devmentor/core";
 import { PageLayout } from "@devmentor/ui/backend/layout/PageLayout";
@@ -11,7 +12,6 @@ export const metadata: Metadata = {
   title: "Your offer – DevMentor",
 };
 
-// Phase 3 shows profile, prices and times; the share link and the public list arrive with phase 4.
 async function Checklist() {
   await connection();
   const user = await getSessionUser();
@@ -19,6 +19,11 @@ async function Checklist() {
   if (user?.role !== "mentor") return null;
   const { mentorService, slotService } = (await createRequestScope()).cradle;
   const profile = await mentorService.getOrCreateOwn(user.id);
+  // The public link is built from the request origin, like the invitation link; no env var.
+  const requestHeaders = await headers();
+  const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
+  const protocol = requestHeaders.get("x-forwarded-proto") ?? (/^(localhost|127\.0\.0\.1)/.test(host ?? "") ? "http" : "https");
+  const shareUrl = `${protocol}://${host}/m/${profile.shareSlug}`;
   // `bookable` is the server's own rule (open and at least 24 h ahead); the checklist never recomputes it.
   const slots = await slotService.listForOwner(user.id);
   const bookableSlots = slots.filter((slot) => slot.bookable).length;
@@ -26,12 +31,11 @@ async function Checklist() {
 
   return (
     <OfferChecklist
-      show={["profile", "prices", "slots"]}
-      profileComplete={Boolean(profile.name && profile.headline)}
+            profileComplete={Boolean(profile.name && profile.headline)}
       pricesSet={profile.price25 !== null && profile.price50 !== null}
       bookableSlots={bookableSlots}
       slotsTooSoon={slotsTooSoon}
-      shareUrl=""
+      shareUrl={shareUrl}
       listed={profile.listed}
       hrefs={{ profile: "/mentor/profile", slots: "/mentor/slots" }}
     />
