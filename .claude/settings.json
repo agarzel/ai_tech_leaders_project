@@ -2,13 +2,14 @@
   "permissions": {
     "deny": [
       "Read(./.env)",
-      "Read(./.env.*)",
       "Read(./**/.env)",
-      "Read(./**/.env.*)",
       "Read(./**/*.pem)",
       "Read(./**/*.key)",
       "Read(~/.ssh/**)",
-      "Read(~/.aws/**)"
+      "Read(~/.aws/**)",
+      "Read(./.env.local)", 
+      "Read(./.env.production)",
+      "Read(./**/.env.local)"
     ]
   },
   "hooks": {
