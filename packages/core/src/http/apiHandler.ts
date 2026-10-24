@@ -39,7 +39,7 @@ export function apiHandler<T>(
       const data = await handler({ req, params: (await ctx?.params) ?? {} });
       return Response.json({ ok: true, data } satisfies ApiResult<T>, { status: successStatus });
     } catch (error) {
-      if (error instanceof AppError) {
+      if (isAppError(error)) {
         const body: ApiResult<never> = {
           ok: false,
           error: { code: error.code, message: error.message, fieldErrors: error.fieldErrors },
@@ -55,4 +55,10 @@ export function apiHandler<T>(
       return Response.json(body, { status: 500 });
     }
   };
+}
+
+// Matched by shape, not by `instanceof`: in Next.js the same error class can be loaded from two module
+// graphs (the cached container and the route handler), and `instanceof` then misses the error and returns 500.
+function isAppError(error: unknown): error is AppError {
+  return error instanceof AppError || (error instanceof Error && typeof (error as AppError).status === "number" && typeof (error as AppError).code === "string");
 }
