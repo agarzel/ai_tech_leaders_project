@@ -44,7 +44,7 @@ export class ConflictError extends AppError {
 }
 
 export class TooManyRequestsError extends AppError {
-  constructor(message = "Too many attempts, try again later") {
+  constructor(message = "Too many attempts. Try again in 15 minutes.") {
     super("rate_limited", 429, message);
   }
 }

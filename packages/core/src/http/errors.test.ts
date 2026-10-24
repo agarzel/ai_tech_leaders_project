@@ -16,7 +16,7 @@ describe("AppError hierarchy", () => {
     [new ForbiddenError(), "forbidden", 403, "Forbidden"],
     [new NotFoundError(), "not_found", 404, "Not found"],
     [new ConflictError(), "conflict", 409, "Conflict"],
-    [new TooManyRequestsError(), "rate_limited", 429, "Too many attempts, try again later"],
+    [new TooManyRequestsError(), "rate_limited", 429, "Too many attempts. Try again in 15 minutes."],
   ])("%o has code, status and default message", (error, code, status, message) => {
     expect(error).toBeInstanceOf(AppError);
     expect(error).toBeInstanceOf(Error);
