@@ -50,4 +50,15 @@ describe("container", () => {
     expect(scopeA.cradle.userService === scopeB.cradle.userService).toBe(false);
     expect(scopeA.cradle.logger).toBeDefined();
   });
+
+  it("shares the rate limiters between request scopes, separate from the login limiter", async () => {
+    const scopeA = await createRequestScope();
+    const scopeB = await createRequestScope();
+    const { cradle } = scopeA;
+
+    expect(cradle.invitationPreviewLimiter === scopeB.cradle.invitationPreviewLimiter).toBe(true);
+    expect(cradle.invitationRegistrationLimiter === scopeB.cradle.invitationRegistrationLimiter).toBe(true);
+    expect(cradle.invitationPreviewLimiter === cradle.invitationRegistrationLimiter).toBe(false);
+    expect(cradle.invitationPreviewLimiter === cradle.rateLimiter).toBe(false);
+  });
 });

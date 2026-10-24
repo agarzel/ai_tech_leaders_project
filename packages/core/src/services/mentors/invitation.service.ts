@@ -1,10 +1,17 @@
 import { createHash, randomBytes } from "node:crypto";
 import { MentorInvitation, User, type EntityManager } from "@devmentor/db";
 import type { Clock } from "../../clock";
-import { NotFoundError } from "../../http/errors";
+import { NotFoundError, TooManyRequestsError } from "../../http/errors";
+import type { RateLimiter, RateLimiterOptions } from "../../rate-limiter";
 
 /** How long an invitation link works (spec: mentor-accounts-and-offer, MentorInvitation.expiresAt). */
 export const INVITATION_TTL_MS = 14 * 24 * 60 * 60_000;
+
+/** Public invitation routes, keyed by client IP: 20 previews per 15 minutes; 10 failed registrations per hour. */
+export const INVITATION_RATE_LIMITS = {
+  preview: { maxAttempts: 20, windowMs: 15 * 60_000 } satisfies RateLimiterOptions,
+  registration: { maxAttempts: 10, windowMs: 60 * 60_000 } satisfies RateLimiterOptions,
+};
 
 const INVALID_INVITATION = "This invitation is no longer valid";
 
@@ -19,8 +26,66 @@ export type CreatedInvitationDto = {
 /** What a valid token reveals: nothing beyond the address being registered. */
 export type InvitationPreviewDto = { email: string; expiresAt: string };
 
+export type InvitationStatus = "pending" | "used" | "revoked" | "expired";
+
+/** One row of the admin list. Never carries the token or its hash. */
+export type InvitationListItemDto = {
+  id: string;
+  email: string;
+  status: InvitationStatus;
+  createdAt: string;
+  expiresAt: string;
+  /** The issuing admin's name (or e-mail when the name is empty); null when that admin was deleted. */
+  createdBy: string | null;
+};
+
 export class InvitationService {
-  constructor(private readonly deps: { em: EntityManager; clock: Clock }) {}
+  constructor(
+    private readonly deps: {
+      em: EntityManager;
+      clock: Clock;
+      /** Process-wide limiters (see container.ts), separate from the login limiter. */
+      invitationPreviewLimiter: RateLimiter;
+      invitationRegistrationLimiter: RateLimiter;
+    },
+  ) {}
+
+  /** Counts one preview request for the IP; refuses (`TooManyRequestsError`) once the IP is over its limit. */
+  guardPreview(ip: string): void {
+    const limiter = this.deps.invitationPreviewLimiter;
+    if (!limiter.check(ip).allowed) throw new TooManyRequestsError();
+    limiter.record(ip);
+  }
+
+  /** Refuses an IP over its failed-registration limit; runs `work`; counts it only when `work` throws. */
+  async guardRegistration<T>(ip: string, work: () => Promise<T>): Promise<T> {
+    const limiter = this.deps.invitationRegistrationLimiter;
+    if (!limiter.check(ip).allowed) throw new TooManyRequestsError();
+    try {
+      return await work();
+    } catch (error) {
+      limiter.record(ip);
+      throw error;
+    }
+  }
+
+  /** All invitations, newest first. Status is computed: used wins over everything, then revoked, then expired. */
+  async listForAdmin(): Promise<InvitationListItemDto[]> {
+    const now = this.deps.clock.now();
+    const invitations = await this.deps.em.find(
+      MentorInvitation,
+      {},
+      { populate: ["createdBy"], orderBy: { createdAt: "desc" } },
+    );
+    return invitations.map((invitation) => ({
+      id: invitation.id,
+      email: invitation.email,
+      status: statusOf(invitation, now),
+      createdAt: invitation.createdAt.toISOString(),
+      expiresAt: invitation.expiresAt.toISOString(),
+      createdBy: invitation.createdBy ? invitation.createdBy.name || invitation.createdBy.email : null,
+    }));
+  }
 
   /** Issues a link token for the e-mail and revokes the older open invitations for it, in one transaction. */
   async create(adminId: string, email: string): Promise<CreatedInvitationDto> {
@@ -77,6 +142,15 @@ export class InvitationService {
       return account;
     });
   }
+}
+
+function statusOf(
+  invitation: { usedAt?: Date | null; revokedAt?: Date | null; expiresAt: Date },
+  now: Date,
+): InvitationStatus {
+  if (invitation.usedAt) return "used";
+  if (invitation.revokedAt) return "revoked";
+  return invitation.expiresAt.getTime() > now.getTime() ? "pending" : "expired";
 }
 
 function isOpen(invitation: { usedAt?: Date | null; revokedAt?: Date | null; expiresAt: Date }, now: Date): boolean {

@@ -1,14 +1,16 @@
 import { createHash } from "node:crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MentorInvitation, User, type EntityManager } from "@devmentor/db";
-import { NotFoundError } from "../../http/errors";
+import { NotFoundError, TooManyRequestsError } from "../../http/errors";
+import { RateLimiter } from "../../rate-limiter";
 import { FakeClock } from "../../testing/fake-clock";
-import { INVITATION_TTL_MS, InvitationService } from "./invitation.service";
+import { INVITATION_RATE_LIMITS, INVITATION_TTL_MS, InvitationService } from "./invitation.service";
 
 const sha256 = (value: string) => createHash("sha256").update(value).digest("hex");
 
 function makeEm() {
   const em = {
+    find: vi.fn(),
     nativeUpdate: vi.fn(),
     create: vi.fn(),
     flush: vi.fn(),
@@ -25,11 +27,20 @@ function makeEm() {
 let em: ReturnType<typeof makeEm>;
 let clock: FakeClock;
 let service: InvitationService;
+let previewLimiter: RateLimiter;
+let registrationLimiter: RateLimiter;
 
 beforeEach(() => {
   em = makeEm();
   clock = new FakeClock(new Date("2026-10-23T10:00:00.000Z"));
-  service = new InvitationService({ em: em as unknown as EntityManager, clock });
+  previewLimiter = new RateLimiter({ clock }, INVITATION_RATE_LIMITS.preview);
+  registrationLimiter = new RateLimiter({ clock }, INVITATION_RATE_LIMITS.registration);
+  service = new InvitationService({
+    em: em as unknown as EntityManager,
+    clock,
+    invitationPreviewLimiter: previewLimiter,
+    invitationRegistrationLimiter: registrationLimiter,
+  });
 });
 
 describe("InvitationService.create", () => {
@@ -163,5 +174,130 @@ describe("InvitationService.consume", () => {
     await expect(service.consume("raw-token", createAccount)).rejects.toThrow("email taken");
 
     expect(em.nativeUpdate).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("InvitationService.guardPreview", () => {
+  it("allows 20 previews per IP and refuses the 21st", () => {
+    for (let i = 0; i < 20; i += 1) service.guardPreview("1.1.1.1");
+
+    expect(() => service.guardPreview("1.1.1.1")).toThrow(TooManyRequestsError);
+  });
+
+  it("counts every IP separately and forgets after the 15-minute window", () => {
+    for (let i = 0; i < 20; i += 1) service.guardPreview("1.1.1.1");
+
+    expect(() => service.guardPreview("2.2.2.2")).not.toThrow();
+    clock.advance(15 * 60_000);
+    expect(() => service.guardPreview("1.1.1.1")).not.toThrow();
+  });
+});
+
+describe("InvitationService.guardRegistration", () => {
+  const fail = () => Promise.reject(new NotFoundError("nope"));
+
+  it("returns the result and does not count a success", async () => {
+    for (let i = 0; i < 15; i += 1) {
+      await expect(service.guardRegistration("1.1.1.1", () => Promise.resolve("ok"))).resolves.toBe("ok");
+    }
+
+    expect(registrationLimiter.check("1.1.1.1").allowed).toBe(true);
+  });
+
+  it("rethrows the original error and refuses the IP after 10 failures", async () => {
+    for (let i = 0; i < 10; i += 1) {
+      await expect(service.guardRegistration("1.1.1.1", fail)).rejects.toBeInstanceOf(NotFoundError);
+    }
+    const work = vi.fn(() => Promise.resolve("ok"));
+
+    await expect(service.guardRegistration("1.1.1.1", work)).rejects.toBeInstanceOf(TooManyRequestsError);
+    expect(work).not.toHaveBeenCalled();
+    await expect(service.guardRegistration("2.2.2.2", work)).resolves.toBe("ok");
+  });
+
+  it("forgets the failures after one hour", async () => {
+    for (let i = 0; i < 10; i += 1) await service.guardRegistration("1.1.1.1", fail).catch(() => undefined);
+    clock.advance(60 * 60_000);
+
+    await expect(service.guardRegistration("1.1.1.1", () => Promise.resolve("ok"))).resolves.toBe("ok");
+  });
+});
+
+describe("InvitationService.listForAdmin", () => {
+  const HOUR = 60 * 60_000;
+  const created = new Date("2026-10-22T10:00:00.000Z");
+  const future = new Date(clockNow().getTime() + HOUR);
+  const past = new Date(clockNow().getTime() - HOUR);
+
+  function clockNow() {
+    return new Date("2026-10-23T10:00:00.000Z");
+  }
+
+  function row(overrides: Record<string, unknown>) {
+    return {
+      id: "i",
+      email: "a@example.com",
+      tokenHash: "secret-hash",
+      createdAt: created,
+      expiresAt: future,
+      usedAt: null,
+      revokedAt: null,
+      createdBy: { name: "Admin One", email: "admin@example.com" },
+      ...overrides,
+    };
+  }
+
+  it("queries newest first with the issuing admin loaded", async () => {
+    em.find.mockResolvedValue([]);
+
+    await expect(service.listForAdmin()).resolves.toEqual([]);
+    expect(em.find).toHaveBeenCalledWith(
+      MentorInvitation,
+      {},
+      { populate: ["createdBy"], orderBy: { createdAt: "desc" } },
+    );
+  });
+
+  it.each([
+    ["pending", {}],
+    ["expired", { expiresAt: past }],
+    ["revoked", { revokedAt: past }],
+    ["revoked", { revokedAt: past, expiresAt: past }],
+    ["used", { usedAt: past }],
+    ["used", { usedAt: past, expiresAt: past }],
+    ["used", { usedAt: past, revokedAt: past }],
+  ])("reports %s for %j", async (status, overrides) => {
+    em.find.mockResolvedValue([row(overrides)]);
+
+    const [item] = await service.listForAdmin();
+
+    expect(item!.status).toBe(status);
+  });
+
+  it("maps dates to ISO strings, names the admin and never exposes the token hash", async () => {
+    em.find.mockResolvedValue([row({})]);
+
+    const [item] = await service.listForAdmin();
+
+    expect(item).toEqual({
+      id: "i",
+      email: "a@example.com",
+      status: "pending",
+      createdAt: created.toISOString(),
+      expiresAt: future.toISOString(),
+      createdBy: "Admin One",
+    });
+    expect(JSON.stringify(item)).not.toContain("secret-hash");
+  });
+
+  it("falls back to the admin's e-mail, and to null when the admin was deleted", async () => {
+    em.find.mockResolvedValue([
+      row({ createdBy: { name: "", email: "admin@example.com" } }),
+      row({ createdBy: null }),
+    ]);
+
+    const items = await service.listForAdmin();
+
+    expect(items.map((item) => item.createdBy)).toEqual(["admin@example.com", null]);
   });
 });
