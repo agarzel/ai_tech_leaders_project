@@ -14,9 +14,9 @@ export const MentorProfile = defineSingletonEntity("MentorProfile", () =>
       headline: p.string().length(120).nullable(),
       bio: p.text().nullable(),
       // Subset of MENTOR_TAGS, validated in the service.
-      tags: p.json<string[]>().default("[]"),
+      tags: p.json<string[]>().default("[]").onCreate(() => []),
       // Up to 5 https URLs, validated in the service.
-      links: p.json<string[]>().default("[]"),
+      links: p.json<string[]>().default("[]").onCreate(() => []),
       // Integer grosze; null until the mentor sets them (fail closed: no price, not bookable).
       price25: p.integer().nullable(),
       price50: p.integer().nullable(),

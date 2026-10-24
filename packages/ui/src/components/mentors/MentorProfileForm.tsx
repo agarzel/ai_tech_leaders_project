@@ -42,6 +42,8 @@ type MentorProfileFormProps = {
   onSubmit: (values: MentorProfileInput) => Promise<ApiResult<unknown>>;
   /** After the server confirmed the save. */
   onSaved?: () => void;
+  /** Hide "Show me on the public list" until the page can honour it; the stored value is sent unchanged. Default: shown. */
+  showVisibility?: boolean;
 };
 
 type Draft = Omit<MentorProfileInput, "price25" | "price50"> & { price25: string; price50: string };
@@ -54,7 +56,7 @@ type Errors = Record<string, string>;
  * error, values kept, one submit at a time, "saved" only after the server confirms, and focus moves to the
  * "Profile saved." status so keyboard and screen-reader users know it worked.
  */
-export function MentorProfileForm({ initialValues, tagOptions, currency, onSubmit, onSaved }: MentorProfileFormProps) {
+export function MentorProfileForm({ initialValues, tagOptions, currency, onSubmit, onSaved, showVisibility = true }: MentorProfileFormProps) {
   const id = useId();
   const [initial] = useState<Draft>(() => ({
     ...initialValues,
@@ -358,25 +360,27 @@ export function MentorProfileForm({ initialValues, tagOptions, currency, onSubmi
         </FieldGroup>
       </FieldSet>
 
-      <FieldSet>
-        <FieldLegend className="type-section-title">Visibility</FieldLegend>
-        <Field orientation="horizontal" data-invalid={invalid("listed")}>
-          <Checkbox
-            id={fid("listed")}
-            checked={draft.listed}
-            disabled={isSaving}
-            aria-describedby={describe("listed", true)}
-            onCheckedChange={(checked) => update({ ...draft, listed: checked }, "listed")}
-          />
-          <FieldContent>
-            <FieldLabel htmlFor={fid("listed")}>Show me on the public list</FieldLabel>
-            <FieldDescription id={fid("listed-hint")}>
-              You appear there once you have prices and a time mentees can book. Your share link works either way.
-            </FieldDescription>
-            {errors.listed && <FieldError id={fid("listed-error")}>{errors.listed}</FieldError>}
-          </FieldContent>
-        </Field>
-      </FieldSet>
+      {showVisibility && (
+        <FieldSet>
+          <FieldLegend className="type-section-title">Visibility</FieldLegend>
+          <Field orientation="horizontal" data-invalid={invalid("listed")}>
+            <Checkbox
+              id={fid("listed")}
+              checked={draft.listed}
+              disabled={isSaving}
+              aria-describedby={describe("listed", true)}
+              onCheckedChange={(checked) => update({ ...draft, listed: checked }, "listed")}
+            />
+            <FieldContent>
+              <FieldLabel htmlFor={fid("listed")}>Show me on the public list</FieldLabel>
+              <FieldDescription id={fid("listed-hint")}>
+                You appear there once you have prices and a time mentees can book. Your share link works either way.
+              </FieldDescription>
+              {errors.listed && <FieldError id={fid("listed-error")}>{errors.listed}</FieldError>}
+            </FieldContent>
+          </Field>
+        </FieldSet>
+      )}
 
       <div className="flex flex-wrap items-center gap-between-groups">
         <Button type="submit" disabled={isSaving} aria-busy={isSaving || undefined}>

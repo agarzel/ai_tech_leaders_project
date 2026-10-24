@@ -20,9 +20,12 @@ type OfferChecklistProps = {
   /** "Show me on the public list" (R08). */
   listed: boolean;
   hrefs: { profile: string; slots: string };
+  /** Which steps to show, for a screen that has not got all of them yet; all five by default. */
+  show?: StepKey[];
   renderLink?: RenderLink;
 };
 
+type StepKey = "profile" | "prices" | "slots" | "share" | "list";
 type Status = "done" | "todo" | "optional";
 
 const STATUS: Record<Status, { word: string; icon: ReactNode }> = {
@@ -31,7 +34,7 @@ const STATUS: Record<Status, { word: string; icon: ReactNode }> = {
   optional: { word: "Optional", icon: <CircleDashedIcon aria-hidden="true" /> },
 };
 
-type Step = { key: string; title: string; status: Status; text: string; action?: { label: string; href: string }; extra?: ReactNode };
+type Step = { key: StepKey; title: string; status: Status; text: string; action?: { label: string; href: string }; extra?: ReactNode };
 
 /**
  * What stands between a mentor and being bookable, one step per row (spec E01, UI/UX `/mentor`): each
@@ -47,10 +50,11 @@ export function OfferChecklist({
   shareUrl,
   listed,
   hrefs,
+  show,
   renderLink = renderAnchor,
 }: OfferChecklistProps) {
   const bookable = profileComplete && pricesSet && bookableSlots > 0;
-  const steps: Step[] = [
+  const allSteps: Step[] = [
     {
       key: "profile",
       title: "Profile",
@@ -102,6 +106,7 @@ export function OfferChecklist({
       action: { label: listed ? "Change" : "Show me on the list", href: hrefs.profile },
     },
   ];
+  const steps = show ? allSteps.filter((step) => show.includes(step.key)) : allSteps;
   const next = steps.find((step) => step.status === "todo");
 
   return (

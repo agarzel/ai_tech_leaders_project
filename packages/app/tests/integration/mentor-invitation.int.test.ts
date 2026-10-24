@@ -43,14 +43,14 @@ describe("mentor invitation and registration", () => {
     await mentor.screenshot("mentor-register-form");
   });
 
-  it("registers the mentor, signs them in and lands on the home page", async () => {
+  it("registers the mentor, signs them in and lands on the mentor workspace", async () => {
     await mentor.fill("Name", "Invited Mentor");
     await mentor.fill("Password", password);
     await mentor.click("button", "Create account");
 
     await mentor.waitForText("Invited Mentor");
     expect(await mentor.textOf("button", "Log out")).toBe("Log out");
-    expect(await mentor.url()).toMatch(/\/$/);
+    expect(await mentor.url()).toMatch(/\/mentor$/);
     await mentor.screenshot("mentor-registered");
   });
 

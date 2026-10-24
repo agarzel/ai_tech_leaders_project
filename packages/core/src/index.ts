@@ -1,3 +1,4 @@
+export { MENTOR_TAGS } from "@devmentor/db";
 export { getEnv, type Env } from "./config/env";
 export { createRequestScope, getContainer, type AppContainer } from "./container/container";
 export type { Cradle } from "./container/cradle";

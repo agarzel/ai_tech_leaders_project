@@ -222,4 +222,10 @@ describe("MentorProfileForm", () => {
     expect(alert).toHaveTextContent("No connection");
     expect(alert.parentElement).toHaveFocus();
   });
+
+  it("can leave out the public-list switch", () => {
+    render(<MentorProfileForm initialValues={filled} tagOptions={TAGS} currency="PLN" onSubmit={vi.fn(async () => ok)} showVisibility={false} />);
+
+    expect(screen.queryByRole("checkbox", { name: "Show me on the public list" })).not.toBeInTheDocument();
+  });
 });
