@@ -23,5 +23,33 @@
         ]
       }
     ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "allowUnsandboxedCommands": false,
+    "filesystem": {
+      "denyRead": [
+        "~/.ssh",
+        "~/.aws",
+        "~/.config/gh",
+        "~/.kube",
+        "~/.npmrc",
+        "~/.pypirc",
+        "~/**/.env"
+      ]
+    },
+    "network": {
+      "allowedDomains": [
+        "localhost",
+        "127.0.0.1",
+        "github.com",
+        "api.github.com",
+        "registry.npmjs.org"
+      ],
+      "deniedDomains": [
+        "169.254.169.254",
+        "metadata.google.internal"
+      ]
+    }
   }
 }
