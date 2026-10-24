@@ -54,7 +54,7 @@ export class SlotService {
         }
         throw error;
       }
-      return toDto(slot, now);
+      return toSlotDto(slot, now);
     });
   }
 
@@ -70,7 +70,7 @@ export class SlotService {
   async listForOwner(userId: string): Promise<SlotDto[]> {
     const now = this.deps.clock.now();
     const slots = await this.deps.em.find(Slot, { mentor: { user: userId } }, { orderBy: { startsAt: "asc" } });
-    return slots.map((slot) => toDto(slot, now));
+    return slots.map((slot) => toSlotDto(slot, now));
   }
 
   /** The one definition of "bookable": open, starts at least 24 h from now, within the horizon. */
@@ -81,12 +81,17 @@ export class SlotService {
       {
         mentor: mentorProfileId,
         status: "open",
-        startsAt: { $gte: new Date(now.getTime() + BOOKING_LEAD_TIME_HOURS * HOUR_MS), $lte: horizon(now) },
+        startsAt: bookableWindow(now),
       },
       { orderBy: { startsAt: "asc" } },
     );
-    return slots.map((slot) => toDto(slot, now));
+    return slots.map((slot) => toSlotDto(slot, now));
   }
+}
+
+/** The start-time range of a bookable slot: at least the lead time from now, at most the horizon. */
+export function bookableWindow(now: Date): { $gte: Date; $lte: Date } {
+  return { $gte: new Date(now.getTime() + BOOKING_LEAD_TIME_HOURS * HOUR_MS), $lte: horizon(now) };
 }
 
 function horizon(now: Date): Date {
@@ -109,7 +114,7 @@ function assertPublishable(startsAt: Date, now: Date): void {
   }
 }
 
-function toDto(slot: ISlot, now: Date): SlotDto {
+export function toSlotDto(slot: ISlot, now: Date): SlotDto {
   const status = slot.status ?? "open";
   return {
     id: slot.id,

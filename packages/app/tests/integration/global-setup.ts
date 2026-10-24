@@ -107,7 +107,7 @@ async function waitForHealthy(url: string, server: ChildProcess) {
 // `next dev` compiles a page on its first request. A browser that opens a cold page meanwhile gets caught in a
 // rebuild-and-reload loop, so every page the tests open is compiled once here, before any browser starts.
 async function warmUp(baseUrl: string) {
-  for (const pathname of ["/", "/login", "/register", "/register/mentor", "/admin", "/admin/users", "/admin/invitations", "/mentor", "/mentor/profile", "/mentor/slots"]) {
+  for (const pathname of ["/", "/login", "/register", "/register/mentor", "/admin", "/admin/users", "/admin/invitations", "/mentor", "/mentor/profile", "/mentor/slots", "/mentors"]) {
     await fetch(`${baseUrl}${pathname}`, { redirect: "manual" });
   }
 }

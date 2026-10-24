@@ -1,7 +1,11 @@
 import { randomInt } from "node:crypto";
-import { CURRENCY, MentorProfile, UniqueConstraintViolationException, User, type EntityManager, type IMentorProfile } from "@devmentor/db";
+import { CURRENCY, MentorProfile, Slot, UniqueConstraintViolationException, User, type EntityManager, type IMentorProfile } from "@devmentor/db";
+import type { Clock } from "../../clock";
+import type { Page } from "../../http/crud";
 import { ConflictError, NotFoundError, ValidationError } from "../../http/errors";
 import type { MentorProfileInput } from "../../validators/mentors/mentor-profile.schema";
+import type { PublicMentorQuery } from "../../validators/mentors/public-mentor-query.schema";
+import { bookableWindow, toSlotDto, type SlotDto } from "../availability/slot.service";
 
 /** How many times a colliding share slug is regenerated before giving up. */
 export const SLUG_MAX_ATTEMPTS = 5;
@@ -25,8 +29,28 @@ export type MentorProfileDto = {
   listed: boolean;
 };
 
+/**
+ * A mentor as the public sees them. No e-mail, user id, role or profile id (spec: Sensitive data), and no
+ * ratings or reviews (N02).
+ */
+export type PublicMentorDto = {
+  name: string;
+  headline: string | null;
+  bio: string | null;
+  tags: string[];
+  links: string[];
+  price25: number | null;
+  price50: number | null;
+  currency: typeof CURRENCY;
+  shareSlug: string;
+  soonestBookableSlotAt: string | null;
+};
+
+/** The share page: the public mentor plus every bookable slot, so the page needs one request. */
+export type PublicMentorDetailDto = PublicMentorDto & { slots: SlotDto[] };
+
 export class MentorService {
-  constructor(private readonly deps: { em: EntityManager }) {}
+  constructor(private readonly deps: { em: EntityManager; clock: Clock }) {}
 
   /** The caller's profile, created on the first call. Identified by the session user, never by a client id. */
   async getOrCreateOwn(userId: string): Promise<MentorProfileDto> {
@@ -77,6 +101,56 @@ export class MentorService {
     return toDto(profile);
   }
 
+  /**
+   * The public list: mentors that opted in (`listed`), have both prices and at least one bookable slot, soonest
+   * bookable slot first. A mentor without a bookable slot never appears, so the list is built from the slots.
+   */
+  async listPublic(query: PublicMentorQuery): Promise<Page<PublicMentorDto>> {
+    const now = this.deps.clock.now();
+    const slots = await this.deps.em.find(
+      Slot,
+      {
+        status: "open",
+        startsAt: bookableWindow(now),
+        mentor: { listed: true, price25: { $ne: null }, price50: { $ne: null } },
+      },
+      { orderBy: { startsAt: "asc" }, populate: ["mentor.user"] },
+    );
+
+    // Slots arrive soonest first, so the first slot seen per mentor is that mentor's soonest one.
+    const soonest = new Map<string, { profile: IMentorProfile; startsAt: Date }>();
+    for (const slot of slots) {
+      const profile = slot.mentor as unknown as IMentorProfile;
+      if (!soonest.has(profile.id)) soonest.set(profile.id, { profile, startsAt: slot.startsAt });
+    }
+    const matching = [...soonest.values()].filter(({ profile }) => !query.tag || (profile.tags ?? []).includes(query.tag));
+
+    const start = (query.page - 1) * query.pageSize;
+    return {
+      page: query.page,
+      pageSize: query.pageSize,
+      total: matching.length,
+      items: matching.slice(start, start + query.pageSize).map(({ profile, startsAt }) => toPublicDto(profile, startsAt)),
+    };
+  }
+
+  /**
+   * The share page of one mentor, found by slug. Works for an unlisted mentor too: `listed` only controls the
+   * public list, the link is the other way in (spec: API Contracts `GET /api/mentors/[slug]`, R08, D03). Without
+   * both prices nothing can be booked, so the slots are empty. An unknown slug is `NotFoundError`.
+   */
+  async getPublicBySlug(slug: string): Promise<PublicMentorDetailDto> {
+    const profile = await this.deps.em.findOne(MentorProfile, { shareSlug: slug }, { populate: ["user"] });
+    if (!profile) throw new NotFoundError("Mentor not found");
+
+    const now = this.deps.clock.now();
+    const priced = profile.price25 != null && profile.price50 != null;
+    const slots = priced
+      ? await this.deps.em.find(Slot, { mentor: profile.id, status: "open", startsAt: bookableWindow(now) }, { orderBy: { startsAt: "asc" } })
+      : [];
+    return { ...toPublicDto(profile, slots[0]?.startsAt), slots: slots.map((slot) => toSlotDto(slot, now)) };
+  }
+
   private findProfile(userId: string): Promise<IMentorProfile | null> {
     return this.deps.em.findOne(MentorProfile, { user: userId }, { populate: ["user"] });
   }
@@ -95,6 +169,21 @@ function toDto(profile: IMentorProfile, userName?: string): MentorProfileDto {
     currency: CURRENCY,
     shareSlug: profile.shareSlug,
     listed: profile.listed ?? false,
+  };
+}
+
+function toPublicDto(profile: IMentorProfile, soonestBookableSlotAt?: Date): PublicMentorDto {
+  return {
+    name: profile.user.name,
+    headline: profile.headline ?? null,
+    bio: profile.bio ?? null,
+    tags: profile.tags ?? [],
+    links: profile.links ?? [],
+    price25: profile.price25 ?? null,
+    price50: profile.price50 ?? null,
+    currency: CURRENCY,
+    shareSlug: profile.shareSlug,
+    soonestBookableSlotAt: soonestBookableSlotAt?.toISOString() ?? null,
   };
 }
 
