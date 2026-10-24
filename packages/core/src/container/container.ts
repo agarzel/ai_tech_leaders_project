@@ -6,6 +6,7 @@ import { logger } from "../logger";
 import { RateLimiter } from "../rate-limiter";
 import { AuthService, LOGIN_RATE_LIMIT } from "../services/auth/auth.service";
 import { UserService } from "../services/auth/user.service";
+import { SlotService } from "../services/availability/slot.service";
 import { InvitationService } from "../services/mentors/invitation.service";
 import { MentorService } from "../services/mentors/mentor.service";
 import { HealthService } from "../services/system/health.service";
@@ -36,6 +37,7 @@ async function createAppContainer(): Promise<AppContainer> {
     authService: asClass(AuthService).scoped(),
     invitationService: asClass(InvitationService).scoped(),
     mentorService: asClass(MentorService).scoped(),
+    slotService: asClass(SlotService).scoped(),
   });
 
   return container;

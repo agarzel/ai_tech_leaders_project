@@ -15,6 +15,12 @@ export { RateLimiter, type RateLimitCheck, type RateLimiterOptions } from "./rat
 export { AuthService, LOGIN_RATE_LIMIT, PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH, type SessionUserDto } from "./services/auth/auth.service";
 export { UserService, type UserDto } from "./services/auth/user.service";
 export {
+  SLOT_GRID_MINUTES,
+  SLOT_HORIZON_DAYS,
+  SlotService,
+  type SlotDto,
+} from "./services/availability/slot.service";
+export {
   INVITATION_TTL_MS,
   InvitationService,
   type CreatedInvitationDto,
