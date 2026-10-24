@@ -154,4 +154,12 @@ describe("OfferChecklist show", () => {
     expect(screen.getAllByRole("listitem")).toHaveLength(2);
     expect(screen.getByRole("link", { name: "Set prices: Prices" })).toHaveAttribute("href", "/mentor/profile");
   });
+
+  it("shows the times step with its link to the slots page next to profile and prices", () => {
+    render(<OfferChecklist {...base} profileComplete pricesSet bookableSlots={1} slotsTooSoon={0} listed={false} show={["profile", "prices", "slots"]} />);
+
+    expect(screen.getAllByRole("listitem")).toHaveLength(3);
+    expect(screen.getByRole("link", { name: "Manage times: A time mentees can book" })).toHaveAttribute("href", "/mentor/slots");
+    expect(screen.queryByText("Share link")).not.toBeInTheDocument();
+  });
 });

@@ -5,7 +5,7 @@ export type { Cradle } from "./container/cradle";
 export { realClock, type Clock } from "./clock";
 export { apiHandler, CLIENT_HEADER, type ApiResult, type HandlerArgs, type RouteContext } from "./http/apiHandler";
 export type { CrudService, Page, PageQuery } from "./http/crud";
-export { parseJsonBody } from "./http/body";
+export { parseJsonBody, parseOrThrow } from "./http/body";
 export { assertOwner, requireAdmin, requireRole, requireSession, type Session } from "./http/auth";
 export * from "./http/errors";
 export { makeCrudRoute } from "./http/makeCrudRoute";
