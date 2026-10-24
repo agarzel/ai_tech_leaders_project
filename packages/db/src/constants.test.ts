@@ -1,9 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { CURRENCY, MENTOR_TAGS, SESSION_LENGTHS } from "./index";
+import { BOOKING_LEAD_TIME_HOURS, CURRENCY, MENTOR_TAGS, SESSION_LENGTHS, SLOT_BLOCK_MINUTES } from "./index";
 
 describe("domain constants", () => {
   it("offers 25- and 50-minute sessions", () => {
     expect(SESSION_LENGTHS).toEqual([25, 50]);
+  });
+
+  it("blocks 50 minutes per slot", () => {
+    expect(SLOT_BLOCK_MINUTES).toBe(50);
+  });
+
+  it("requires a 24-hour booking lead time (D13)", () => {
+    expect(BOOKING_LEAD_TIME_HOURS).toBe(24);
   });
 
   it("prices in PLN only", () => {

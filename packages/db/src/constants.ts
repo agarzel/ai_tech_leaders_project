@@ -5,6 +5,12 @@ export { USER_ROLES, type UserRole } from "./entities/auth/user.constants";
 export const SESSION_LENGTHS = [25, 50] as const;
 export type SessionLength = (typeof SESSION_LENGTHS)[number];
 
+// A slot blocks this many minutes; also the minimum spacing between one mentor's slots.
+export const SLOT_BLOCK_MINUTES = 50;
+
+// A slot is bookable only when it starts at least this many hours ahead (D13).
+export const BOOKING_LEAD_TIME_HOURS = 24;
+
 // Prices are PLN only, stored in grosze (D12).
 export const CURRENCY = "PLN";
 
