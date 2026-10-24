@@ -78,6 +78,28 @@ describe("mentor profile and prices", () => {
     await first.screenshot("mentor-checklist-done");
   });
 
+  it("shows the share link and saves the public-list option", async () => {
+    await first.open("/mentor");
+    await first.waitForText("Share link");
+    const link = JSON.parse(await first.run("eval", "document.querySelector('input[readonly]').value")) as string;
+    expect(link).toMatch(new RegExp(`^${inject("baseUrl")}/m/first-mentor-[a-z0-9]{6}$`));
+    await first.waitForText("You are not on the public list");
+
+    await first.open("/mentor/profile");
+    await first.waitForText("Show me on the public list");
+    await first.click("checkbox", "Show me on the public list");
+    await first.click("button", "Save profile");
+    await first.waitForText("Profile saved.");
+    await first.screenshot("mentor-profile-listed");
+
+    await first.open("/mentor/profile");
+    await first.waitForText("Show me on the public list");
+    expect(await isChecked(first, "Show me on the public list")).toBe(true);
+    await first.open("/mentor");
+    await first.waitForText("You opted in");
+    await first.screenshot("mentor-checklist-listed");
+  });
+
   it("keeps the first mentor's profile unchanged when the second mentor saves", async () => {
     expect(await statusOf(second, "PUT", { name: "Second Mentor", headline: "Someone else", price25: 2000, price50: 4000 })).toBe(200);
 
@@ -108,4 +130,10 @@ describe("mentor profile and prices", () => {
 async function valueOf(browser: Browser, label: string): Promise<string> {
   const script = `document.getElementById([...document.querySelectorAll('label')].find((label) => label.textContent.trim().startsWith(${JSON.stringify(label)})).htmlFor).value`;
   return JSON.parse(await browser.run("eval", script)) as string;
+}
+
+/** Whether the checkbox with this label is checked (Base UI keeps the state on `aria-checked` or on a hidden input). */
+async function isChecked(browser: Browser, label: string): Promise<boolean> {
+  const script = `(() => { const control = document.getElementById([...document.querySelectorAll('label')].find((item) => item.textContent.trim().startsWith(${JSON.stringify(label)})).htmlFor); return control.getAttribute('aria-checked') === 'true' || control.checked === true; })()`;
+  return JSON.parse(await browser.run("eval", script)) as boolean;
 }

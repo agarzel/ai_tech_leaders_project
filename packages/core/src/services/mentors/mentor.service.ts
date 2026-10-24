@@ -1,6 +1,6 @@
 import { randomInt } from "node:crypto";
 import { CURRENCY, MentorProfile, UniqueConstraintViolationException, User, type EntityManager, type IMentorProfile } from "@devmentor/db";
-import { ConflictError, NotFoundError } from "../../http/errors";
+import { ConflictError, NotFoundError, ValidationError } from "../../http/errors";
 import type { MentorProfileInput } from "../../validators/mentors/mentor-profile.schema";
 
 /** How many times a colliding share slug is regenerated before giving up. */
@@ -53,8 +53,14 @@ export class MentorService {
     throw new ConflictError("Could not create the profile, try again");
   }
 
-  /** Saves the caller's own profile and name. Prices are grosze, null while not set. */
+  /**
+   * Saves the caller's own profile, name and list opt-in. Prices are grosze, null while not set. Listing
+   * needs both prices (the name and headline a save requires are already there); fails closed otherwise.
+   */
   async updateOwn(userId: string, input: MentorProfileInput): Promise<MentorProfileDto> {
+    if (input.listed && (input.price25 === null || input.price50 === null)) {
+      throw new ValidationError("Check the highlighted fields.", { listed: ["Set both prices before joining the public list."] });
+    }
     await this.getOrCreateOwn(userId);
     const profile = await this.findProfile(userId);
     if (!profile) throw new NotFoundError("Profile not found");
@@ -66,6 +72,7 @@ export class MentorService {
     profile.links = input.links;
     profile.price25 = input.price25;
     profile.price50 = input.price50;
+    profile.listed = input.listed;
     await this.deps.em.flush();
     return toDto(profile);
   }

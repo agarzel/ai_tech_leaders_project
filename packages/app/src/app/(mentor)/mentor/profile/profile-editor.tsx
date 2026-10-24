@@ -42,7 +42,6 @@ export function ProfileEditor() {
       }}
       tagOptions={profile.tagOptions}
       currency={profile.currency}
-      showVisibility={false}
       onSubmit={(values: MentorProfileInput) => apiCall("/api/mentor/profile", { method: "PUT", body: values })}
       // The checklist and the header name come from the server.
       onSaved={() => router.refresh()}

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MentorProfile, UniqueConstraintViolationException, User, type EntityManager } from "@devmentor/db";
-import { ConflictError, NotFoundError } from "../../http/errors";
+import { ConflictError, NotFoundError, ValidationError } from "../../http/errors";
 import type { MentorProfileInput } from "../../validators/mentors/mentor-profile.schema";
 import { MentorService, SLUG_MAX_ATTEMPTS } from "./mentor.service";
 
@@ -43,6 +43,7 @@ const input: MentorProfileInput = {
   links: ["https://github.com/ada"],
   price25: 8000,
   price50: 15000,
+  listed: false,
 };
 
 let em: ReturnType<typeof makeEm>;
@@ -191,6 +192,40 @@ describe("MentorService.updateOwn", () => {
     });
     expect(profile.user.name).toBe("Ada Byron");
     expect(dto).toMatchObject({ name: "Ada Byron", headline: "Staff engineer", price25: 8000, price50: 15000, currency: "PLN" });
+  });
+
+  it("lists the caller's own profile when both prices are set", async () => {
+    const profile = storedProfile();
+    em.findOne.mockResolvedValue(profile);
+
+    const dto = await service.updateOwn("u1", { ...input, listed: true });
+
+    expect(profile.listed).toBe(true);
+    expect(dto.listed).toBe(true);
+  });
+
+  it("unlists a listed profile when the caller opts out", async () => {
+    const profile = storedProfile({ price25: 8000, price50: 15000, listed: true });
+    em.findOne.mockResolvedValue(profile);
+
+    const dto = await service.updateOwn("u1", { ...input, listed: false });
+
+    expect(dto.listed).toBe(false);
+  });
+
+  it.each([
+    { price25: null, price50: 15000 },
+    { price25: 8000, price50: null },
+  ])("refuses to list without both prices and changes nothing ($price25, $price50)", async (prices) => {
+    const profile = storedProfile();
+    em.findOne.mockResolvedValue(profile);
+
+    const attempt = service.updateOwn("u1", { ...input, ...prices, listed: true });
+
+    await expect(attempt).rejects.toBeInstanceOf(ValidationError);
+    await expect(attempt).rejects.toMatchObject({ fieldErrors: { listed: ["Set both prices before joining the public list."] } });
+    expect(em.flush).not.toHaveBeenCalled();
+    expect(profile.listed).toBe(false);
   });
 
   it("keeps prices unset when the caller sends none", async () => {

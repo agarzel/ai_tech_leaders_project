@@ -32,6 +32,8 @@ export const mentorProfileSchema = z.object({
   links: z.array(httpsLink).max(LINKS_MAX_COUNT, `Add at most ${LINKS_MAX_COUNT} links`).default([]),
   price25: price.default(null),
   price50: price.default(null),
+  // R08 opt-in: unlisted unless the mentor says otherwise.
+  listed: z.boolean("Choose whether to be listed").default(false),
 });
 
 export type MentorProfileInput = z.infer<typeof mentorProfileSchema>;

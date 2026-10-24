@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { mentorProfileSchema, PRICE_MAX_GROSZE, PRICE_MIN_GROSZE } from "./mentor-profile.schema";
 
-const valid = { name: "Ada Lovelace", headline: "Staff engineer", bio: "Hello", tags: ["React"], links: ["https://github.com/ada"], price25: 8000, price50: 15000 };
+const valid = { name: "Ada Lovelace", headline: "Staff engineer", bio: "Hello", tags: ["React"], links: ["https://github.com/ada"], price25: 8000, price50: 15000, listed: true };
 
 describe("mentorProfileSchema", () => {
   it("accepts a full profile", () => {
@@ -17,6 +17,7 @@ describe("mentorProfileSchema", () => {
       links: [],
       price25: null,
       price50: null,
+      listed: false,
     });
   });
 
@@ -66,5 +67,11 @@ describe("mentorProfileSchema", () => {
     expect(mentorProfileSchema.safeParse({ ...valid, price25: 1500.5 }).success).toBe(false);
     expect(mentorProfileSchema.safeParse({ ...valid, price25: "80" }).success).toBe(false);
     expect(mentorProfileSchema.safeParse({ ...valid, price25: null, price50: null }).success).toBe(true);
+  });
+
+  it("takes listed as a boolean, unlisted by default", () => {
+    expect(mentorProfileSchema.parse({ ...valid, listed: false }).listed).toBe(false);
+    expect(mentorProfileSchema.safeParse({ ...valid, listed: "yes" }).success).toBe(false);
+    expect(mentorProfileSchema.safeParse({ ...valid, listed: null }).success).toBe(false);
   });
 });
