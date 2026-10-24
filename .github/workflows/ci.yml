@@ -80,6 +80,7 @@ jobs:
         with:
           name: integration-screenshots
           path: packages/app/tests/integration/.artifacts/
+          include-hidden-files: true
           retention-days: 14
 
   migrations:
