@@ -53,6 +53,8 @@ export const RefundDelayed: Story = { args: { booking: bookings.refundDelayed },
 
 /** The hold ran out before the payment finished; the time is free again. */
 export const PaymentNotCompleted: Story = {
+  // ui must not import next/link (C29); a plain anchor is the story's stand-in for the app's link.
+  // eslint-disable-next-line @next/next/no-html-link-for-pages
   args: { booking: bookings.paymentNotCompleted, actions: <a className={buttonVariants()} href="/m/marek">Choose a time again</a> },
   play: async ({ canvasElement }) => title(canvasElement, "Payment not completed — the time was released"),
 };
