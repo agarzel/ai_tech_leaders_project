@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import type { InvitationListItemDto, InvitationStatus } from "@devmentor/core";
 import { invitationCreateSchema } from "@devmentor/core/validators/mentors/invitation-create.schema";
 import { apiCall } from "@devmentor/ui/backend/api/apiCall";
 import { CopyField } from "@devmentor/ui/backend/forms/CopyField";
 import { CrudForm, type CrudFormField } from "@devmentor/ui/backend/forms/CrudForm";
+import { DataTable, type DataTableColumn } from "@devmentor/ui/backend/tables/DataTable";
+import { Badge } from "@devmentor/ui/components/ui/badge";
 import { Button } from "@devmentor/ui/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@devmentor/ui/components/ui/card";
 
@@ -14,14 +17,53 @@ const fields: CrudFormField<typeof invitationCreateSchema>[] = [
   { name: "email", label: "Mentor email", placeholder: "ada@example.com" },
 ];
 
+const statusVariant: Record<InvitationStatus, "secondary" | "outline" | "destructive"> = {
+  pending: "secondary",
+  used: "outline",
+  revoked: "outline",
+  expired: "destructive",
+};
+
+const formatDate = (iso: string) => new Date(iso).toLocaleDateString("en-GB");
+
+const columns: DataTableColumn<InvitationListItemDto>[] = [
+  { key: "email", header: "Email" },
+  { key: "status", header: "Status", cell: (row) => <Badge variant={statusVariant[row.status]}>{row.status}</Badge> },
+  { key: "createdAt", header: "Created", cell: (row) => formatDate(row.createdAt) },
+  { key: "expiresAt", header: "Expires", cell: (row) => formatDate(row.expiresAt) },
+  { key: "createdBy", header: "Invited by", cell: (row) => row.createdBy ?? "–" },
+];
+
 export function InvitationsAdmin() {
+  const [invitations, setInvitations] = useState<InvitationListItemDto[]>();
+  const [listError, setListError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    const result = await apiCall<InvitationListItemDto[]>("/api/admin/invitations");
+    if (!result.ok) {
+      setListError(result.error.message);
+      return;
+    }
+    setListError(null);
+    setInvitations(result.data);
+  }, []);
+
+  useEffect(() => {
+    // Fetching on mount is the intended side effect here.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load();
+  }, [load]);
+
   const [created, setCreated] = useState<CreatedInvitation | null>(null);
   // Changing the key resets the form after a link was created.
   const [formKey, setFormKey] = useState(0);
 
   async function createInvitation(values: { email: string }) {
     const result = await apiCall<CreatedInvitation>("/api/admin/invitations", { method: "POST", body: values });
-    if (result.ok) setCreated(result.data);
+    if (result.ok) {
+      setCreated(result.data);
+      void load();
+    }
     return result;
   }
 
@@ -67,6 +109,24 @@ export function InvitationsAdmin() {
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>All invitations</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DataTable
+            columns={columns}
+            rows={invitations}
+            getRowId={(row) => row.id}
+            isLoading={!invitations && !listError}
+            error={listError}
+            onRetry={() => void load()}
+            emptyTitle="No invitations yet"
+            emptyDescription="Create the first invitation with the form above."
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

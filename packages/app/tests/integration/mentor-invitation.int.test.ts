@@ -33,6 +33,13 @@ describe("mentor invitation and registration", () => {
     await admin.screenshot("mentor-invitation-created");
   });
 
+  it("lists the invitation as pending", async () => {
+    await admin.open("/admin/invitations");
+    await admin.waitForText(email);
+    await admin.waitForText("pending");
+    await admin.screenshot("mentor-invitation-list-pending");
+  });
+
   it("shows the invited address and validates the form", async () => {
     await mentor.open(new URL(link).pathname + new URL(link).search);
     await mentor.waitForText(email);
@@ -52,6 +59,13 @@ describe("mentor invitation and registration", () => {
     expect(await mentor.textOf("button", "Log out")).toBe("Log out");
     expect(await mentor.url()).toMatch(/\/mentor$/);
     await mentor.screenshot("mentor-registered");
+  });
+
+  it("lists the invitation as used", async () => {
+    await admin.open("/admin/invitations");
+    await admin.waitForText(email);
+    await admin.waitForText("used");
+    await admin.screenshot("mentor-invitation-list-used");
   });
 
   it("rejects the used link", async () => {

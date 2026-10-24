@@ -7,7 +7,7 @@ import { RateLimiter } from "../rate-limiter";
 import { AuthService, LOGIN_RATE_LIMIT } from "../services/auth/auth.service";
 import { UserService } from "../services/auth/user.service";
 import { SlotService } from "../services/availability/slot.service";
-import { InvitationService } from "../services/mentors/invitation.service";
+import { INVITATION_RATE_LIMITS, InvitationService } from "../services/mentors/invitation.service";
 import { MentorService } from "../services/mentors/mentor.service";
 import { HealthService } from "../services/system/health.service";
 import type { Cradle } from "./cradle";
@@ -32,6 +32,8 @@ async function createAppContainer(): Promise<AppContainer> {
     clock: asValue(realClock),
     // One process-wide instance: the limiter's counters must outlive a single request.
     rateLimiter: asValue(new RateLimiter({ clock: realClock }, LOGIN_RATE_LIMIT)),
+    invitationPreviewLimiter: asValue(new RateLimiter({ clock: realClock }, INVITATION_RATE_LIMITS.preview)),
+    invitationRegistrationLimiter: asValue(new RateLimiter({ clock: realClock }, INVITATION_RATE_LIMITS.registration)),
     healthService: asClass(HealthService).scoped(),
     userService: asClass(UserService).scoped(),
     authService: asClass(AuthService).scoped(),

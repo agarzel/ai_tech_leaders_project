@@ -18,6 +18,8 @@ export type Cradle = {
   env: Env;
   clock: Clock;
   rateLimiter: RateLimiter;
+  invitationPreviewLimiter: RateLimiter;
+  invitationRegistrationLimiter: RateLimiter;
   healthService: HealthService;
   userService: UserService;
   authService: AuthService;
