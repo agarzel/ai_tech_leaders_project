@@ -135,4 +135,24 @@ describe("apiHandler", () => {
     const [context] = vi.mocked(logger.error).mock.calls[0] as unknown as [{ requestId: string }];
     expect(context.requestId).toMatch(/^[0-9a-f-]{36}$/);
   });
+
+  it("maps an error from another copy of the error class to its status instead of a 500", async () => {
+    // A second copy of AppError (same shape, different class), as when a module graph loads the class twice.
+    class ForeignValidationError extends Error {
+      readonly code = "validation_error";
+      readonly status = 400;
+      readonly fieldErrors = { startsAt: ["too soon"] };
+    }
+    const handler = apiHandler(async () => {
+      throw new ForeignValidationError("Start time too soon");
+    });
+
+    const response = await handler(request(), { params: Promise.resolve({}) });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      ok: false,
+      error: { code: "validation_error", message: "Start time too soon", fieldErrors: { startsAt: ["too soon"] } },
+    });
+  });
 });

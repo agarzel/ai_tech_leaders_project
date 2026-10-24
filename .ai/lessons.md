@@ -4,6 +4,8 @@ Short, durable findings for AI agents and humans. Newest first. Format: `- YYYY-
 
 - 2026-10-24 – Base UI checkboxes do not toggle when the hidden input or a label is clicked in browser tests: click the element with `role="checkbox"` (or `box.click()` in page script) and check `aria-checked` before saving. Verify the saved value in the database, not only the page text (Epic 01 phase 4 manual test).
 
+- 2026-10-24 – `instanceof` on core errors fails in Next.js dev: the cached container and a route handler can load the same error class from two module graphs, so a rule error (e.g. slot 24 h lead time) became a 500. `apiHandler` now recognises AppError by shape (status and code); regression test in `apiHandler.test.ts`. Do not rely on `instanceof` for errors that cross module boundaries.
+
 - 2026-10-19 – Never run `git stash` (or any command that hides or discards local changes) in an agent run, not even to compare with HEAD – use `git show HEAD:<file>` or `git diff`. A stray stash hid the whole uncommitted stage-1 work until `git stash pop` (review rule R3: never destroy local state; `.ai/runs/2026-10-19-lesson-6-design-system.md`).
 - 2026-10-19 – `cn` (tailwind-merge semantics) does not know custom Tailwind utilities: `cn("gap-2", "gap-in-group")` keeps both. Register design-system spacing/type classes in `createCn` (`packages/ui/src/lib/utils.ts`), and name type roles `type-*`, not `text-*`, so they never collide with colour classes.
 - 2026-10-19 – Measure contrast of translucent tokens composited over their surface: dark `--border` is white 10%, and painting it alone on a transparent canvas reads as pure white (17:1 instead of 1.25:1) (`packages/ui/.storybook/blocks/Foundations.tsx`).
