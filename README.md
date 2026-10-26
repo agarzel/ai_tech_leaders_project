@@ -111,6 +111,15 @@ The database listens on `localhost:5432`; the connection string is `DATABASE_URL
 
 `AUTH_SECRET` in `.env` is required (at least 32 characters; the app refuses to start without it). Generate one with `openssl rand -base64 32`; never commit a real value.
 
+Payments are configured in `.env` too (all validated at startup; the app refuses to start when one is wrong):
+
+| Variable | Meaning |
+| --- | --- |
+| `PAYMENTS_PROVIDER` | `fake` (no network, development and tests; refused when `NODE_ENV=production`) or `stripe` (Stripe Checkout, cards only). Required. |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Required when the provider is `stripe`; use test-mode keys outside production. |
+| `SWEEP_SECRET` | At least 32 characters. Protects the sweep endpoint and signs the fake provider's webhook events. |
+| `APP_URL` | Public base URL (`http` or `https`); Checkout success and cancel URLs are built from it. |
+
 ### First admin
 
 Admin pages and `/api/users` need an admin session. Once after `npm run setup`, create your admin (or reset any account's password) against the database in `.env`:

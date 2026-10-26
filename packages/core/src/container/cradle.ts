@@ -2,6 +2,7 @@ import type { EntityManager, MikroORM } from "@devmentor/db";
 import type { Clock } from "../clock";
 import type { Env } from "../config/env";
 import type { Logger } from "../logger";
+import type { PaymentGateway } from "../payments/payment-gateway";
 import type { RateLimiter } from "../rate-limiter";
 import type { AuthService } from "../services/auth/auth.service";
 import type { UserService } from "../services/auth/user.service";
@@ -17,6 +18,7 @@ export type Cradle = {
   logger: Logger;
   env: Env;
   clock: Clock;
+  paymentGateway: PaymentGateway;
   rateLimiter: RateLimiter;
   invitationPreviewLimiter: RateLimiter;
   invitationRegistrationLimiter: RateLimiter;

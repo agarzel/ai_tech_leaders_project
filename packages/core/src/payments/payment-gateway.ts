@@ -1,0 +1,36 @@
+/** What the app asks a payment provider to charge for one booking. `amount` is in grosze (minor units). */
+export type CheckoutInput = {
+  bookingId: string;
+  amount: number;
+  currency: string;
+  description: string;
+  successUrl: string;
+  cancelUrl: string;
+  expiresAt: Date;
+  /** Same key → same session, so a retry after a lost response never creates a second charge. */
+  idempotencyKey: string;
+  customerEmail?: string;
+};
+
+export type CheckoutSession = { sessionId: string; url: string };
+
+/** A verified webhook event, reduced to what the app acts on. Anything else is `ignored` (answered with 200). */
+export type PaymentEvent =
+  | {
+      type: "checkout.completed";
+      sessionId: string;
+      bookingId: string | null;
+      paymentStatus: string;
+      amountTotal: number | null;
+      currency: string | null;
+      paymentIntentId: string | null;
+    }
+  | { type: "ignored"; providerType: string };
+
+/** Port to the payment provider. One implementation per process, chosen by `PAYMENTS_PROVIDER`. */
+export interface PaymentGateway {
+  /** Throws `PaymentUnavailableError` when the provider cannot create the session; nothing was charged then. */
+  createCheckout(input: CheckoutInput): Promise<CheckoutSession>;
+  /** Verifies the provider's signature over the raw body, then parses it. Throws `ValidationError` when it does not verify. */
+  parseWebhook(rawBody: string, headers: Headers): PaymentEvent;
+}

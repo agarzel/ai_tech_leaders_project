@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { getOrm } from "@devmentor/db";
 import { getEnv } from "../config/env";
+import { FakeGateway } from "../payments/fake.gateway";
 import { UserService } from "../services/auth/user.service";
 import { InvitationService } from "../services/mentors/invitation.service";
 import { MentorService } from "../services/mentors/mentor.service";
@@ -11,7 +12,9 @@ vi.mock("@devmentor/db", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@devmentor/db")>()),
   getOrm: vi.fn(),
 }));
-vi.mock("../config/env", () => ({ getEnv: vi.fn() }));
+vi.mock("../config/env", () => ({
+  getEnv: vi.fn(() => ({ PAYMENTS_PROVIDER: "fake", SWEEP_SECRET: "w".repeat(32), APP_URL: "http://localhost:3000" })),
+}));
 
 const forks: object[] = [];
 const orm = {
@@ -49,6 +52,14 @@ describe("container", () => {
     expect(scopeA.cradle.userService === scopeA.cradle.userService).toBe(true);
     expect(scopeA.cradle.userService === scopeB.cradle.userService).toBe(false);
     expect(scopeA.cradle.logger).toBeDefined();
+  });
+
+  it("registers the payment gateway the environment selects, one instance for the whole process", async () => {
+    const scopeA = await createRequestScope();
+    const scopeB = await createRequestScope();
+
+    expect(scopeA.cradle.paymentGateway).toBeInstanceOf(FakeGateway);
+    expect(scopeA.cradle.paymentGateway === scopeB.cradle.paymentGateway).toBe(true);
   });
 
   it("shares the rate limiters between request scopes, separate from the login limiter", async () => {

@@ -48,3 +48,10 @@ export class TooManyRequestsError extends AppError {
     super("rate_limited", 429, message);
   }
 }
+
+/** The payment provider could not be reached or refused the request; nothing was charged. Safe to retry. */
+export class PaymentUnavailableError extends AppError {
+  constructor(message = "Payment is temporarily unavailable. Try again shortly.") {
+    super("payment_unavailable", 503, message);
+  }
+}

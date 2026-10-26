@@ -11,6 +11,11 @@ describe("getEnv", () => {
     vi.stubEnv("NODE_ENV", "test");
     vi.stubEnv("LOG_LEVEL", "debug");
     vi.stubEnv("AUTH_SECRET", "a".repeat(32));
+    vi.stubEnv("PAYMENTS_PROVIDER", "fake");
+    vi.stubEnv("STRIPE_SECRET_KEY", undefined);
+    vi.stubEnv("STRIPE_WEBHOOK_SECRET", undefined);
+    vi.stubEnv("SWEEP_SECRET", "w".repeat(32));
+    vi.stubEnv("APP_URL", "http://localhost:3000");
   });
 
   afterEach(() => {
@@ -25,6 +30,9 @@ describe("getEnv", () => {
       DATABASE_URL: "postgres://devmentor:secret@localhost:5432/devmentor",
       AUTH_SECRET: "a".repeat(32),
       LOG_LEVEL: "debug",
+      PAYMENTS_PROVIDER: "fake",
+      SWEEP_SECRET: "w".repeat(32),
+      APP_URL: "http://localhost:3000",
     });
   });
 
@@ -74,5 +82,79 @@ describe("getEnv", () => {
 
     expect(() => getEnv()).toThrow(/Invalid environment variables:[\s\S]*DATABASE_URL[\s\S]*LOG_LEVEL/);
     expect(() => getEnv()).not.toThrow(/secret-value/);
+  });
+
+  describe("payments", () => {
+    it("requires PAYMENTS_PROVIDER, with no default", async () => {
+      vi.stubEnv("PAYMENTS_PROVIDER", undefined);
+      const getEnv = await loadGetEnv();
+
+      expect(() => getEnv()).toThrow(/PAYMENTS_PROVIDER/);
+    });
+
+    it("rejects an unknown provider", async () => {
+      vi.stubEnv("PAYMENTS_PROVIDER", "paypal");
+      const getEnv = await loadGetEnv();
+
+      expect(() => getEnv()).toThrow(/PAYMENTS_PROVIDER/);
+    });
+
+    it("accepts the stripe provider with both Stripe keys", async () => {
+      vi.stubEnv("PAYMENTS_PROVIDER", "stripe");
+      vi.stubEnv("STRIPE_SECRET_KEY", "sk_test_value");
+      vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_value");
+      const getEnv = await loadGetEnv();
+
+      expect(getEnv()).toMatchObject({ PAYMENTS_PROVIDER: "stripe", STRIPE_SECRET_KEY: "sk_test_value" });
+    });
+
+    it.each(["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"])("requires %s when the provider is stripe", async (name) => {
+      vi.stubEnv("PAYMENTS_PROVIDER", "stripe");
+      vi.stubEnv("STRIPE_SECRET_KEY", "sk_test_value");
+      vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_value");
+      vi.stubEnv(name, undefined);
+      const getEnv = await loadGetEnv();
+
+      expect(() => getEnv()).toThrow(new RegExp(`${name}: required when PAYMENTS_PROVIDER is stripe`));
+    });
+
+    it("refuses the fake provider in production", async () => {
+      vi.stubEnv("NODE_ENV", "production");
+      const getEnv = await loadGetEnv();
+
+      expect(() => getEnv()).toThrow(/PAYMENTS_PROVIDER: the fake provider is refused in production/);
+    });
+
+    it("allows the stripe provider in production", async () => {
+      vi.stubEnv("NODE_ENV", "production");
+      vi.stubEnv("PAYMENTS_PROVIDER", "stripe");
+      vi.stubEnv("STRIPE_SECRET_KEY", "sk_live_value");
+      vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_value");
+      const getEnv = await loadGetEnv();
+
+      expect(getEnv().PAYMENTS_PROVIDER).toBe("stripe");
+    });
+
+    it("requires a SWEEP_SECRET of at least 32 characters without printing it", async () => {
+      vi.stubEnv("SWEEP_SECRET", "short-sweep-value");
+      const getEnv = await loadGetEnv();
+
+      expect(() => getEnv()).toThrow(/SWEEP_SECRET/);
+      expect(() => getEnv()).not.toThrow(/short-sweep-value/);
+    });
+
+    it("rejects a missing SWEEP_SECRET", async () => {
+      vi.stubEnv("SWEEP_SECRET", undefined);
+      const getEnv = await loadGetEnv();
+
+      expect(() => getEnv()).toThrow(/SWEEP_SECRET/);
+    });
+
+    it.each([undefined, "not a url", "ftp://example.com"])("rejects APP_URL %s", async (value) => {
+      vi.stubEnv("APP_URL", value);
+      const getEnv = await loadGetEnv();
+
+      expect(() => getEnv()).toThrow(/APP_URL/);
+    });
   });
 });

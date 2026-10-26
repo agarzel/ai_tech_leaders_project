@@ -10,7 +10,7 @@ What DevMentor treats as a **protected contract surface** and how a change to on
 
 Current routes: `GET /api/health`; `GET, POST /api/users`; `GET, PUT, DELETE /api/users/{id}`.
 
-- **The response envelope is a contract:** `{ ok: true, data }` / `{ ok: false, error: { code, message, fieldErrors? } }`, produced by `apiHandler` and parsed by `apiCall`. Error `code` values (`validation_error`, `unauthorized`, `forbidden`, `not_found`, `conflict`, `rate_limited`, `internal_error`) are part of it.
+- **The response envelope is a contract:** `{ ok: true, data }` / `{ ok: false, error: { code, message, fieldErrors? } }`, produced by `apiHandler` and parsed by `apiCall`. Error `code` values (`validation_error`, `unauthorized`, `forbidden`, `not_found`, `conflict`, `rate_limited`, `payment_unavailable`, `internal_error`) are part of it.
 - **The CSRF header** `x-devmentor-client: 1` on POST/PUT/PATCH/DELETE is shared by `apiHandler` (core) and `apiCall` (ui); the two must change together.
 - `GET /api/health` returns `{ status, database }` with 200/503 – used by Docker/compose checks and the integration test setup.
 - **Breaking:** removing or renaming a route, field or error code; changing a field's type or meaning; making an optional request field required; changing status codes or pagination parameters (`page`, `pageSize`, max 100).
@@ -37,7 +37,7 @@ Each package exposes only what its `package.json` `exports` map lists:
 
 ### 4. Configuration and environment
 
-- Environment variables: `DATABASE_URL`, `AUTH_SECRET`, `NODE_ENV`, `LOG_LEVEL` (validated in `packages/core/src/config/env.ts`), `POSTGRES_USER`/`POSTGRES_PASSWORD`/`POSTGRES_DB` (compose), `NEXT_DIST_DIR`, `INTEGRATION_APP_PORT`, `PORT`; `DEVMENTOR_PASSWORD` (read only by `auth:set-password`, never stored).
+- Environment variables: `DATABASE_URL`, `AUTH_SECRET`, `NODE_ENV`, `LOG_LEVEL`, `PAYMENTS_PROVIDER` (`stripe` or `fake`; `fake` refused in production), `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` (required for `stripe`), `SWEEP_SECRET` (at least 32 characters), `APP_URL` (validated in `packages/core/src/config/env.ts`), `POSTGRES_USER`/`POSTGRES_PASSWORD`/`POSTGRES_DB` (compose), `NEXT_DIST_DIR`, `INTEGRATION_APP_PORT`, `PORT`; `DEVMENTOR_PASSWORD` (read only by `auth:set-password`, never stored).
 - `.env.example`, `docker-compose.yml` service names (`app`, `db`) and the single root `.env` convention.
 - `.ai/agentic.config.json` – read by every `om-*` skill.
 - **Breaking:** renaming or removing a variable, making an optional one required, changing defaults that alter behaviour, renaming compose services.

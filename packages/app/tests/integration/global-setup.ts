@@ -9,6 +9,12 @@ import { ARTIFACTS_DIR, REPO_ROOT, run } from "./support/process";
 // Throw-away value for the ephemeral test app only; not a real secret.
 const INTEGRATION_AUTH_SECRET = "integration-test-auth-secret-0123456789abcdef";
 const APP_PORT = Number(process.env.INTEGRATION_APP_PORT ?? 3100);
+// Payments run against the fake provider; the sweep secret also signs its webhook events.
+const INTEGRATION_PAYMENTS_ENV = {
+  PAYMENTS_PROVIDER: "fake",
+  SWEEP_SECRET: "integration-test-sweep-secret-0123456789abcdef",
+  APP_URL: `http://localhost:${APP_PORT}`,
+};
 const SERVER_READY_TIMEOUT_MS = 180_000;
 
 declare module "vitest" {
@@ -71,6 +77,7 @@ async function createAdmin(admin: { email: string; password: string }, databaseU
   await run("npm", ["run", "auth:set-password", "--", "--email", admin.email, "--admin"], {
     DATABASE_URL: databaseUrl,
     AUTH_SECRET: INTEGRATION_AUTH_SECRET,
+    ...INTEGRATION_PAYMENTS_ENV,
     DEVMENTOR_PASSWORD: admin.password,
   });
 }
@@ -79,7 +86,7 @@ function startApp(databaseUrl: string): ChildProcess {
   const log = createWriteStream(path.join(ARTIFACTS_DIR, "app-server.log"));
   const server = spawn("npm", ["run", "dev"], {
     cwd: REPO_ROOT,
-    env: { ...process.env, DATABASE_URL: databaseUrl, AUTH_SECRET: INTEGRATION_AUTH_SECRET, PORT: String(APP_PORT), NEXT_DIST_DIR: ".next-test" },
+    env: { ...process.env, DATABASE_URL: databaseUrl, AUTH_SECRET: INTEGRATION_AUTH_SECRET, ...INTEGRATION_PAYMENTS_ENV, PORT: String(APP_PORT), NEXT_DIST_DIR: ".next-test" },
     // Own process group, so the whole tree (npm → next) can be stopped at once.
     detached: true,
     stdio: ["ignore", "pipe", "pipe"],
