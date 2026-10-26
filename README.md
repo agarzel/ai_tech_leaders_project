@@ -120,6 +120,8 @@ Payments are configured in `.env` too (all validated at startup; the app refuses
 | `SWEEP_SECRET` | At least 32 characters. Protects the sweep endpoint and signs the fake provider's webhook events. |
 | `APP_URL` | Public base URL (`http` or `https`); Checkout success and cancel URLs are built from it. |
 
+Deadlines and recovery (releasing unpaid holds, expiring unanswered bookings, refunds) run only when something calls the sweep, so every deployed environment needs a scheduler that posts to it every few minutes, for example `curl -fsS -X POST -H "x-sweep-token: $SWEEP_SECRET" -H "x-devmentor-client: 1" "$APP_URL/api/system/sweep"`. The provider's webhook goes to `POST /api/payments/webhook`.
+
 ### First admin
 
 Admin pages and `/api/users` need an admin session. Once after `npm run setup`, create your admin (or reset any account's password) against the database in `.env`:
