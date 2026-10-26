@@ -48,6 +48,14 @@ export const Booking = defineSingletonEntity("Booking", () =>
       // Optional mentor text, up to 280 characters (validated in the service).
       declineReason: p.string().length(280).nullable(),
     },
+    // One live booking per slot: a partial unique index, so cancelled or expired bookings free the slot again.
+    uniques: [
+      {
+        name: "bookings_slot_id_live_unique",
+        properties: ["slot"],
+        where: { status: { $in: [...LIVE_BOOKING_STATUSES] } },
+      },
+    ],
     indexes: [
       { name: "bookings_status_accept_by_index", properties: ["status", "acceptBy"] },
       { name: "bookings_status_hold_expires_at_index", properties: ["status", "holdExpiresAt"] },
