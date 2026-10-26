@@ -1,5 +1,5 @@
 import { defineEntity, p, type InferEntity } from "@mikro-orm/core";
-import { CURRENCY, type SessionLength } from "../../constants";
+import { BOOKING_ENTRY_POINTS, CURRENCY, type BookingEntryPoint, type SessionLength } from "../../constants";
 import { User } from "../auth/user.entity";
 import { Slot } from "../availability/slot.entity";
 import { baseProperties } from "../base.entity";
@@ -19,8 +19,8 @@ export type BookingStatus = (typeof BOOKING_STATUSES)[number];
 // States that occupy a slot; the hand-written partial unique index on slot_id covers exactly these.
 export const LIVE_BOOKING_STATUSES = ["pending_payment", "awaiting_acceptance", "confirmed"] as const satisfies readonly BookingStatus[];
 
-export const BOOKING_ENTRY_POINTS = ["link", "list", "unknown"] as const;
-export type BookingEntryPoint = (typeof BOOKING_ENTRY_POINTS)[number];
+// Defined in constants.ts so client-safe validators can use them; re-exported here for the entity barrel.
+export { BOOKING_ENTRY_POINTS, type BookingEntryPoint };
 
 export const Booking = defineSingletonEntity("Booking", () =>
   defineEntity({

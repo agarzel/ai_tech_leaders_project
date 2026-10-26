@@ -236,7 +236,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "unique": false,
+          "unique": true,
           "length": null,
           "precision": null,
           "scale": null,
@@ -294,6 +294,17 @@
         },
         {
           "columnNames": [
+            "slot_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "bookings_slot_id_live_unique",
+          "primary": false,
+          "unique": true,
+          "where": "(status)::text = ANY ((ARRAY['pending_payment'::character varying, 'awaiting_acceptance'::character varying, 'confirmed'::character varying])::text[])"
+        },
+        {
+          "columnNames": [
             "status",
             "accept_by"
           ],
@@ -318,18 +329,6 @@
       "checks": [],
       "triggers": [],
       "foreignKeys": {
-        "bookings_slot_id_foreign": {
-          "columnNames": [
-            "slot_id"
-          ],
-          "constraintName": "bookings_slot_id_foreign",
-          "localTableName": "public.bookings",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.slots",
-          "deleteRule": "restrict"
-        },
         "bookings_mentee_id_foreign": {
           "columnNames": [
             "mentee_id"
@@ -352,6 +351,18 @@
             "id"
           ],
           "referencedTableName": "public.mentor_profiles",
+          "deleteRule": "restrict"
+        },
+        "bookings_slot_id_foreign": {
+          "columnNames": [
+            "slot_id"
+          ],
+          "constraintName": "bookings_slot_id_foreign",
+          "localTableName": "public.bookings",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.slots",
           "deleteRule": "restrict"
         }
       },

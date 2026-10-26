@@ -24,6 +24,12 @@ export {
   type SlotDto,
 } from "./services/availability/slot.service";
 export {
+  BOOKING_HOLD_MINUTES,
+  BookingService,
+  CHECKOUT_MARGIN_MINUTES,
+  type CreatedBookingDto,
+} from "./services/bookings/booking.service";
+export {
   INVITATION_RATE_LIMITS,
   INVITATION_TTL_MS,
   InvitationService,

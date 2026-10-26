@@ -1,4 +1,4 @@
-import { BOOKING_LEAD_TIME_HOURS, LockMode, MentorProfile, SLOT_BLOCK_MINUTES, Slot, UniqueConstraintViolationException, type EntityManager, type ISlot } from "@devmentor/db";
+import { BOOKING_LEAD_TIME_HOURS, Booking, LIVE_BOOKING_STATUSES, LockMode, MentorProfile, SLOT_BLOCK_MINUTES, Slot, UniqueConstraintViolationException, type EntityManager, type ISlot } from "@devmentor/db";
 import type { Clock } from "../../clock";
 import { ConflictError, NotFoundError, ValidationError } from "../../http/errors";
 
@@ -7,6 +7,7 @@ export const SLOT_GRID_MINUTES = 15;
 /** A slot can be published at most this many days ahead. */
 export const SLOT_HORIZON_DAYS = 60;
 
+const TAKEN_MESSAGE = "This time was just taken";
 const MINUTE_MS = 60_000;
 const HOUR_MS = 60 * MINUTE_MS;
 const DAY_MS = 24 * HOUR_MS;
@@ -64,6 +65,43 @@ export class SlotService {
     if (!slot) throw new NotFoundError("Slot not found");
     if (slot.status !== "open") throw new ConflictError("This slot is booked. Cancel the booking instead");
     await this.deps.em.remove(slot).flush();
+  }
+
+  /**
+   * Throws unless the slot can be booked now: open, starting at least the lead time from `now`, within the
+   * horizon, and without a live booking. Returns the slot. Pass the transaction's `em` and a `lockMode` to
+   * take the row lock in the same read (`BookingService.create`).
+   */
+  async assertBookable(slotId: string, now: Date, em: EntityManager = this.deps.em, lockMode?: LockMode): Promise<ISlot> {
+    const slot = await em.findOne(Slot, { id: slotId }, lockMode === undefined ? {} : { lockMode });
+    if (!slot) throw new NotFoundError("Slot not found");
+    if (slot.status !== "open") throw new ConflictError(TAKEN_MESSAGE);
+    if (slot.startsAt.getTime() < now.getTime() + BOOKING_LEAD_TIME_HOURS * HOUR_MS) {
+      throw new ValidationError(`A session must start at least ${BOOKING_LEAD_TIME_HOURS} hours from now`);
+    }
+    if (slot.startsAt.getTime() > horizon(now).getTime()) {
+      throw new ValidationError(`A session can be booked at most ${SLOT_HORIZON_DAYS} days ahead`);
+    }
+    // The partial unique index is the last line of defence; this gives the mentee a clear error first.
+    if ((await em.count(Booking, { slot: slotId, status: { $in: [...LIVE_BOOKING_STATUSES] } })) > 0) {
+      throw new ConflictError(TAKEN_MESSAGE);
+    }
+    return slot;
+  }
+
+  /**
+   * Moves a slot back to open, but only while no live booking holds it. Conditional and idempotent: an open,
+   * held or missing slot is left alone. Never deletes the slot.
+   */
+  async release(slotId: string): Promise<void> {
+    await this.deps.em.transactional(async (em) => {
+      // Same row lock as booking: a release and a new booking of this slot cannot interleave.
+      const slot = await em.findOne(Slot, { id: slotId }, { lockMode: LockMode.PESSIMISTIC_WRITE });
+      if (!slot || slot.status !== "booked") return;
+      if ((await em.count(Booking, { slot: slotId, status: { $in: [...LIVE_BOOKING_STATUSES] } })) > 0) return;
+      slot.status = "open";
+      await em.flush();
+    });
   }
 
   /** Every slot of the caller, soonest first, past ones included. */
