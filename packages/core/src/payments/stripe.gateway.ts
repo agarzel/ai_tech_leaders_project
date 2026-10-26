@@ -37,11 +37,8 @@ export class StripeGateway implements PaymentGateway {
         { idempotencyKey: input.idempotencyKey },
       );
     } catch (error) {
-      // Only the error's type and message are logged (never the raw error: it can carry request details).
-      logger.error(
-        { errorType: error instanceof Error ? error.name : typeof error, errorMessage: error instanceof Error ? error.message : undefined },
-        "Stripe Checkout creation failed",
-      );
+      // Only the error's type is logged: the provider's message can carry credentials or request details.
+      logger.error({ errorType: error instanceof Error ? error.name : typeof error }, "Stripe Checkout creation failed");
       throw new PaymentUnavailableError();
     }
     if (!session.url) throw new PaymentUnavailableError();

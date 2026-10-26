@@ -95,4 +95,22 @@ describe("webhookHandler", () => {
     expect((await route(post("{}"))).status).toBe(200);
     expect(handler).toHaveBeenCalledWith("event");
   });
+
+  it("answers 500 for a non-Error thrown by verification or the handler", async () => {
+    const handler = vi.fn();
+    const route = webhookHandler(() => {
+      throw "not an error object";
+    }, handler);
+
+    expect((await route(post("{}"))).status).toBe(500);
+    expect(handler).not.toHaveBeenCalled();
+
+    const failingHandler = webhookHandler(
+      () => "event",
+      () => {
+        throw "handler string";
+      },
+    );
+    expect((await failingHandler(post("{}"))).status).toBe(500);
+  });
 });

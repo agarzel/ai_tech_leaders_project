@@ -21,16 +21,21 @@ export function webhookHandler<T>(
       if (error instanceof AppError) {
         return Response.json({ ok: false, error: { code: error.code, message: error.message } }, { status: error.status });
       }
-      logger.error({ err: error, url: req.url }, "Webhook verification failed unexpectedly");
+      logger.error({ errorType: errorType(error), path: new URL(req.url).pathname }, "Webhook verification failed unexpectedly");
       return Response.json({ ok: false, error: { code: "internal_error", message: "Internal server error" } }, { status: 500 });
     }
 
     try {
       await handler(event);
     } catch (error) {
-      logger.error({ err: error, url: req.url }, "Webhook handler failed");
+      logger.error({ errorType: errorType(error), path: new URL(req.url).pathname }, "Webhook handler failed");
       return Response.json({ ok: false, error: { code: "internal_error", message: "Internal server error" } }, { status: 500 });
     }
     return Response.json({ ok: true, data: { received: true } });
   };
+}
+
+// Only the error's type is logged: messages and stacks can carry secret values or request details.
+function errorType(error: unknown): string {
+  return error instanceof Error ? error.name : typeof error;
 }
