@@ -8,6 +8,7 @@ import type { AuthService } from "../services/auth/auth.service";
 import type { UserService } from "../services/auth/user.service";
 import type { SlotService } from "../services/availability/slot.service";
 import type { BookingService } from "../services/bookings/booking.service";
+import type { BookingTransitions } from "../services/bookings/booking-transitions.service";
 import type { InvitationService } from "../services/mentors/invitation.service";
 import type { MentorService } from "../services/mentors/mentor.service";
 import type { HealthService } from "../services/system/health.service";
@@ -30,4 +31,5 @@ export type Cradle = {
   mentorService: MentorService;
   slotService: SlotService;
   bookingService: BookingService;
+  bookingTransitions: BookingTransitions;
 };
