@@ -22,6 +22,10 @@ declare module "vitest" {
     baseUrl: string;
     /** Sign-in credentials of the accounts created by the setup (generated per run, never committed). */
     accounts: { admin: { email: string; password: string } };
+    /** Id of the PostgreSQL container, for tests that seed or inspect rows (`support/database.ts`). */
+    databaseContainerId: string;
+    /** The sweep endpoint's token (`x-sweep-token`), the same value the app runs with. */
+    sweepSecret: string;
   }
 }
 
@@ -57,6 +61,8 @@ export default async function setup(project: TestProject) {
 
   project.provide("baseUrl", baseUrl);
   project.provide("accounts", { admin });
+  project.provide("databaseContainerId", database.getId());
+  project.provide("sweepSecret", INTEGRATION_PAYMENTS_ENV.SWEEP_SECRET);
 
   return async () => {
     await stopApp(server);
@@ -114,7 +120,7 @@ async function waitForHealthy(url: string, server: ChildProcess) {
 // `next dev` compiles a page on its first request. A browser that opens a cold page meanwhile gets caught in a
 // rebuild-and-reload loop, so every page the tests open is compiled once here, before any browser starts.
 async function warmUp(baseUrl: string) {
-  for (const pathname of ["/", "/login", "/register", "/register/mentor", "/admin", "/admin/users", "/admin/invitations", "/mentor", "/mentor/profile", "/mentor/slots", "/mentors"]) {
+  for (const pathname of ["/", "/login", "/register", "/register/mentor", "/admin", "/admin/users", "/admin/invitations", "/mentor", "/mentor/profile", "/mentor/slots", "/mentor/bookings", "/mentors", "/bookings", "/book/warm-up", "/bookings/warm-up", "/dev/fake-checkout/warm-up"]) {
     await fetch(`${baseUrl}${pathname}`, { redirect: "manual" });
   }
 }

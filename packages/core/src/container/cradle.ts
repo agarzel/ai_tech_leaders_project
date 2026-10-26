@@ -8,6 +8,8 @@ import type { AuthService } from "../services/auth/auth.service";
 import type { UserService } from "../services/auth/user.service";
 import type { SlotService } from "../services/availability/slot.service";
 import type { BookingService } from "../services/bookings/booking.service";
+import type { BookingQueryService } from "../services/bookings/booking-query.service";
+import type { FakeCheckoutService } from "../services/bookings/fake-checkout.service";
 import type { BookingTransitions } from "../services/bookings/booking-transitions.service";
 import type { SweepService } from "../services/bookings/sweep.service";
 import type { InvitationService } from "../services/mentors/invitation.service";
@@ -34,4 +36,6 @@ export type Cradle = {
   bookingService: BookingService;
   bookingTransitions: BookingTransitions;
   sweepService: SweepService;
+  bookingQueryService: BookingQueryService;
+  fakeCheckoutService: FakeCheckoutService;
 };

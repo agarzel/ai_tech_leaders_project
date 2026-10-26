@@ -88,14 +88,15 @@ describe("public mentor list and share page", () => {
     expect(text).not.toContain("Hidden headline");
   });
 
-  it("opens the share page of an unlisted mentor from the link, with prices and a disabled Book", async () => {
+  it("opens the share page of an unlisted mentor from the link, with prices and Book links", async () => {
     await visitor.open(`/m/${unlistedSlug}`);
     await visitor.waitForText(unlistedName);
     await visitor.waitForText("Hidden headline");
     await visitor.waitForText("Available times");
-    await visitor.waitForText("Booking opens soon");
-    const disabled = JSON.parse(await visitor.run("eval", "[...document.querySelectorAll('button')].filter((b) => b.textContent.trim() === 'Book').every((b) => b.disabled)")) as boolean;
-    expect(disabled).toBe(true);
+    // A guest's Book links lead to sign-in first and come back to the booking page afterwards.
+    await visitor.waitForText("Book 25 min");
+    const links = JSON.parse(await visitor.run("eval", "JSON.stringify([...document.querySelectorAll('a[href^=\"/login?from=\"]')].map((a) => a.textContent))")) as string;
+    expect(links).toContain("Book 25 min");
     await visitor.screenshot("mentor-share-page");
   });
 

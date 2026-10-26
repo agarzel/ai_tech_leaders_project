@@ -30,6 +30,16 @@ export {
   CHECKOUT_MARGIN_MINUTES,
   type CreatedBookingDto,
 } from "./services/bookings/booking.service";
+export {
+  BookingQueryService,
+  MENTOR_BOOKINGS_READ_LIMIT,
+  effectiveStatus,
+  type BookingDto,
+  type BookingOfferDto,
+  type MentorBookingDto,
+  type MentorBookingsPage,
+} from "./services/bookings/booking-query.service";
+export { FakeCheckoutService, type FakeCheckoutDto } from "./services/bookings/fake-checkout.service";
 export { ACCEPTANCE_LEAD_HOURS, BookingTransitions } from "./services/bookings/booking-transitions.service";
 export {
   CHECKOUT_RETRY_AFTER_MINUTES,

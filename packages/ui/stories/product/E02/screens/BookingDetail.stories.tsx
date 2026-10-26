@@ -65,6 +65,7 @@ function BookingDetailScreen({ pollMs = 3000, giveUpMs = 60000 }: { pollMs?: num
           title="We could not find this booking"
           description="It may not exist, or it may belong to someone else."
           action={
+            // eslint-disable-next-line @next/next/no-html-link-for-pages -- Storybook has no Next router
             <a className="link-text" href="/bookings">
               My bookings
             </a>

@@ -26,7 +26,7 @@ export function MentorList({ mentors, filtered }: { mentors: PublicMentor[]; fil
   return (
     <ItemGroup>
       {mentors.map((mentor) => (
-        <MentorCard key={mentor.slug} mentor={mentor} href={`/m/${mentor.slug}`} timeZone={timeZone} renderLink={renderNextLink} />
+        <MentorCard key={mentor.slug} mentor={mentor} href={`/m/${mentor.slug}?from=list`} timeZone={timeZone} renderLink={renderNextLink} />
       ))}
     </ItemGroup>
   );

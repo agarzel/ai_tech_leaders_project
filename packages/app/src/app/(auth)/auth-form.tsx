@@ -10,14 +10,15 @@ import { CrudForm } from "@devmentor/ui/backend/forms/CrudForm";
 import { homePathFor } from "../../lib/home-path";
 
 /** The sign-in and sign-up forms: same schemas as the API routes, same flow after success. */
-export function AuthForm({ mode }: { mode: "login" | "register" }) {
+export function AuthForm({ mode, returnPath = null }: { mode: "login" | "register"; returnPath?: string | null }) {
   const router = useRouter();
   // The destination depends on the role the server answered with; CrudForm's onSuccess carries no data.
   const destination = useRef("/");
 
   async function submit(url: string, values: unknown) {
     const result = await apiCall<SessionUserDto>(url, { method: "POST", body: values });
-    if (result.ok) destination.current = homePathFor(result.data.role);
+    // The page that sent the person here (`from`) wins over the role's home; role gates redirect from there if needed.
+    if (result.ok) destination.current = returnPath ?? homePathFor(result.data.role);
     return result;
   }
 

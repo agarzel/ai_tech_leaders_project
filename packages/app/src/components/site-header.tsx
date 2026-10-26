@@ -11,6 +11,11 @@ async function HeaderAccount() {
 
   return (
     <>
+      {user && user.role !== "admin" && (
+        <Link href={user.role === "mentor" ? "/mentor/bookings" : "/bookings"} className={navLinkClassName}>
+          {user.role === "mentor" ? "Bookings" : "My bookings"}
+        </Link>
+      )}
       {user?.role === "admin" && (
         <Link href="/admin" className={navLinkClassName}>
           Admin
