@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { connection } from "next/server";
-import { createRequestScope, SESSION_COOKIE_NAME, UnauthorizedError, type SessionUserDto } from "@devmentor/core";
+import { createRequestScope, SESSION_COOKIE_NAME, type SessionUserDto } from "@devmentor/core";
 
 /**
  * The signed-in user behind the request's session cookie, for server components. Fails closed: a missing,
@@ -16,7 +16,8 @@ export async function getSessionUser(): Promise<SessionUserDto | null> {
   try {
     return await authService.authenticate(token);
   } catch (error) {
-    if (error instanceof UnauthorizedError) return null;
+    // Matched by name, like isNotFound: the error class is not always the same instance in this layer.
+    if (error instanceof Error && error.name === "UnauthorizedError") return null;
     throw error;
   }
 }

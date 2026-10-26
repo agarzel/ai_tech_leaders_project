@@ -9,8 +9,9 @@ const password = "correct horse battery";
 
 async function signIn(address: string, secret: string) {
   await browser.open("/login");
-  // The form streams in after the document load: wait until it is visible before using it.
-  await browser.waitForText("Sign in");
+  // The form streams in after the document load. "Sign in" also matches the heading, which is there first:
+  // wait for text that only the form's own section renders.
+  await browser.waitForText("No account yet?");
   await browser.fill("Email", address);
   await browser.fill("Password", secret);
   await browser.click("button", "Sign in");
@@ -32,7 +33,8 @@ describe("accounts and sessions", () => {
 
   it("validates the registration form on the client", async () => {
     await browser.open("/register");
-    await browser.waitForText("Create account");
+    // The form streams in after the heading: wait for text that only the form's own section renders.
+    await browser.waitForText("Already have an account?");
     await browser.click("button", "Create account");
 
     await browser.waitForText("Name is required");

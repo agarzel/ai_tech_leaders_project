@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
-import { Suspense } from "react";
 import { createRequestScope } from "@devmentor/core";
 import { PageLayout } from "@devmentor/ui/backend/layout/PageLayout";
 import { SiteHeader } from "../../../../../components/site-header";
@@ -13,9 +12,13 @@ export const metadata: Metadata = {
 };
 
 // Only exists with PAYMENTS_PROVIDER=fake: the service answers not found for any other provider.
-async function Checkout({ params }: { params: Promise<{ sessionId: string }> }) {
+// The lookup runs before anything streams: notFound() inside a Suspense boundary would answer 200, not 404.
+// A blocking route: the lookup is not cached and cannot sit inside Suspense, so the shell is not prerendered.
+export const instant = false;
+
+export default async function FakeCheckoutPage(props: PageProps<"/dev/fake-checkout/[sessionId]">) {
   await connection();
-  const { sessionId } = await params;
+  const { sessionId } = await props.params;
   const { fakeCheckoutService } = (await createRequestScope()).cradle;
   let session;
   try {
@@ -24,15 +27,9 @@ async function Checkout({ params }: { params: Promise<{ sessionId: string }> }) 
     if (isNotFound(error)) notFound();
     throw error;
   }
-  return <FakeCheckoutForm sessionId={session.sessionId} amount={session.amount} currency={session.currency} description={session.description} />;
-}
-
-export default function FakeCheckoutPage(props: PageProps<"/dev/fake-checkout/[sessionId]">) {
   return (
     <PageLayout header={<SiteHeader />} title="Fake checkout" description="Development only. No card is charged.">
-      <Suspense>
-        <Checkout params={props.params} />
-      </Suspense>
+      <FakeCheckoutForm sessionId={session.sessionId} amount={session.amount} currency={session.currency} description={session.description} />
     </PageLayout>
   );
 }

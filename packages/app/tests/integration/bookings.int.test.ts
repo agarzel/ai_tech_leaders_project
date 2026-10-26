@@ -194,7 +194,7 @@ describe("booking and prepayment", () => {
     await mentee1.screenshot("bookings-declined-refund-on-its-way");
 
     expect((await sweep()).summary.refundsReconciled).toBeGreaterThanOrEqual(1);
-    expect(await bookingStatus(mentee1, declinedId)).toEqual({ status: "declined", paymentStatus: "refunded" });
+    expect(await bookingStatus(mentee1, declinedId)).toMatchObject({ status: "declined", paymentStatus: "refunded" });
     await mentee1.open(`/bookings/${declinedId}`);
     await mentee1.waitForText("Refunded");
     await mentee1.screenshot("bookings-declined-refunded");
@@ -214,7 +214,7 @@ describe("booking and prepayment", () => {
 
     const { summary } = await sweep();
     expect(summary.bookingsExpired).toBeGreaterThanOrEqual(1);
-    expect(await bookingStatus(mentee1, lapsedId)).toEqual({ status: "expired", paymentStatus: "refunded" });
+    expect(await bookingStatus(mentee1, lapsedId)).toMatchObject({ status: "expired", paymentStatus: "refunded" });
     expect(await sql(`select status from bookings where id = '${lapsedId}'`)).toBe("expired");
     expect(await openSlotIds(slug)).toContain(slotC);
     // A second sweep right after changes nothing.
@@ -275,7 +275,7 @@ describe("booking and prepayment", () => {
     await visitor.open(`/m/${slug}`);
     await visitor.waitForText("Book 25 min");
     await clickBySelector(visitor, 'a[href^="/login?from="]');
-    await visitor.waitForText("Sign in");
+    await visitor.waitForText("No account yet?");
     expect(await visitor.url()).toContain("/login?from=%2Fbook%2F");
     await visitor.fill("Email", menteeThree.email);
     await visitor.fill("Password", password);

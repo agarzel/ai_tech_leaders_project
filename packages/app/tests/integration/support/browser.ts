@@ -1,5 +1,6 @@
 import { execFile } from "node:child_process";
 import path from "node:path";
+import { randomUUID } from "node:crypto";
 import { promisify } from "node:util";
 import { ARTIFACTS_DIR, REPO_ROOT } from "./process";
 
@@ -8,12 +9,20 @@ const execFileAsync = promisify(execFile);
 const AGENT_BROWSER = path.join(REPO_ROOT, "node_modules/.bin/agent-browser");
 const COMMAND_TIMEOUT_MS = 45_000;
 
-/** Thin wrapper over the agent-browser CLI, one isolated session per test file. */
+/**
+ * Thin wrapper over the agent-browser CLI, one isolated session per test file.
+ * agent-browser keeps cookies under the session name, so every instance gets a fresh name: a session left
+ * behind by an interrupted run would otherwise carry a sign-in for a database that no longer exists.
+ */
 export class Browser {
+  private readonly session: string;
+
   constructor(
-    private readonly session: string,
+    session: string,
     private readonly baseUrl: string,
-  ) {}
+  ) {
+    this.session = `${session}-${randomUUID().slice(0, 8)}`;
+  }
 
   /** Runs an agent-browser command; rejects with the CLI's message if it fails (e.g. element not found). */
   async run(...args: string[]): Promise<string> {

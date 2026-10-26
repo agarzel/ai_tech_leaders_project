@@ -1,12 +1,20 @@
 import { afterAll, beforeAll, describe, expect, inject, it } from "vitest";
 import { loginAs } from "./support/auth";
 import { Browser } from "./support/browser";
+import { sql } from "./support/database";
 
 const browser = new Browser("devmentor-it-admin", inject("baseUrl"));
+
+// The list shows the 10 newest users, and other files create users before this one runs (their order is not fixed).
+// So this file adds its own newest mentor and looks for that one, not for the seeded row.
+const listedEmail = `listed.${Date.now()}@devmentor.test`;
 
 describe("admin panel", () => {
   beforeAll(async () => {
     await loginAs(browser, "admin");
+    await sql(
+      `insert into users (id, email, name, role, created_at, updated_at) values (gen_random_uuid(), '${listedEmail}', 'Listed Mentor', 'mentor', now(), now())`,
+    );
   });
 
   it("shows the sections and a live database status", async () => {
@@ -25,7 +33,7 @@ describe("admin panel", () => {
   it("navigates to user management", async () => {
     await browser.click("link", "Users Mentors, mentees and administrators.");
 
-    await browser.waitForText("Seeded Mentor");
+    await browser.waitForText("Listed Mentor");
     expect(await browser.url()).toMatch(/\/admin\/users$/);
     expect(await browser.textOf("heading", "Users")).toBe("Users");
   });
@@ -40,7 +48,7 @@ describe("admin users – CRUD through the UI", () => {
   it("lists the seeded user", async () => {
     await browser.open("/admin/users");
 
-    await browser.waitForText("seeded.mentor@devmentor.test");
+    await browser.waitForText(listedEmail);
     await browser.screenshot("admin-users");
   });
 
@@ -89,6 +97,6 @@ describe("admin users – CRUD through the UI", () => {
     await browser.click("button", "Confirm delete Grace B. Hopper");
 
     await browser.run("wait", "--fn", "!document.body.innerText.includes('grace@devmentor.test')");
-    await browser.waitForText("seeded.mentor@devmentor.test");
+    await browser.waitForText(listedEmail);
   });
 });
