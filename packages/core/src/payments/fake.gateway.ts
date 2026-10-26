@@ -1,7 +1,7 @@
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { ValidationError } from "../http/errors";
-import type { CheckoutInput, CheckoutSession, PaymentEvent, PaymentGateway } from "./payment-gateway";
+import type { CheckoutInput, CheckoutSession, ExpiredCheckout, PaymentEvent, PaymentGateway } from "./payment-gateway";
 
 export const FAKE_SIGNATURE_HEADER = "x-fake-signature";
 
@@ -22,6 +22,8 @@ export type FakeCheckoutSession = CheckoutInput & { sessionId: string };
  */
 export class FakeGateway implements PaymentGateway {
   private readonly sessions = new Map<string, FakeCheckoutSession>();
+  // Sessions a signed "completed" event was created for: expiring one of them reports `paid`, like the real provider.
+  private readonly paid = new Set<string>();
 
   constructor(private readonly options: { secret: string; appUrl: string }) {}
 
@@ -32,6 +34,16 @@ export class FakeGateway implements PaymentGateway {
     return { sessionId: session.sessionId, url: new URL(`/dev/fake-checkout/${session.sessionId}`, this.options.appUrl).toString() };
   }
 
+  /** A paid session reports `paid`; anything else (also a session this process never saw) is expired. */
+  async expireCheckout(sessionId: string): Promise<ExpiredCheckout> {
+    return this.paid.has(sessionId) ? { state: "paid", paymentIntentId: `fake_pi_${sessionId}` } : { state: "expired" };
+  }
+
+  /** Deterministic: the refund id is derived from the key, so the same key always gives the same refund. */
+  async refund(input: { paymentIntentId: string; amount: number; idempotencyKey: string }): Promise<string> {
+    return `fake_re_${input.idempotencyKey}`;
+  }
+
   getSession(sessionId: string): FakeCheckoutSession | undefined {
     return this.sessions.get(sessionId);
   }
@@ -40,6 +52,7 @@ export class FakeGateway implements PaymentGateway {
   createCompletedEvent(sessionId: string): { rawBody: string; headers: Record<string, string> } | undefined {
     const session = this.sessions.get(sessionId);
     if (!session) return undefined;
+    this.paid.add(sessionId);
     const rawBody = JSON.stringify({
       sessionId,
       bookingId: session.bookingId,

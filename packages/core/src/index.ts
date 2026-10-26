@@ -7,12 +7,13 @@ export { apiHandler, CLIENT_HEADER, type ApiResult, type HandlerArgs, type Route
 export type { CrudService, Page, PageQuery } from "./http/crud";
 export { parseJsonBody, parseOrThrow } from "./http/body";
 export { assertOwner, requireAdmin, requireRole, requireSession, type Session } from "./http/auth";
+export { SWEEP_SECRET_MIN_LENGTH, SWEEP_TOKEN_HEADER, verifySweepSecret } from "./http/sweep-auth";
 export * from "./http/errors";
 export { webhookHandler } from "./http/webhookHandler";
 export { makeCrudRoute } from "./http/makeCrudRoute";
 export { SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS, sessionCookieOptions, type SessionCookieOptions } from "./http/session-cookie";
 export { FAKE_SIGNATURE_HEADER, FakeGateway, type FakeCheckoutSession } from "./payments/fake.gateway";
-export type { CheckoutInput, CheckoutSession, PaymentEvent, PaymentGateway } from "./payments/payment-gateway";
+export type { CheckoutInput, CheckoutSession, ExpiredCheckout, PaymentEvent, PaymentGateway } from "./payments/payment-gateway";
 export { logger, type Logger } from "./logger";
 export { RateLimiter, type RateLimitCheck, type RateLimiterOptions } from "./rate-limiter";
 export { AuthService, LOGIN_RATE_LIMIT, PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH, type SessionUserDto } from "./services/auth/auth.service";
@@ -30,6 +31,13 @@ export {
   type CreatedBookingDto,
 } from "./services/bookings/booking.service";
 export { ACCEPTANCE_LEAD_HOURS, BookingTransitions } from "./services/bookings/booking-transitions.service";
+export {
+  CHECKOUT_RETRY_AFTER_MINUTES,
+  MAX_REFUND_ATTEMPTS,
+  SWEEP_BATCH_SIZE,
+  SweepService,
+  type SweepSummary,
+} from "./services/bookings/sweep.service";
 export { paymentWebhookHandler } from "./services/bookings/payment-webhook";
 export {
   INVITATION_RATE_LIMITS,

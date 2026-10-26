@@ -10,6 +10,7 @@ import { UserService } from "../services/auth/user.service";
 import { SlotService } from "../services/availability/slot.service";
 import { BookingService } from "../services/bookings/booking.service";
 import { BookingTransitions } from "../services/bookings/booking-transitions.service";
+import { SweepService } from "../services/bookings/sweep.service";
 import { INVITATION_RATE_LIMITS, InvitationService } from "../services/mentors/invitation.service";
 import { MentorService } from "../services/mentors/mentor.service";
 import { HealthService } from "../services/system/health.service";
@@ -47,6 +48,7 @@ async function createAppContainer(): Promise<AppContainer> {
     slotService: asClass(SlotService).scoped(),
     bookingService: asClass(BookingService).scoped(),
     bookingTransitions: asClass(BookingTransitions).scoped(),
+    sweepService: asClass(SweepService).scoped(),
   });
 
   return container;

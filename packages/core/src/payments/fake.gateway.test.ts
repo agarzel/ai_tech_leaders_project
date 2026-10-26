@@ -98,4 +98,28 @@ describe("FakeGateway", () => {
     expect(() => fake.parseWebhook("not json", signed("not json"))).toThrow("Invalid webhook payload");
     expect(() => fake.parseWebhook('{"a":1}', signed('{"a":1}'))).toThrow("Invalid webhook payload");
   });
+
+  it("reports an unpaid or unknown session as expired when expiring it", async () => {
+    const fake = gateway();
+    const { sessionId } = await fake.createCheckout(input);
+
+    await expect(fake.expireCheckout(sessionId)).resolves.toEqual({ state: "expired" });
+    await expect(fake.expireCheckout("fake_cs_unknown")).resolves.toEqual({ state: "expired" });
+  });
+
+  it("reports a session whose completed event was created as paid when expiring it", async () => {
+    const fake = gateway();
+    const { sessionId } = await fake.createCheckout(input);
+    fake.createCompletedEvent(sessionId);
+
+    await expect(fake.expireCheckout(sessionId)).resolves.toEqual({ state: "paid", paymentIntentId: `fake_pi_${sessionId}` });
+  });
+
+  it("derives the refund id from the idempotency key", async () => {
+    const fake = gateway();
+    const refund = { paymentIntentId: "pi_1", amount: 15000, idempotencyKey: "refund:booking-1" };
+
+    expect(await fake.refund(refund)).toBe("fake_re_refund:booking-1");
+    expect(await fake.refund(refund)).toBe(await fake.refund(refund));
+  });
 });
