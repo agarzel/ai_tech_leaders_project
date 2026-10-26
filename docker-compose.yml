@@ -5,6 +5,11 @@ services:
       - "3000:3000"
     environment:
       AUTH_SECRET: ${AUTH_SECRET}
+      PAYMENTS_PROVIDER: ${PAYMENTS_PROVIDER}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      SWEEP_SECRET: ${SWEEP_SECRET}
+      APP_URL: ${APP_URL}
       DATABASE_URL: postgres://${POSTGRES_USER:-devmentor}:${POSTGRES_PASSWORD:-devmentor}@db:5432/${POSTGRES_DB:-devmentor}
     depends_on:
       db:

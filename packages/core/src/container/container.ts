@@ -3,6 +3,7 @@ import { getOrm } from "@devmentor/db";
 import { realClock } from "../clock";
 import { getEnv } from "../config/env";
 import { logger } from "../logger";
+import { createPaymentGateway } from "../payments/create-payment-gateway";
 import { RateLimiter } from "../rate-limiter";
 import { AuthService, LOGIN_RATE_LIMIT } from "../services/auth/auth.service";
 import { UserService } from "../services/auth/user.service";
@@ -30,6 +31,8 @@ async function createAppContainer(): Promise<AppContainer> {
     logger: asValue(logger),
     env: asValue(env),
     clock: asValue(realClock),
+    // One provider per process, chosen by PAYMENTS_PROVIDER (the fake keeps its sessions in this instance).
+    paymentGateway: asValue(createPaymentGateway(env)),
     // One process-wide instance: the limiter's counters must outlive a single request.
     rateLimiter: asValue(new RateLimiter({ clock: realClock }, LOGIN_RATE_LIMIT)),
     invitationPreviewLimiter: asValue(new RateLimiter({ clock: realClock }, INVITATION_RATE_LIMITS.preview)),

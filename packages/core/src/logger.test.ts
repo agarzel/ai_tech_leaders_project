@@ -41,6 +41,28 @@ describe("logger", () => {
     expect(lines[0]).toMatchObject({ AUTH_SECRET: "[redacted]", config: { authSecret: "[redacted]", name: "x" } });
   });
 
+  it("redacts the payment and sweep secrets", () => {
+    const { lines, stream } = capture();
+    const logger = createLogger(stream);
+
+    logger.info(
+      { STRIPE_SECRET_KEY: "a", config: { STRIPE_WEBHOOK_SECRET: "b", SWEEP_SECRET: "c", sweepSecret: "d", stripeSecretKey: "e", stripeWebhookSecret: "f", name: "x" } },
+      "boot",
+    );
+
+    expect(lines[0]).toMatchObject({
+      STRIPE_SECRET_KEY: "[redacted]",
+      config: {
+        STRIPE_WEBHOOK_SECRET: "[redacted]",
+        SWEEP_SECRET: "[redacted]",
+        sweepSecret: "[redacted]",
+        stripeSecretKey: "[redacted]",
+        stripeWebhookSecret: "[redacted]",
+        name: "x",
+      },
+    });
+  });
+
   it("uses LOG_LEVEL", () => {
     vi.stubEnv("LOG_LEVEL", "warn");
 
