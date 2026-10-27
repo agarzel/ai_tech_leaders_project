@@ -11,6 +11,8 @@ import { SlotService } from "../services/availability/slot.service";
 import { BookingService } from "../services/bookings/booking.service";
 import { BookingQueryService } from "../services/bookings/booking-query.service";
 import { FakeCheckoutService } from "../services/bookings/fake-checkout.service";
+import { SessionNoteService } from "../services/sessions/session-note.service";
+import { SessionThreadService } from "../services/sessions/session-thread.service";
 import { BookingTransitions } from "../services/bookings/booking-transitions.service";
 import { SweepService } from "../services/bookings/sweep.service";
 import { INVITATION_RATE_LIMITS, InvitationService } from "../services/mentors/invitation.service";
@@ -53,6 +55,8 @@ async function createAppContainer(): Promise<AppContainer> {
     sweepService: asClass(SweepService).scoped(),
     bookingQueryService: asClass(BookingQueryService).scoped(),
     fakeCheckoutService: asClass(FakeCheckoutService).scoped(),
+    sessionThreadService: asClass(SessionThreadService).scoped(),
+    sessionNoteService: asClass(SessionNoteService).scoped(),
   });
 
   return container;

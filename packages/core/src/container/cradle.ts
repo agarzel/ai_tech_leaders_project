@@ -10,6 +10,8 @@ import type { SlotService } from "../services/availability/slot.service";
 import type { BookingService } from "../services/bookings/booking.service";
 import type { BookingQueryService } from "../services/bookings/booking-query.service";
 import type { FakeCheckoutService } from "../services/bookings/fake-checkout.service";
+import type { SessionNoteService } from "../services/sessions/session-note.service";
+import type { SessionThreadService } from "../services/sessions/session-thread.service";
 import type { BookingTransitions } from "../services/bookings/booking-transitions.service";
 import type { SweepService } from "../services/bookings/sweep.service";
 import type { InvitationService } from "../services/mentors/invitation.service";
@@ -38,4 +40,6 @@ export type Cradle = {
   sweepService: SweepService;
   bookingQueryService: BookingQueryService;
   fakeCheckoutService: FakeCheckoutService;
+  sessionThreadService: SessionThreadService;
+  sessionNoteService: SessionNoteService;
 };

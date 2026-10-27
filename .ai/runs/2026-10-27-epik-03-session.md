@@ -16,8 +16,16 @@ Branch: `epik-03-session` from `origin/main` (b5c55cb). Local commits only; not 
 - The 7-day approval window counts from the session end, not from the moment the draft was written. The spec does not say which; `createdAt` is not stored for drafts yet.
 - A rejected note cannot be replaced. The spec says "can be replaced once"; that needs a replacement counter, which is not in the data model yet.
 
+## Second slice: persistence and services (same branch)
+- Entities `Message` (`messages`) and `SessionNote` (`session_notes`, one per booking, status `draft|approved|rejected`), registered in `packages/db/src/entities/index.ts`; metadata tests (8).
+- Migration `Migration20261027120000_session_thread_and_notes.ts`, hand-written. The snapshot file is not updated.
+- `SessionThreadService` (post and list, party-only, `not_found` for strangers) and `SessionNoteService` (mentor writes, mentee decides, mentee reads only an approved note). Both in `services/sessions/`, registered in the container, cradle and `core` index; 51 tests.
+- Gates on this branch: `npm run lint` exit 0; `npm run typecheck` exit 0 (after switching the services to `IBooking`); `npm run test:coverage` exit 0 (81 files, 1004 tests, 100% gate).
+- `npm run build`: fails in the sandbox with `EPERM: unlink .../packages/app/.next/standalone/.env` (the sandbox denies writes to `.env` files). Not verified; the owner runs it in the terminal.
+
 ## Not done (blocked or later)
-- Entities `Message` and `SessionNote`, migrations (hand-written, owner runs `db:migrate` and `db:migration:check` with Docker), routes, pages, integration tests.
+- Migration snapshot (`.snapshot-devmentor.json`) and `npm run db:migration:check`: owner runs with Docker and commits the regenerated snapshot if it differs.
+- Routes, pages, Storybook story for the thread, integration tests.
 - The cancel transition with the row lock and the refund path (#34). Needs DB work and the payment port.
 - Real-run evidence on Stripe test mode for the cancellation refund.
 - Pushing the branch and opening the PR: `gh` cannot read its config in the agent sandbox. Owner does this in the terminal.
@@ -27,4 +35,4 @@ Branch: `epik-03-session` from `origin/main` (b5c55cb). Local commits only; not 
 - Not run in this sandbox: `npm run build` (EPERM before), integration tests and migrations (Docker).
 
 ## Handoff
-Next: entities and migrations for `Message` and `SessionNote`, then the services that call these rules, then routes and pages. Owner: push `epik-03-session`, open the PR, run `npm run test:integration` and `npm run build` in the terminal.
+Next: routes and pages for the thread and the note (mentee and mentor booking detail), the cancel transition (#34), then the Storybook story and integration tests. Owner: regenerate the migration snapshot with Docker, push `epik-03-session`, open the PR, run `npm run db:migration:check`, `npm run test:integration` and `npm run build` in the terminal.
