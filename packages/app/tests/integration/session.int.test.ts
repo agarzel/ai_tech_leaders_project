@@ -133,7 +133,8 @@ describe("session thread, note and cancellation", () => {
 
   it("the mentee cancels a booking before the free deadline and sees the refund on its way", async () => {
     await mentee.open(`/bookings/${cancellable}`);
-    await mentee.waitForText("Your booking");
+    // "Your booking" is the page title and shows before the content; the status panel renders with the cancel action.
+    await mentee.waitForText("Confirmed");
     await mentee.click("button", "Cancel booking");
     await mentee.waitForText("Cancel this booking?");
     await mentee.waitForText("Free cancellation until");
