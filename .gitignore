@@ -64,3 +64,8 @@ packages/ui/stories/**/__screenshots__/
 
 # Built clickable prototypes served by Storybook (build output, not design-system code)
 packages/ui/.storybook/public/prototypes/
+# om-prepare-test-env: per-checkout state and the dev server's build dir
+.next-test-env/
+.ai/qa/test-env.lock/
+.ai/qa/test-env-build-cache.json
+.ai/qa/test-env-app.log
