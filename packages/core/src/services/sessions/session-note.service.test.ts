@@ -151,10 +151,10 @@ describe("SessionNoteService.readForMentee", () => {
     });
   });
 
-  it("returns nothing for a draft", async () => {
-    const { service } = setup({ note: { status: "draft", body: "private" } });
+  it("returns a draft for the mentee to decide on", async () => {
+    const { service } = setup({ note: { status: "draft", body: "to decide" } });
 
-    await expect(service.readForMentee("b1", "mentee")).resolves.toBeNull();
+    await expect(service.readForMentee("b1", "mentee")).resolves.toEqual({ status: "draft", body: "to decide" });
   });
 
   it("returns nothing for a rejected note", async () => {
@@ -179,5 +179,25 @@ describe("SessionNoteService.readForMentee", () => {
     const { service } = setup({ note: { status: "approved", body: "x" } });
 
     await expect(service.readForMentee("b1", "mentor")).rejects.toThrow(NotFoundError);
+  });
+});
+
+describe("SessionNoteService.readForMentor", () => {
+  it("returns the mentor's note in any state, rejected included", async () => {
+    const { service } = setup({ note: { status: "rejected", body: "not published" } });
+
+    await expect(service.readForMentor("b1", "mentor")).resolves.toEqual({ status: "rejected", body: "not published" });
+  });
+
+  it("returns nothing when no note was written", async () => {
+    const { service } = setup({ note: null });
+
+    await expect(service.readForMentor("b1", "mentor")).resolves.toBeNull();
+  });
+
+  it("answers not_found for a user who is not the mentor", async () => {
+    const { service } = setup({ note: { status: "draft", body: "x" } });
+
+    await expect(service.readForMentor("b1", "mentee")).rejects.toThrow(NotFoundError);
   });
 });

@@ -9,6 +9,7 @@ import { BookingQuestion } from "@devmentor/ui/components/bookings/BookingQuesti
 import { BookingStatusPanel } from "@devmentor/ui/components/bookings/BookingStatusPanel";
 import { BookingSummary } from "@devmentor/ui/components/bookings/BookingSummary";
 import type { PaymentPendingPhase } from "@devmentor/ui/components/bookings/PaymentPending";
+import { SessionNotePanel } from "@devmentor/ui/components/sessions/SessionNotePanel";
 import { SessionThread } from "@devmentor/ui/components/sessions/SessionThread";
 import { buttonVariants } from "@devmentor/ui/components/ui/button";
 import { useTimeZone } from "../../../../lib/use-time-zone";
@@ -24,11 +25,14 @@ export function BookingDetail({
   initial,
   viewerId,
   thread,
+  note,
 }: {
   initial: BookingDto;
   viewerId: string;
   /** Present while the thread can be read; `canWrite` only inside the session window. */
   thread?: { messages: MessageDto[]; canWrite: boolean };
+  /** The mentor's note as the mentee may see it: a draft to decide on, or an approved note; null otherwise. */
+  note: { status: "draft" | "approved" | "rejected"; body: string } | null;
 }) {
   const timeZone = useTimeZone();
   const [booking, setBooking] = useState(initial);
@@ -97,6 +101,7 @@ export function BookingDetail({
           canWrite={thread.canWrite}
         />
       )}
+      {note && <SessionNotePanel bookingId={booking.id} mentorName={booking.mentor.name} note={note} />}
     </div>
   );
 }

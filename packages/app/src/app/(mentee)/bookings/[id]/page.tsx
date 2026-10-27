@@ -17,7 +17,7 @@ async function Gate({ params }: { params: Promise<{ id: string }> }) {
   await connection();
   const { id } = await params;
   const user = await requireUser(`/bookings/${encodeURIComponent(id)}`);
-  const { bookingQueryService, sessionThreadService } = (await createRequestScope()).cradle;
+  const { bookingQueryService, sessionThreadService, sessionNoteService } = (await createRequestScope()).cradle;
   let booking;
   try {
     booking = await bookingQueryService.getForMentee(user.id, id);
@@ -37,7 +37,9 @@ async function Gate({ params }: { params: Promise<{ id: string }> }) {
           canWrite: isMessagingOpen(startsAt, booking.lengthMinutes, now),
         }
       : undefined;
-  return <BookingDetail initial={booking} viewerId={user.id} thread={thread} />;
+  // The note shows once the mentor has written it: a draft to decide on, or the approved note.
+  const note = confirmed ? await sessionNoteService.readForMentee(id, user.id) : null;
+  return <BookingDetail initial={booking} viewerId={user.id} thread={thread} note={note} />;
 }
 
 export default function BookingPage(props: PageProps<"/bookings/[id]">) {
