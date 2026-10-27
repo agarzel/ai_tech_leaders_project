@@ -1,6 +1,6 @@
 ---
 name: om-code-review
-description: DevMentor extension of the installed om-code-review skill – adds repo-specific review rules on top of it. Never replaces or relaxes the installed skill.
+description: Use when reviewing a DevMentor PR or diff with om-code-review. Adds the repo-specific rules R1–R5 (contract registry sync, actionable script errors, no destruction of local state, real-run evidence, self-review disclosure) on top of the installed skill, never replacing it.
 ---
 
 # om-code-review – DevMentor extension
