@@ -1,0 +1,46 @@
+# Execution plan – cache agent-browser Chrome in the CI integration job
+
+Issue: #18. Engine: om-auto-create-pr (steps: 4, --loop: no).
+
+## Goal
+
+The Integration tests job restores Chrome for Testing from the GitHub Actions cache instead of downloading it (~186 MB) on every run.
+
+## Scope
+
+- `.github/workflows/ci.yml`, job `integration-tests` only: restore `~/.agent-browser/browsers` before `npx agent-browser install --with-deps`, save it after.
+- The install step stays as it is, so the Linux system libraries are still installed on every run.
+
+**Non-goals:** caching the testcontainers PostgreSQL image, changing the test suite, other jobs.
+
+## Finding that changes the issue's suggested key
+
+`agent-browser install` (0.39.0) installs the latest known-good Chrome, not a version pinned by the lockfile. Checked locally on 2026-10-27: the first run downloaded Chrome 156 next to an existing 155; a second run printed "Chrome 156.0.8078.47 is already installed" and took 0.4 s. A key from `hashFiles('package-lock.json')` would keep hitting a stale cache after every Chrome release and download again on every run, because a cache whose key hit is never re-saved. So the cache is keyed by the **installed Chrome directory** instead:
+
+1. `actions/cache/restore` with the prefix `Linux-agent-browser-` (newest matching cache wins).
+2. Install as today (skips the download when the restored Chrome is the current one).
+3. Remove older `chrome-*` directories, keep the newest.
+4. `actions/cache/save` with the key `Linux-agent-browser-<directory>` (e.g. `Linux-agent-browser-chrome-156.0.8078.47`) only when it differs from the restored key.
+
+## Risks
+
+- Found in CI on 2026-10-27: one rerun hung for 13 min in `apt` (`--with-deps`) fetching fonts from `azure.archive.ubuntu.com`, with Chrome already restored. This network dependency exists on `main` too and is outside this cache; a `timeout-minutes` on the install step is a possible follow-up.
+- A cache miss or a broken cache falls back to the normal download (today's behaviour).
+- Tests: a workflow change has no unit tests; the evidence is the CI log of two runs (miss, then hit). The repo gate (lint, typecheck, coverage, build, design tokens, Storybook, integration, Docker) ran in CI on this PR: all 7 jobs green; not rerun locally, since only the workflow changed.
+- `actions/cache` v6.1.0 is the latest release (checked with `gh api`).
+
+## Progress
+
+PR: #83
+
+> Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles.
+
+### Phase 1: Cache Chrome in the integration job
+
+- [x] 1.1 Restore and save the agent-browser browsers directory around the install step — 2f1ebd0
+- [x] 1.2 Keep only the newest Chrome directory before saving — 2f1ebd0
+
+### Phase 2: Verify in CI
+
+- [x] 2.1 First CI run: cache miss, Chrome downloaded and saved — run 40538137754: "Cache not found", Chrome 156 installed in 14s, cache saved in 4s; all 7 jobs green
+- [x] 2.2 Second CI run: cache hit, download skipped, durations recorded — run 40540520920: prefix hit then saved under the new key; rerun: exact hit, "already installed", save skipped; install 10-11s vs 12s on main
