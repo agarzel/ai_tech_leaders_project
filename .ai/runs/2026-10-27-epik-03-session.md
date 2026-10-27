@@ -22,7 +22,9 @@ Branch: `epik-03-session` from `origin/main` (b5c55cb). Local commits only; not 
 - Branch fix: the first two commits had landed on `context-homework`; they now sit on `epik-03-session` and `context-homework` is back at `b5c55cb`.
 - `SessionThreadService` (post and list, party-only, `not_found` for strangers) and `SessionNoteService` (mentor writes, mentee decides, mentee reads only an approved note). Both in `services/sessions/`, registered in the container, cradle and `core` index; 51 tests.
 - Gates on this branch: `npm run lint` exit 0; `npm run typecheck` exit 0 (after switching the services to `IBooking`); `npm run test:coverage` exit 0 (81 files, 1004 tests, 100% gate).
-- `npm run build`: fails in the sandbox with `EPERM: unlink .../packages/app/.next/standalone/.env` (the sandbox denies writes to `.env` files). Not verified; the owner runs it in the terminal.
+- `npm run build`: fails in the sandbox with `EPERM: unlink .../packages/app/.next/standalone/.env` (the sandbox denies writes to `.env` files). Owner ran it in the terminal on `epik-03-session`: build passes, route table printed (no E03 routes yet, as expected).
+- `npm run db:migration:check` (owner, Docker): "No changes required, schema is up-to-date".
+- `npm run test:integration` (owner, Docker): 9 files, 56 tests passed (Epic 01 and 02 regression; no E03 tests yet).
 
 ## Not done (blocked or later)
 - Migration snapshot (`.snapshot-devmentor.json`) and `npm run db:migration:check`: owner runs with Docker and commits the regenerated snapshot if it differs.
