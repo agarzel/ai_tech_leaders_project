@@ -69,8 +69,35 @@ jobs:
 
       - run: npm ci
 
-      # Chrome for Testing + Linux libraries for the headless browser.
+      # Chrome for Testing (~186 MB) from the cache. `agent-browser install` fetches the latest known-good
+      # Chrome, not a lockfile-pinned one, so the cache is keyed by the installed Chrome directory:
+      # restore the newest cache, install (skips the download when it is current), save only a new version.
+      - name: Restore agent-browser Chrome
+        id: chrome-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.agent-browser/browsers
+          key: ${{ runner.os }}-agent-browser-chrome-
+          restore-keys: ${{ runner.os }}-agent-browser-chrome-
+
+      # Chrome for Testing + Linux libraries for the headless browser (the libraries install on every run).
       - run: npx agent-browser install --with-deps
+
+      # Keep only the newest Chrome, so the cache does not grow with every release.
+      - name: Prune older Chrome versions
+        id: chrome
+        run: |
+          cd ~/.agent-browser/browsers
+          newest=$(ls -d chrome-* | sort -V | tail -n 1)
+          for dir in chrome-*; do [ "$dir" = "$newest" ] || rm -rf "$dir"; done
+          echo "dir=$newest" >> "$GITHUB_OUTPUT"
+
+      - name: Save agent-browser Chrome
+        if: steps.chrome-cache.outputs.cache-matched-key != format('{0}-agent-browser-chrome-{1}', runner.os, steps.chrome.outputs.dir)
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.agent-browser/browsers
+          key: ${{ runner.os }}-agent-browser-chrome-${{ steps.chrome.outputs.dir }}
 
       # Ephemeral PostgreSQL via testcontainers (Docker is available on the runner),
       # migrations + seed, the app in dev mode, browser tests with agent-browser.
