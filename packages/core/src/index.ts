@@ -30,8 +30,9 @@ export {
   CHECKOUT_MARGIN_MINUTES,
   type CreatedBookingDto,
 } from "./services/bookings/booking.service";
-export { SessionThreadService, MESSAGE_MAX_LENGTH, type MessageDto } from "./services/sessions/session-thread.service";
-export { SessionNoteService, NOTE_MAX_LENGTH, type NoteDto } from "./services/sessions/session-note.service";
+export { canReadThread, freeCancellationUntil, isMessagingOpen, sessionEndsAt } from "./services/sessions/session-rules";
+export { SessionThreadService, type MessageDto } from "./services/sessions/session-thread.service";
+export { SessionNoteService, type NoteDto } from "./services/sessions/session-note.service";
 export {
   BookingQueryService,
   MENTOR_BOOKINGS_READ_LIMIT,

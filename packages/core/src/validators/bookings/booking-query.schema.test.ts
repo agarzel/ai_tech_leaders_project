@@ -19,7 +19,7 @@ describe("bookingListQuerySchema", () => {
     ["non-numeric page", { page: "abc" }],
     ["page size below 1", { pageSize: "0" }],
     ["fractional page size", { pageSize: "2.5" }],
-    ["unknown status", { status: "cancelled" }],
+    ["unknown status", { status: "refunded" }],
   ])("rejects %s", (_name, query) => {
     expect(bookingListQuerySchema.safeParse(query).success).toBe(false);
   });

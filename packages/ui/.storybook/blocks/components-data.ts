@@ -11,10 +11,11 @@ export type ComponentGroup =
   | "Structure and navigation"
   | "Lists and data"
   | "Mentor offer (E01)"
-  | "Booking and prepayment (E02)";
+  | "Booking and prepayment (E02)"
+  | "Session and aftermath (E03)";
 
 /** The Storybook section the component's page lives in (the first part of its story title). */
-export type ComponentSection = "Primitives" | "Primitives/Panel blocks" | "Product/E01" | "Product/E02";
+export type ComponentSection = "Primitives" | "Primitives/Panel blocks" | "Product/E01" | "Product/E02" | "Product/E03";
 
 export type ComponentEntry = {
   name: string;
@@ -38,6 +39,7 @@ export const GROUPS: { name: ComponentGroup; intro: string }[] = [
   { name: "Lists and data", intro: "Show many things of one kind." },
   { name: "Mentor offer (E01)", intro: "Product components of the mentor's offer: accounts, profile, prices, slots, public list." },
   { name: "Booking and prepayment (E02)", intro: "Product components of booking, paying and the mentor's decision." },
+  { name: "Session and aftermath (E03)", intro: "Product components of the session itself: the text thread and the mentor's note." },
 ];
 
 const ui = (file: string) => `@devmentor/ui/components/ui/${file}`;
@@ -647,6 +649,44 @@ export const COMPONENTS: ComponentEntry[] = [
     purpose: "Tells the mentor that bookings wait for a decision and by when; the only in-app signal.",
     when: "`/mentor` when something is pending.",
     whenNot: "A counter badge in the navigation: never. Email: not built.",
+  },
+
+  // ---- Session and aftermath (E03)
+  {
+    name: "SessionThread",
+    group: "Session and aftermath (E03)",
+    section: "Product/E03",
+    importLine: `import { SessionThread } from "${product("sessions", "SessionThread")}"`,
+    purpose: "Lets the mentee and the mentor of a confirmed booking exchange text during the session.",
+    when: "The booking page of a confirmed booking, for both the mentee and the mentor.",
+    whenNot: "Chat between people outside a booking, or a thread after the grace period (read-only text instead).",
+  },
+  {
+    name: "SessionNotePanel",
+    group: "Session and aftermath (E03)",
+    section: "Product/E03",
+    importLine: `import { SessionNotePanel } from "${product("sessions", "SessionNotePanel")}"`,
+    purpose: "Lets the mentee approve or reject the mentor's note before anyone else sees it.",
+    when: "The mentee's booking page once the mentor has written a note (a draft to decide on, or an approved note).",
+    whenNot: "The mentor's own note (SessionNoteEditor). A rejected note: it is not returned at all.",
+  },
+  {
+    name: "CancelBookingDialog",
+    group: "Session and aftermath (E03)",
+    section: "Product/E03",
+    importLine: `import { CancelBookingDialog } from "${product("bookings", "CancelBookingDialog")}"`,
+    purpose: "Lets the mentee cancel a confirmed booking, with the free-cancellation deadline in view.",
+    when: "The mentee's booking page while the session has not started.",
+    whenNot: "Declining as a mentor (DeclineBookingDialog, with a reason). Deleting a slot (AlertDialog in DeleteSlotDialog).",
+  },
+  {
+    name: "SessionNoteEditor",
+    group: "Session and aftermath (E03)",
+    section: "Product/E03",
+    importLine: `import { SessionNoteEditor } from "${product("sessions", "SessionNoteEditor")}"`,
+    purpose: "Lets the mentor write the optional note after a session and see whether the mentee approved it.",
+    when: "The mentor's session page of a confirmed booking.",
+    whenNot: "The mentee's view (SessionNotePanel). Writing before the session ends: the editor is read-only then.",
   },
 ];
 

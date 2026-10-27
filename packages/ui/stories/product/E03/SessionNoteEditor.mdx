@@ -1,0 +1,57 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./SessionNoteEditor.stories";
+
+<Meta of={Stories} />
+
+# SessionNoteEditor
+
+`import { SessionNoteEditor } from "@devmentor/ui/components/sessions/SessionNoteEditor"`
+
+Product component, concept `sessions` (E03, S04 #36). Built on `Field`, `Textarea`, `Button` and `ErrorMessage`.
+
+## 1. Purpose
+
+Lets the mentor write the optional note after a session and see what the mentee did with it.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| The mentor's session page of a confirmed booking | spec E03, S04 |
+
+## 3. When not to use
+
+| Instead of `SessionNoteEditor`… | Use | Why |
+|---|---|---|
+| The mentee's decision | `SessionNotePanel` | the mentee approves or rejects |
+| A note before the session ends | nothing | the server refuses it |
+
+## 4. Anatomy
+
+Heading *Session note*; a text area *Your note* with *Write note* or *Save note* while the note is a draft and writing is open; otherwise one sentence with the note read-only (waiting for approval, approved, or rejected).
+
+## 5. Variants
+
+None.
+
+<Canvas of={Stories.Write} />
+
+## 6. States
+
+| State | Story |
+|---|---|
+| Nothing written, after the session | [Write](?path=/story/product-e03-sessionnoteeditor--write) |
+| Saved draft | [EditDraft](?path=/story/product-e03-sessionnoteeditor--edit-draft) |
+| Before the session ends | [BeforeSession](?path=/story/product-e03-sessionnoteeditor--before-session) |
+| Approved | [Approved](?path=/story/product-e03-sessionnoteeditor--approved) |
+| Rejected | [Rejected](?path=/story/product-e03-sessionnoteeditor--rejected) |
+
+Saving shows *Saving…* and disables the button; a refused save keeps the text and shows the reason.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| The note is optional, up to 1,000 characters, and visible to the mentee only after approval. | R06, spec E03 |
+| A decided note cannot be replaced. | spec E03, Edge Cases |
+| The mentor always sees their own note, including a rejected one. | spec E03, API Contracts |

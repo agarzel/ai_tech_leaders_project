@@ -6,6 +6,7 @@ import type { Logger } from "../../logger";
 import type { PaymentEvent } from "../../payments/payment-gateway";
 import { bookingDeclineSchema } from "../../validators/bookings/booking-decline.schema";
 import type { SlotService } from "../availability/slot.service";
+import { cancellationOutcome, type CancellationOutcome } from "../sessions/session-rules";
 
 /** The mentor decides until this many hours before the session starts (spec: state machine, R05). */
 export const ACCEPTANCE_LEAD_HOURS = 12;
@@ -135,6 +136,37 @@ export class BookingTransitions {
       await em.flush();
       return booking.slot.id;
     });
+  }
+
+  /**
+   * The mentee cancels a confirmed booking (E03 S02). Free until 12 h before the start: the payment is refunded
+   * in full (requested here, performed by the sweep). Later the mentor keeps the payment, recorded as their share.
+   * The slot is freed either way.
+   */
+  async cancelByMentee(menteeUserId: string, bookingId: string): Promise<CancellationOutcome> {
+    const now = this.deps.clock.now();
+    const result = await this.deps.em.transactional(async (em) => {
+      const booking = await em.findOne(Booking, { id: bookingId }, { lockMode: LockMode.PESSIMISTIC_WRITE, populate: ["slot"] });
+      // Another person's booking looks like a missing one, so ids do not leak.
+      if (!booking || booking.mentee.id !== menteeUserId) throw new NotFoundError("Booking not found");
+      if (booking.status !== "confirmed") throw new ConflictError("Only a confirmed booking can be cancelled");
+
+      const outcome = cancellationOutcome(booking.slot.startsAt, now);
+      booking.status = "cancelled";
+      booking.cancelledAt = now;
+      booking.cancelReason = outcome === "refunded" ? "mentee_free" : "mentee_late";
+
+      const payment: IPayment | null = await em.findOne(Payment, { booking: booking.id });
+      if (outcome === "refunded") {
+        if (payment?.status === "paid") payment.status = "refund_requested";
+      } else if (payment) {
+        payment.mentorShareAmount = booking.priceAmount;
+      }
+      await em.flush();
+      return { outcome, slotId: booking.slot.id };
+    });
+    await this.deps.slotService.release(result.slotId);
+    return result.outcome;
   }
 
   private async lockOwnAwaiting(em: EntityManager, mentorUserId: string, bookingId: string, now: Date): Promise<IBooking> {

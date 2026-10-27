@@ -1,9 +1,8 @@
 import { Booking, SessionNote, type EntityManager, type IBooking } from "@devmentor/db";
 import type { Clock } from "../../clock";
 import { ConflictError, NotFoundError, ValidationError } from "../../http/errors";
+import { NOTE_MAX_LENGTH } from "../../validators/sessions/session-note.schema";
 import { assertNoteDecidable, assertNoteWritable, noteEffectiveStatus, type NoteStatus } from "./session-rules";
-
-export const NOTE_MAX_LENGTH = 1000;
 
 export type NoteDto = { status: NoteStatus; body: string };
 
@@ -55,15 +54,28 @@ export class SessionNoteService {
     return { status: note.status, body: note.body };
   }
 
-  /** What the mentee sees: the approved note, or nothing. Drafts and rejected notes are never returned. */
+  /**
+   * What the mentee sees: the draft to decide on, or the approved note. A rejected note, or a draft that
+   * expired unanswered, is never returned.
+   */
   async readForMentee(bookingId: string, menteeUserId: string): Promise<NoteDto | null> {
     const booking = await this.loadBooking(bookingId, menteeUserId, "mentee");
+    return this.readNote(bookingId, booking, true);
+  }
+
+  /** The mentor reads their own note in any state, including a rejected one. */
+  async readForMentor(bookingId: string, mentorUserId: string): Promise<NoteDto | null> {
+    const booking = await this.loadBooking(bookingId, mentorUserId, "mentor");
+    return this.readNote(bookingId, booking, false);
+  }
+
+  private async readNote(bookingId: string, booking: IBooking, hideRejected: boolean): Promise<NoteDto | null> {
     const note = await this.deps.em.findOne(SessionNote, { booking: bookingId });
     if (!note) {
       return null;
     }
     const status = noteEffectiveStatus(note.status, booking.slot.startsAt, booking.lengthMinutes, this.deps.clock.now());
-    return status === "approved" ? { status, body: note.body } : null;
+    return hideRejected && status === "rejected" ? null : { status, body: note.body };
   }
 
   /** A booking that is not the caller's, in the caller's role, is `not_found`, so existence does not leak. */

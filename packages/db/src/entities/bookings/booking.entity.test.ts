@@ -51,6 +51,7 @@ describe("Booking entity", () => {
       "declined",
       "expired",
       "payment_expired",
+      "cancelled",
     ]);
     expect(status.default).toBe("pending_payment");
     expect(status.nullable).toBeFalsy();

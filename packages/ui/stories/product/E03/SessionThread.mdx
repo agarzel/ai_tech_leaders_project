@@ -1,0 +1,56 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./SessionThread.stories";
+
+<Meta of={Stories} />
+
+# SessionThread
+
+`import { SessionThread } from "@devmentor/ui/components/sessions/SessionThread"`
+
+Product component, concept `sessions` (E03, S01 #33). Built on `Field`, `Textarea`, `Button` and `ErrorMessage`.
+
+## 1. Purpose
+
+Lets the two people of a confirmed booking exchange text during the session.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| The booking page of a confirmed booking, mentee and mentor | spec E03, Architecture |
+
+## 3. When not to use
+
+| Instead of `SessionThread`… | Use | Why |
+|---|---|---|
+| Chat with anyone outside the booking | not built | the thread belongs to one booking |
+| Reading after the grace period | the page without the thread | the server stops returning it |
+
+## 4. Anatomy
+
+Heading *Session thread*; messages oldest first (author, time in the viewer's zone, text); the composer (*Message*, *Send*) only while the window is open, otherwise one read-only sentence.
+
+## 5. Variants
+
+None.
+
+<Canvas of={Stories.Playground} />
+
+## 6. States
+
+| State | Story |
+|---|---|
+| Inside the window | [Playground](?path=/story/product-e03-sessionthread--playground) |
+| Nothing sent yet | [Empty](?path=/story/product-e03-sessionthread--empty) |
+| After the window | [ReadOnly](?path=/story/product-e03-sessionthread--read-only) |
+
+Sending shows *Sending…* on the button; a failed send keeps the text and shows the error through `ErrorMessage`.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Only the booking's mentee and mentor can read or write the thread; anyone else gets nothing. | spec E03, API Contracts |
+| Send stays disabled while the draft is empty. | C64 |
+| The author is named *You* or by name; the time is in the viewer's zone. | spec E02 (every time shows its zone) |
+| A failed send explains itself in words and keeps the text. | C18 |

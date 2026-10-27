@@ -1,0 +1,54 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./SessionNotePanel.stories";
+
+<Meta of={Stories} />
+
+# SessionNotePanel
+
+`import { SessionNotePanel } from "@devmentor/ui/components/sessions/SessionNotePanel"`
+
+Product component, concept `sessions` (E03, S04 #36). Built on `Button` and `ErrorMessage`.
+
+## 1. Purpose
+
+Lets the mentee approve or reject the mentor's note. Nothing reaches the mentee's screen before the approval.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| The mentee's booking page once the mentor wrote a note | spec E03, S04 |
+
+## 3. When not to use
+
+| Instead of `SessionNotePanel`… | Use | Why |
+|---|---|---|
+| The mentor's own note | `SessionNoteEditor` | the mentor writes, the mentee decides |
+| A rejected note | nothing | the server never returns it |
+
+## 4. Anatomy
+
+Heading *Session note*; a sentence saying who wrote it and that it is shown only if approved; the note in full; *Approve* (the one accent) and *Reject*. Approved: the sentence and the note, no actions.
+
+## 5. Variants
+
+None.
+
+<Canvas of={Stories.Draft} />
+
+## 6. States
+
+| State | Story |
+|---|---|
+| Draft to decide on | [Draft](?path=/story/product-e03-sessionnotepanel--draft) |
+| Approved | [Approved](?path=/story/product-e03-sessionnotepanel--approved) |
+
+While a decision is sent, the chosen button reads *Approving…* or *Rejecting…* and both buttons are disabled. A refused decision shows the reason through `ErrorMessage` and keeps the draft.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| Nothing from a session is shown to the mentee without approval. | R02, R06 |
+| A draft past its approval window cannot be decided (the server answers with a conflict). | spec E03, Open Question 4 |
+| Approve is the only accent on the panel. | design-system K3 |

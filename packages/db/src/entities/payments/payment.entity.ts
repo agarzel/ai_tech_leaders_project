@@ -41,6 +41,8 @@ export const Payment = defineSingletonEntity("Payment", () =>
       refundAttempts: p.integer().default(0),
       paidAt: p.datetime().nullable(),
       refundedAt: p.datetime().nullable(),
+      // Grosze the mentor keeps when a late cancellation keeps the payment; paying it out is a later spec (D14, Q05).
+      mentorShareAmount: p.integer().nullable(),
       // Provider message only; never card data or the booking question.
       lastError: p.text().nullable(),
     },

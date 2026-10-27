@@ -131,6 +131,15 @@ Import paths are under `@devmentor/ui/`. Use by path, never a barrel. Base UI pa
 | DeclineBookingDialog | `components/bookings/DeclineBookingDialog` | Declining a booking (reason up to 280). | A confirmation with no input: AlertDialog. |
 | PendingBookingsNotice | `components/bookings/PendingBookingsNotice` | `/mentor` when something is pending. | A counter badge in the navigation: never. Email: not built. |
 
+### Session and aftermath (E03)
+
+| Component | Import path | Use when | Not when |
+|---|---|---|---|
+| SessionThread | `components/sessions/SessionThread` | The booking page of a confirmed booking, for both the mentee and the mentor. | Chat between people outside a booking, or a thread after the grace period (read-only text instead). |
+| SessionNotePanel | `components/sessions/SessionNotePanel` | The mentee's booking page once the mentor has written a note (a draft to decide on, or an approved note). | The mentor's own note (SessionNoteEditor). A rejected note: it is not returned at all. |
+| CancelBookingDialog | `components/bookings/CancelBookingDialog` | The mentee's booking page while the session has not started. | Declining as a mentor (DeclineBookingDialog, with a reason). Deleting a slot (AlertDialog in DeleteSlotDialog). |
+| SessionNoteEditor | `components/sessions/SessionNoteEditor` | The mentor's session page of a confirmed booking. | The mentee's view (SessionNotePanel). Writing before the session ends: the editor is read-only then. |
+
 <!-- END:components-table -->
 
 Not components: `lib/format` (`formatPrice`, `parsePrice`, `formatPriceInput`, `formatDateTime`, `formatDay`, `formatTime`, `formatZoneLabel`, `formatRelative`), `lib/time` (`localToUtc`), `lib/useNow`, `backend/api/apiCall` (the only `fetch` to `/api/*`), `describeApiError`, `lib/utils` (`cn`), `backend/layout/links` (`navLinkClassName`, `renderLink`).

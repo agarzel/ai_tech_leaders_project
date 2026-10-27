@@ -40,6 +40,9 @@ export const Booking = defineSingletonEntity("Booking", () =>
       decidedAt: p.datetime().nullable(),
       // Optional mentor text, up to 280 characters (validated in the service).
       declineReason: p.string().length(280).nullable(),
+      // Set when the mentee cancels a confirmed booking (E03 S02); `mentee_free` refunds, `mentee_late` keeps the payment for the mentor.
+      cancelledAt: p.datetime().nullable(),
+      cancelReason: p.string().length(20).nullable(),
     },
     // One live booking per slot: a partial unique index, so cancelled or expired bookings free the slot again.
     uniques: [

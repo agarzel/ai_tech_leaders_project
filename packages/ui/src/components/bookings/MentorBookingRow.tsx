@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { ApiError, ApiResult } from "@devmentor/ui/backend/api/types";
 import { ErrorMessage } from "@devmentor/ui/backend/feedback/ErrorMessage";
 import { Badge } from "@devmentor/ui/components/ui/badge";
-import { Button } from "@devmentor/ui/components/ui/button";
+import { Button, buttonVariants } from "@devmentor/ui/components/ui/button";
 import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from "@devmentor/ui/components/ui/item";
 import { Spinner } from "@devmentor/ui/components/ui/spinner";
 import { formatDateTime, formatPrice, formatZoneLabel } from "@devmentor/ui/lib/format";
@@ -27,6 +27,8 @@ type MentorBookingRowProps = {
   onDecline: (booking: MentorBooking, values: { reason?: string }) => Promise<ApiResult<unknown>>;
   /** After the server confirmed either decision – the page reloads the list. */
   onDecided?: (booking: MentorBooking) => void;
+  /** The session page of this booking; shown once it is confirmed. */
+  sessionHref?: string;
 };
 
 /**
@@ -35,7 +37,7 @@ type MentorBookingRowProps = {
  * expired bookings show their status instead of actions – in the mentor's words, never refund details (Q14). A refusal (deadline passed) appears under the
  * row in words (C69).
  */
-export function MentorBookingRow({ booking, timeZone, now, isNext = false, onAccept, onDecline, onDecided }: MentorBookingRowProps) {
+export function MentorBookingRow({ booking, timeZone, now, isNext = false, onAccept, onDecline, onDecided, sessionHref }: MentorBookingRowProps) {
   const [isAccepting, setIsAccepting] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
   const awaiting = booking.status === "awaiting_acceptance" && booking.acceptBy !== null;
@@ -92,7 +94,14 @@ export function MentorBookingRow({ booking, timeZone, now, isNext = false, onAcc
             />
           </>
         ) : (
-          <Badge variant={booking.status === "confirmed" ? "secondary" : "outline"}>{mentorStatusLabel(booking.status)}</Badge>
+          <>
+            <Badge variant={booking.status === "confirmed" ? "secondary" : "outline"}>{mentorStatusLabel(booking.status)}</Badge>
+            {sessionHref && booking.status === "confirmed" && (
+              <a href={sessionHref} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                Open session
+              </a>
+            )}
+          </>
         )}
       </ItemActions>
     </Item>

@@ -1,0 +1,54 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./CancelBookingDialog.stories";
+
+<Meta of={Stories} />
+
+# CancelBookingDialog
+
+`import { CancelBookingDialog } from "@devmentor/ui/components/bookings/CancelBookingDialog"`
+
+Product component, concept `bookings` (E03, S02 #34). Built on `AlertDialog`, `Button` and `ErrorMessage`.
+
+## 1. Purpose
+
+Lets the mentee cancel a confirmed booking, with the deadline for a full refund in view.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| The mentee's booking page, confirmed booking, before the start | spec E03, S02 |
+
+## 3. When not to use
+
+| Instead of `CancelBookingDialog`… | Use | Why |
+|---|---|---|
+| The mentor declining a request | `DeclineBookingDialog` | the mentor gives a reason |
+| Deleting a slot | `AlertDialog` in `DeleteSlotDialog` | a different action |
+
+## 4. Anatomy
+
+Trigger *Cancel booking* (outline); an alert dialog with the title *Cancel this booking?*, one sentence with the deadline or the no-refund outcome, *Keep booking* and the confirming *Cancel booking* (the only destructive button).
+
+## 5. Variants
+
+None.
+
+<Canvas of={Stories.Refundable} />
+
+## 6. States
+
+| State | Story |
+|---|---|
+| Before the free deadline | [Refundable](?path=/story/product-e03-cancelbookingdialog--refundable) |
+| After the free deadline | [AfterDeadline](?path=/story/product-e03-cancelbookingdialog--after-deadline) |
+
+While the request runs, the button reads *Cancelling…* and the dialog cannot be closed. A refusal (the session already started) stays in the dialog in words.
+
+## 7. Behaviour and accessibility
+
+| Rule | Source |
+|---|---|
+| The deadline and the outcome come from the server, never from the browser's clock. | spec E03, Architecture |
+| Cancelling is irreversible, so the dialog has no input and the confirm button is the only destructive one. | design-system, Page-level destructive action |
+| The outcome is stated in words, not colour alone. | WCAG 1.4.1 |

@@ -421,3 +421,78 @@ describe("slot lookup", () => {
     expect(ctx.tx.findOneOrFail).toHaveBeenCalledWith(Slot, { id: "s1" });
   });
 });
+
+describe("BookingTransitions.cancelByMentee", () => {
+  const HOURS = (hours: number) => new Date(NOW.getTime() + hours * HOUR);
+  const confirmed = (startsAt: Date, status = "confirmed") => ({
+    status,
+    mentee: { id: "mentee" },
+    priceAmount: 15_000,
+    slot: { id: "s1", startsAt },
+  });
+
+  it("refunds a cancellation made more than 12 hours before the start and frees the slot", async () => {
+    const ctx = setup({ booking: confirmed(HOURS(48)), payment: { status: "paid" } });
+
+    await expect(ctx.service.cancelByMentee("mentee", "b1")).resolves.toBe("refunded");
+
+    expect(ctx.booking).toMatchObject({ status: "cancelled", cancelledAt: NOW, cancelReason: "mentee_free" });
+    expect(ctx.payment.status).toBe("refund_requested");
+    expect(ctx.slotService.release).toHaveBeenCalledWith("s1");
+  });
+
+  it("keeps the payment for the mentor when cancelled less than 12 hours before the start", async () => {
+    const ctx = setup({ booking: confirmed(HOURS(6)), payment: { status: "paid" } });
+
+    await expect(ctx.service.cancelByMentee("mentee", "b1")).resolves.toBe("not_refunded");
+
+    expect(ctx.booking).toMatchObject({ status: "cancelled", cancelReason: "mentee_late" });
+    expect(ctx.payment).toMatchObject({ status: "paid", mentorShareAmount: 15_000 });
+    expect(ctx.slotService.release).toHaveBeenCalledWith("s1");
+  });
+
+  it("does not request a refund for a payment that is not paid", async () => {
+    const ctx = setup({ booking: confirmed(HOURS(48)), payment: { status: "open" } });
+
+    await ctx.service.cancelByMentee("mentee", "b1");
+
+    expect(ctx.payment.status).toBe("open");
+  });
+
+  it("cancels a booking that has no payment row without recording a share", async () => {
+    const ctx = setup({ booking: confirmed(HOURS(6)) });
+    ctx.tx.findOne.mockImplementation(async (entity: unknown) => (entity === Booking ? ctx.booking : null));
+
+    await expect(ctx.service.cancelByMentee("mentee", "b1")).resolves.toBe("not_refunded");
+
+    expect(ctx.booking.status).toBe("cancelled");
+  });
+
+  it("answers not_found for a booking that is not the caller's", async () => {
+    const ctx = setup({ booking: confirmed(HOURS(48)) });
+
+    await expect(ctx.service.cancelByMentee("someone-else", "b1")).rejects.toThrow(NotFoundError);
+    expect(ctx.booking.status).toBe("confirmed");
+  });
+
+  it("answers not_found when the booking does not exist", async () => {
+    const ctx = setup();
+    ctx.tx.findOne.mockImplementation(async () => null);
+
+    await expect(ctx.service.cancelByMentee("mentee", "missing")).rejects.toThrow(NotFoundError);
+  });
+
+  it("refuses a booking that is not confirmed", async () => {
+    const ctx = setup({ booking: confirmed(HOURS(48), "awaiting_acceptance") });
+
+    await expect(ctx.service.cancelByMentee("mentee", "b1")).rejects.toThrow(ConflictError);
+    expect(ctx.slotService.release).not.toHaveBeenCalled();
+  });
+
+  it("refuses a cancellation once the session has started", async () => {
+    const ctx = setup({ booking: confirmed(HOURS(-1)) });
+
+    await expect(ctx.service.cancelByMentee("mentee", "b1")).rejects.toThrow(ConflictError);
+    expect(ctx.booking.status).toBe("confirmed");
+  });
+});

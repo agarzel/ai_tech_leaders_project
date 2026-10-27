@@ -59,6 +59,7 @@ export function MentorBookings() {
             onAccept={(target) => apiCall(`/api/mentor/bookings/${target.id}/accept`, { method: "POST" })}
             onDecline={(target, values) => apiCall(`/api/mentor/bookings/${target.id}/decline`, { method: "POST", body: values })}
             onDecided={reload}
+            sessionHref={`/mentor/bookings/${booking.id}`}
           />
         ))}
       </ItemGroup>
