@@ -141,6 +141,14 @@ npm run db:migrate            # applies pending migrations
 npm run db:migration:check    # checks that entities and migrations are in sync
 ```
 
+### Demo data
+
+```bash
+npm run db:seed               # demo accounts: admin@, mentor@ and mentee@devmentor.test
+```
+
+The seed is idempotent: an email that already exists is skipped, so a second run creates nothing. It seeds no passwords; set one with `npm run auth:set-password -- --email mentor@devmentor.test` (see above). The demo mentor has prices and a public page at `/m/demo-mentor`. Development and test databases only.
+
 ## Tests
 
 ```bash

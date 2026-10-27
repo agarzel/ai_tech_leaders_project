@@ -71,6 +71,7 @@ npm run check:agents           # fail when AGENTS.md files exceed their budget, 
 npm run db:migrate             # apply pending migrations
 npm run db:migration:create    # generate a migration from entity changes
 npm run db:migration:check     # fail if entities and migrations are out of sync
+npm run db:seed                # idempotent demo accounts (admin@, mentor@, mentee@devmentor.test; no passwords – use auth:set-password)
 npm run auth:set-password -- --email you@example.com --admin   # set/reset a password; run once after `npm run setup`; password from DEVMENTOR_PASSWORD (`read -rs DEVMENTOR_PASSWORD && export DEVMENTOR_PASSWORD`), never an argument
 npm run db:up                  # PostgreSQL only (docker compose up -d db), for npm run dev
 npm run db:down                # stop the compose stack (docker compose down)

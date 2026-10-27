@@ -11,17 +11,19 @@
     "typecheck": "tsc --noEmit",
     "db:migrate": "mikro-orm migration:up",
     "db:migration:create": "mikro-orm migration:create",
-    "db:migration:check": "mikro-orm migration:check"
+    "db:migration:check": "mikro-orm migration:check",
+    "db:seed": "mikro-orm seeder:run"
   },
   "dependencies": {
     "@mikro-orm/core": "^7.2.5",
     "@mikro-orm/migrations": "^7.2.5",
-    "@mikro-orm/postgresql": "^7.2.5"
+    "@mikro-orm/postgresql": "^7.2.5",
+    "@mikro-orm/seeder": "^7.2.5"
   },
   "devDependencies": {
     "@mikro-orm/cli": "^7.2.5",
-    "tsx": "^4.23.15",
     "@types/node": "^20",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }

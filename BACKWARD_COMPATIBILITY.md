@@ -45,7 +45,7 @@ Each package exposes only what its `package.json` `exports` map lists:
 
 ### 5. Developer commands
 
-Root npm scripts are used by CI, the validation gate, docs and agents: `setup`, `dev`, `build`, `start`, `lint`, `typecheck`, `test`, `test:coverage`, `test:watch`, `test:integration`, `test:integration:setup`, `db:migrate`, `db:migration:create`, `db:migration:check`, `auth:set-password`, `storybook`, `build-storybook`, `test:storybook`, `lint:tokens`, `docs:design-system`, `docs:design-system:check`, `check:agents`.
+Root npm scripts are used by CI, the validation gate, docs and agents: `setup`, `dev`, `build`, `start`, `lint`, `typecheck`, `test`, `test:coverage`, `test:watch`, `test:integration`, `test:integration:setup`, `db:migrate`, `db:migration:create`, `db:migration:check`, `db:seed`, `auth:set-password`, `storybook`, `build-storybook`, `test:storybook`, `lint:tokens`, `docs:design-system`, `docs:design-system:check`, `check:agents`.
 
 - **Breaking:** renaming or removing a script, or changing what it checks so that it proves less.
 - **Required path:** update `.github/workflows/ci.yml`, `.ai/agentic.config.json`, `SDLC.md`, `AGENTS.md` and README in the same PR.

@@ -13,8 +13,9 @@ src/
     <concept>/<name>.entity.ts
     index.ts                   every entity MUST be exported and listed in `entities`
   migrations/                  generated migrations + .snapshot-devmentor.json – commit both
+  seeders/database.seeder.ts   `npm run db:seed` – fixed demo accounts; skips existing emails, never rewrites a row
   index.ts                     public API (+ EntityManager / MikroORM type re-exports)
-mikro-orm.config.ts            CLI config (adds the Migrator)
+mikro-orm.config.ts            CLI config (adds the Migrator and the SeedManager)
 ```
 
 ## Rules
