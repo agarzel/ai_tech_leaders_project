@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { ConflictError, NotFoundError, ValidationError } from "../../http/errors";
-import { MESSAGE_MAX_LENGTH, SessionThreadService } from "./session-thread.service";
+import { MESSAGE_MAX_LENGTH } from "../../validators/sessions/session-message.schema";
+import { SessionThreadService } from "./session-thread.service";
 
 const MINUTE = 60_000;
 const STARTS_AT = new Date("2026-06-10T10:00:00Z");

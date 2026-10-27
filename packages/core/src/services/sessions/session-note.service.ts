@@ -1,9 +1,8 @@
 import { Booking, SessionNote, type EntityManager, type IBooking } from "@devmentor/db";
 import type { Clock } from "../../clock";
 import { ConflictError, NotFoundError, ValidationError } from "../../http/errors";
+import { NOTE_MAX_LENGTH } from "../../validators/sessions/session-note.schema";
 import { assertNoteDecidable, assertNoteWritable, noteEffectiveStatus, type NoteStatus } from "./session-rules";
-
-export const NOTE_MAX_LENGTH = 1000;
 
 export type NoteDto = { status: NoteStatus; body: string };
 

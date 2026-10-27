@@ -1,9 +1,8 @@
 import { Booking, Message, User, type EntityManager, type IBooking } from "@devmentor/db";
 import type { Clock } from "../../clock";
 import { ConflictError, NotFoundError, ValidationError } from "../../http/errors";
+import { MESSAGE_MAX_LENGTH } from "../../validators/sessions/session-message.schema";
 import { assertMessagingOpen, canReadThread } from "./session-rules";
-
-export const MESSAGE_MAX_LENGTH = 2000;
 
 export type MessageDto = { id: string; authorId: string; body: string; createdAt: string };
 

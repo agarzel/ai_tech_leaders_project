@@ -1,7 +1,8 @@
 import { Booking } from "@devmentor/db";
 import { describe, expect, it, vi } from "vitest";
 import { ConflictError, NotFoundError, ValidationError } from "../../http/errors";
-import { NOTE_MAX_LENGTH, SessionNoteService } from "./session-note.service";
+import { NOTE_MAX_LENGTH } from "../../validators/sessions/session-note.schema";
+import { SessionNoteService } from "./session-note.service";
 
 const HOUR = 3_600_000;
 const STARTS_AT = new Date("2026-06-10T10:00:00Z");
