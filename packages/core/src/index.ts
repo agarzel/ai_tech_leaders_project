@@ -30,6 +30,7 @@ export {
   CHECKOUT_MARGIN_MINUTES,
   type CreatedBookingDto,
 } from "./services/bookings/booking.service";
+export { canReadThread, isMessagingOpen } from "./services/sessions/session-rules";
 export { SessionThreadService, type MessageDto } from "./services/sessions/session-thread.service";
 export { SessionNoteService, type NoteDto } from "./services/sessions/session-note.service";
 export {

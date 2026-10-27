@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import type { BookingDto } from "@devmentor/core";
+import type { BookingDto, MessageDto } from "@devmentor/core";
 import { apiCall } from "@devmentor/ui/backend/api/apiCall";
 import { LoadingMessage } from "@devmentor/ui/backend/feedback/LoadingMessage";
 import { BookingQuestion } from "@devmentor/ui/components/bookings/BookingQuestion";
 import { BookingStatusPanel } from "@devmentor/ui/components/bookings/BookingStatusPanel";
 import { BookingSummary } from "@devmentor/ui/components/bookings/BookingSummary";
 import type { PaymentPendingPhase } from "@devmentor/ui/components/bookings/PaymentPending";
+import { SessionThread } from "@devmentor/ui/components/sessions/SessionThread";
 import { buttonVariants } from "@devmentor/ui/components/ui/button";
 import { useTimeZone } from "../../../../lib/use-time-zone";
 
@@ -19,7 +20,16 @@ const POLL_FOR_MS = 60_000;
 const ENDED = ["declined", "expired", "payment_expired"];
 
 /** A booking of the caller: status and next step, the summary and the question; follows the payment while it settles. */
-export function BookingDetail({ initial }: { initial: BookingDto }) {
+export function BookingDetail({
+  initial,
+  viewerId,
+  thread,
+}: {
+  initial: BookingDto;
+  viewerId: string;
+  /** Present while the thread can be read; `canWrite` only inside the session window. */
+  thread?: { messages: MessageDto[]; canWrite: boolean };
+}) {
   const timeZone = useTimeZone();
   const [booking, setBooking] = useState(initial);
   const [phase, setPhase] = useState<PaymentPendingPhase>("checking");
@@ -77,6 +87,16 @@ export function BookingDetail({ initial }: { initial: BookingDto }) {
         </h2>
         <BookingQuestion question={booking.question} />
       </section>
+      {thread && (
+        <SessionThread
+          bookingId={booking.id}
+          viewerId={viewerId}
+          counterpartName={booking.mentor.name}
+          timeZone={timeZone}
+          messages={thread.messages}
+          canWrite={thread.canWrite}
+        />
+      )}
     </div>
   );
 }
