@@ -25,9 +25,8 @@ The Integration tests job restores Chrome for Testing from the GitHub Actions ca
 ## Risks
 
 - Found in CI on 2026-10-27: one rerun hung for 13 min in `apt` (`--with-deps`) fetching fonts from `azure.archive.ubuntu.com`, with Chrome already restored. This network dependency exists on `main` too and is outside this cache; a `timeout-minutes` on the install step is a possible follow-up.
-
 - A cache miss or a broken cache falls back to the normal download (today's behaviour).
-- Tests: a workflow change has no unit tests; the evidence is the CI log of two runs (miss, then hit). The repo gate (lint, typecheck, coverage, build) is unaffected but is run anyway.
+- Tests: a workflow change has no unit tests; the evidence is the CI log of two runs (miss, then hit). The repo gate (lint, typecheck, coverage, build, design tokens, Storybook, integration, Docker) ran in CI on this PR: all 7 jobs green; not rerun locally, since only the workflow changed.
 - `actions/cache` v6.1.0 is the latest release (checked with `gh api`).
 
 ## Progress
