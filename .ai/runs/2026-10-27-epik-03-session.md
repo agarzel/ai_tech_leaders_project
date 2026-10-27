@@ -18,7 +18,8 @@ Branch: `epik-03-session` from `origin/main` (b5c55cb). Local commits only; not 
 
 ## Second slice: persistence and services (same branch)
 - Entities `Message` (`messages`) and `SessionNote` (`session_notes`, one per booking, status `draft|approved|rejected`), registered in `packages/db/src/entities/index.ts`; metadata tests (8).
-- Migration `Migration20261027120000_session_thread_and_notes.ts`, hand-written. The snapshot file is not updated.
+- Migration: first a hand-written `Migration20261027120000_session_thread_and_notes.ts`, then replaced by the generated `Migration20261027124735.ts` (`npm run db:migration:create` in the owner's terminal) because both created the same tables. The regenerated `.snapshot-devmentor.json` is included.
+- Branch fix: the first two commits had landed on `context-homework`; they now sit on `epik-03-session` and `context-homework` is back at `b5c55cb`.
 - `SessionThreadService` (post and list, party-only, `not_found` for strangers) and `SessionNoteService` (mentor writes, mentee decides, mentee reads only an approved note). Both in `services/sessions/`, registered in the container, cradle and `core` index; 51 tests.
 - Gates on this branch: `npm run lint` exit 0; `npm run typecheck` exit 0 (after switching the services to `IBooking`); `npm run test:coverage` exit 0 (81 files, 1004 tests, 100% gate).
 - `npm run build`: fails in the sandbox with `EPERM: unlink .../packages/app/.next/standalone/.env` (the sandbox denies writes to `.env` files). Not verified; the owner runs it in the terminal.
