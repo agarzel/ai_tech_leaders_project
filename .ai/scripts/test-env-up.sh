@@ -2,7 +2,10 @@
 # om-prepare-test-env: generated entrypoint (contract v2)
 # regenerate with: om-prepare-test-env --regenerate
 # history:
-#   2026-10-27 generated in the agent sandbox (no Docker access there); cold/warm verification pending on the owner's machine
+#   2026-10-27 generated in the agent sandbox (no Docker access there); cold run on the owner's machine: 36s
+#   2026-10-27 repair: send the CSRF header x-devmentor-client on the login probe (without it the API answers 403 and every warm run rebooted)
+#   2026-10-27 repair: unset VSCODE_INSPECTOR_OPTIONS so VS Code's auto-attach does not hook a debugger into every node process
+#   2026-10-27 verified on macOS (darwin): cold 36s, warm 0.6s (reused)
 set -eu
 
 # --- project-specific facts (discovered from docker-compose.yml, .env.example, package.json, CI, the integration setup) ---
@@ -22,6 +25,7 @@ FRESHNESS_PATHS="$BUILD_INPUTS packages/db/src/migrations packages/db/src/seeder
 # Seeded by `npm run db:seed`; passwords are generated per environment into the gitignored credentials file.
 SEED_ACCOUNTS="admin:admin@devmentor.test mentor:mentor@devmentor.test mentee:mentee@devmentor.test"
 TTL="${TEST_ENV_CACHE_TTL_SECONDS:-600}"
+CLIENT_HEADER="x-devmentor-client"           # state-changing API routes reject requests without it (CSRF, core apiHandler)
 
 FORCE=0; FORCE_REBUILD=0
 for arg in "$@"; do
@@ -34,6 +38,8 @@ done
 
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 cd "$ROOT"
+# A VS Code terminal attaches a debugger to every node process (npm, MikroORM CLI, next); it only slows the boot.
+unset VSCODE_INSPECTOR_OPTIONS 2>/dev/null || true
 QA_DIR=".ai/qa"
 DESCRIPTOR="$QA_DIR/test-env.json"
 CREDENTIALS_FILE="$QA_DIR/test-env.env"
@@ -110,7 +116,7 @@ reusable() {
   if [ -f "$CREDENTIALS_FILE" ]; then
     # shellcheck disable=SC1090
     set -a; . "./$CREDENTIALS_FILE"; set +a
-    code=$(curl -s -m 15 -o /dev/null -w '%{http_code}' -H 'content-type: application/json' \
+    code=$(curl -s -m 15 -o /dev/null -w '%{http_code}' -H 'content-type: application/json' -H "$CLIENT_HEADER: 1" \
       -d "{\"email\":\"admin@devmentor.test\",\"password\":\"$TEST_ADMIN_PASSWORD\"}" "$base/api/auth/login")
     [ "$code" = 200 ] || { log "authenticated probe failed ($code)"; return 1; }
   fi
