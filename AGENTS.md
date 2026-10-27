@@ -33,8 +33,6 @@ tsconfig.base.json        Shared TypeScript options
 eslint.config.mjs         Lint rules for all packages, incl. dependency boundaries
 ```
 
-Each package has its own `AGENTS.md` – read it before working inside that package.
-
 **Dependency direction (enforced by ESLint `no-restricted-imports`):** `app → core → db`; `ui` is importable by `app` only. Only `db` imports `@mikro-orm/*` (others use its type re-exports); `core` never imports `next`/`react`; `app` never imports `db` directly. Do not loosen these rules for convenience.
 
 Internal packages are consumed as TypeScript source (`exports` → `src/`, compiled by Next.js via `transpilePackages`). Run npm commands from the repo root; root scripts delegate to the workspaces. Add a dependency to the package that uses it: `npm install <pkg> -w @devmentor/<name>`.
@@ -50,16 +48,13 @@ Domain code is not organized into `modules/`. Each concept (`auth`, `mentors`, `
 
 Create a concept folder only when its first file is added – never scaffold empty ones. This is a directory convention, not a module runtime: there is no per-concept setup/ACL/auto-discovery. Infrastructure that is not a domain concept lives in `system` (e.g. `services/system/health.service.ts`).
 
-Event IDs follow `concept.entity.action` (e.g. `bookings.booking.created`) and are emitted through the typed emitter in `packages/core/src/events`, registered on the `Cradle` – in-process only; there is no queue/worker in this project. (Not implemented yet – add it with the first feature that emits an event.)
-
+Event IDs follow `concept.entity.action` (e.g. `bookings.booking.created`) and are emitted through the typed emitter in `packages/core/src/events`, registered on the `Cradle` – in-process only; there is no queue/worker in this project.
 ### Reusable API & UI layer
 
 Every route and every page reuses two shared layers instead of re-implementing fetch/validation/auth/error-handling per feature:
 
 - `packages/core/src/http/` – `errors.ts` (typed `AppError` hierarchy), `apiHandler.ts` (wraps a route: catches `AppError`s, maps to status + JSON envelope, logs unexpected failures), `makeCrudRoute.ts` (schema + service in, `{ GET, POST, PUT, DELETE }` out, for plain CRUD resources), `auth.ts` (`requireSession`, `requireRole`, ownership assertions).
 - `packages/ui/src/backend/` – `api/apiCall.ts` (the only sanctioned `fetch()` call site), `forms/CrudForm.tsx`, `tables/DataTable.tsx`, `feedback/{LoadingMessage,ErrorMessage,EmptyState}.tsx`.
-
-Implemented. `auth.ts` has `requireSession`, `requireRole`, `assertOwner` and `requireAdmin(request, authService)` (valid admin session or 401/403 – no development bypass). `makeCrudRoute` guards receive the request and the request-scoped cradle.
 
 **Reference example – copy it for every new resource:** `UserService` (`core/src/services/auth/user.service.ts`) + validators (`core/src/validators/auth/`) → `api/users/users.crud.ts` (`makeCrudRoute`) re-exported by `api/users/route.ts` and `api/users/[id]/route.ts` → `admin/users/` page using `apiCall`, `DataTable` and `CrudForm`.
 
@@ -80,7 +75,7 @@ Before you build or change any UI, read `.ai/docs/design-system.md`: product cha
 
 The full standards – naming table, principles (SRP, DRY, dependency inversion, YAGNI, fail closed, idempotency), security minimums, code quality rules and the code review checklist – are in `.ai/docs/engineering-standards.md`. Follow them; its preface lists the adaptations for this repo (Next.js 16 `connection()` instead of `force-dynamic`, MikroORM 7 `defineEntity`).
 
-Key naming rules: packages `@devmentor/<name>`; tables plural snake_case (`users`), columns snake_case; entities PascalCase singular in `<name>.entity.ts`; services `<Name>Service` in `<name>.service.ts`; cradle keys camelCase; Zod schemas `<name>Schema` in `<name>.schema.ts`; pages default-export `<Segment>Page`.
+Naming rules (files, entities, services, cradle keys, tables) are in the table in `.ai/docs/engineering-standards.md`.
 
 ## Testing – mandatory
 
@@ -88,7 +83,7 @@ Key naming rules: packages `@devmentor/<name>`; tables plural snake_case (`users
 
 - **Runner:** Vitest (`vitest.config.mts`, one project per package: `core` and `db` in Node, `ui` in jsdom with Testing Library).
 - **Location:** colocated `<file>.test.ts(x)` next to the code it tests.
-- **Storybook story tests** are separate from unit coverage: stories live in `packages/ui/stories/` (outside the coverage glob) and run in Chromium through `npm run test:storybook` (`packages/ui/vitest.storybook.config.mts`, light and dark theme, accessibility violations fail). Run in CI by the "Storybook tests" job (`build-storybook` + `test:storybook`).
+- **Storybook story tests** are separate from unit coverage; details in `packages/ui/AGENTS.md`.
 - **Excluded from unit coverage (by design):** barrels (`src/index.ts`), type-only modules, generated shadcn primitives (`ui/src/components/ui/`), migrations (checked by the CI migrations job), and the Next.js app (`packages/app` – pages and route wiring are covered by integration tests).
 - **Style:** test behaviour through the public API; mock only boundaries (database `EntityManager`, `fetch`, the container, env). Arrange / act / assert, one behaviour per test, descriptive names.
 - A bug fix ships with a regression test that fails without the fix.
@@ -96,12 +91,7 @@ Key naming rules: packages `@devmentor/<name>`; tables plural snake_case (`users
 
 ### Integration tests
 
-- **What:** the real app in a real browser. `packages/app/tests/integration/*.int.test.ts`, config `vitest.integration.config.mts`.
-- **How:** `global-setup.ts` starts an ephemeral PostgreSQL with testcontainers, runs all migrations, seeds known rows, boots the app (`next dev` on port 3100, build dir `.next-test`) and tears everything down afterwards. Tests drive headless Chrome through the agent-browser CLI (`support/browser.ts`).
-- **Requires:** Docker running and Chrome for agent-browser (`npm run test:integration:setup`, once).
-- **Rule:** every new page or user-facing flow gets an integration test of its main path, plus a screenshot (`browser.screenshot(name)` → `.artifacts/`, uploaded by CI).
-- Locate elements the way users do – by role + accessible name or by label (`browser.click("button", "Create user")`, `browser.fill("Email", …)`). Repeated controls (row actions) need unique accessible names, e.g. `aria-label="Delete {name}"`.
-- Each test file uses its own browser session; files run sequentially against one app and database, so tests must not depend on data created by another file.
+The rules, setup and browser helpers are in `packages/app/AGENTS.md` (section "Integration tests").
 
 ## Delivery process (SDLC)
 
@@ -123,7 +113,7 @@ The Open Mercato skills (`om-*`, from [open-mercato/skills](https://github.com/o
 - Do not edit installed skills. To adapt a skill to this project, create a skill with the same name in `.ai/skills/` – it overrides the matching parts of the generic one.
 - Current overrides: `.ai/skills/om-code-review/` – DevMentor review rules R1–R5 (contract registry sync, actionable script errors, never destroy local state, real-run evidence, self-review disclosure).
 - Run them as `/om-<name>` in Claude Code, `$om-<name>` in Codex.
-- Also installed per project from [mattpocock/skills](https://github.com/mattpocock/skills): `grill-me` (entry point, `/grill-me`) and `grilling` (the interview it delegates to) – used after the cross-model review of a spec to surface remaining ambiguities (lesson 5).
+- Also installed per project from [mattpocock/skills](https://github.com/mattpocock/skills): `grill-me` (`/grill-me`) and `grilling`.
 
 ## The `.ai` folder – mandatory
 
@@ -162,13 +152,13 @@ npm run test:integration       # integration tests (needs Docker; first run: npm
 npm run storybook              # design-system Storybook on http://localhost:6006
 npm run build-storybook        # static Storybook build (packages/ui/storybook-static)
 npm run test:storybook         # every story as a browser test, both themes, a11y errors fail (first run: npx playwright install chromium)
-npm run lint:tokens            # design-system and app code: fails on colour literals outside packages/ui/src/styles/tokens.css, Tailwind palette classes, arbitrary values, gradients, backdrop blur, shadows, rounded-full (allow-list in scripts/check-tokens.mjs), emoji and the Sparkles icon
+npm run lint:tokens            # design tokens: no colour literals or palette classes outside the token layer (rules in scripts/check-tokens.mjs)
 npm run docs:design-system     # regenerate the component tables in .ai/docs/design-system.md from packages/ui/.storybook/blocks/components-data.ts
 npm run docs:design-system:check  # fail when those tables are stale (CI "Design tokens" job)
 npm run db:migrate             # apply pending migrations
 npm run db:migration:create    # generate a migration from entity changes
 npm run db:migration:check     # fail if entities and migrations are out of sync
-npm run auth:set-password -- --email you@example.com --admin   # sets/resets a password (--admin: create or promote to admin); run once after `npm run setup` – admin pages need it. The password is read from DEVMENTOR_PASSWORD (e.g. `read -rs DEVMENTOR_PASSWORD && export DEVMENTOR_PASSWORD`), never an argument
+npm run auth:set-password -- --email you@example.com --admin   # set/reset a password; run once after `npm run setup`; password from DEVMENTOR_PASSWORD (`read -rs DEVMENTOR_PASSWORD && export DEVMENTOR_PASSWORD`), never an argument
 npm run db:up                  # PostgreSQL only (docker compose up -d db), for npm run dev
 npm run db:down                # stop the compose stack (docker compose down)
 docker compose up --build      # app + PostgreSQL in containers
@@ -180,5 +170,4 @@ docker compose up --build      # app + PostgreSQL in containers
 - Every PR must pass CI (lint, typecheck, build, unit tests with 100% coverage, design tokens, Storybook tests, integration tests, database migrations, Docker image) before merge.
 - Before finishing, run `npm run lint`, `npm run typecheck`, `npm run test:coverage` and `npm run build` locally and report the results honestly.
 - Plan before coding anything non-trivial; if the plan turns out wrong, stop and re-plan instead of pushing on.
-- Prefer the simplest change that solves the problem; touch only what the task needs.
 - Keep this file up to date: when you add a convention, command, folder or tool, document it here in the same PR.
