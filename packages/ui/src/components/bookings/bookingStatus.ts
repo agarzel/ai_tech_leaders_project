@@ -34,6 +34,9 @@ export function bookingStatusLabel(status: BookingStatus, payment: PaymentStatus
       return `Expired · ${REFUND_SUFFIX[refundPhase(payment)]}`;
     case "payment_expired":
       return "Payment not completed";
+    case "cancelled":
+      // A payment still "paid" after cancelling means the mentor keeps it (cancelled after the free period).
+      return payment === "paid" ? "Cancelled · no refund" : `Cancelled · ${REFUND_SUFFIX[refundPhase(payment)]}`;
   }
 }
 
@@ -52,6 +55,8 @@ export function mentorStatusLabel(status: BookingStatus): string {
       return "Expired";
     case "payment_expired":
       return "Payment not completed";
+    case "cancelled":
+      return "Cancelled by the mentee";
   }
 }
 
@@ -81,6 +86,7 @@ export function describeBooking(booking: Booking, audience: BookingAudience, tim
     if (status === "confirmed") return { title: "Confirmed", text: `The session is on ${when} (${zone}).` };
     if (status === "declined") return { title: "You declined this booking", text: "The mentee gets a full refund." };
     if (status === "expired") return { title: "This booking expired", text: "You did not decide in time. The mentee gets a full refund." };
+    if (status === "cancelled") return { title: "The mentee cancelled", text: "The session will not take place. The slot is released." };
   }
 
   switch (status) {
@@ -100,6 +106,14 @@ export function describeBooking(booking: Booking, audience: BookingAudience, tim
         title: status === "declined" ? "Declined — refund on its way" : "Expired — refund on its way",
         text: `${lead} The full amount goes back to your card. ${BANKS}`,
       };
+    }
+    case "cancelled": {
+      if (booking.paymentStatus === "paid") {
+        return { title: "Cancelled — no refund", text: `You cancelled after the free period, so ${mentor.name} keeps the payment. The session will not take place.` };
+      }
+      if (refund === "refunded") return { title: "Cancelled — refunded", text: `The full amount went back to your card. ${BANKS}` };
+      if (refund === "failed") return { title: "Cancelled — refund delayed", text: "The refund has not gone through yet. You do not need to do anything." };
+      return { title: "Cancelled — refund on its way", text: `The full amount goes back to your card. ${BANKS}` };
     }
     default: {
       // payment_expired (pending_payment is shown by PaymentPending): normally nothing was charged; a payment that arrived late is refunded.

@@ -61,6 +61,11 @@ export function assertNoteDecidable(status: NoteStatus, startsAt: Date, lengthMi
   }
 }
 
+/** The last moment a cancellation is still refunded in full (R04): 12 h before the start. */
+export function freeCancellationUntil(startsAt: Date): Date {
+  return new Date(startsAt.getTime() - FREE_CANCELLATION_LEAD_MS);
+}
+
 /** Free until 12 h before the start (R04); later the mentor keeps the payment; from the start on it is refused. */
 export function cancellationOutcome(startsAt: Date, now: Date): CancellationOutcome {
   if (now.getTime() >= startsAt.getTime()) {

@@ -6,6 +6,7 @@ import {
   assertNoteWritable,
   canReadThread,
   cancellationOutcome,
+  freeCancellationUntil,
   isMessagingOpen,
   noteEffectiveStatus,
   sessionEndsAt,
@@ -102,5 +103,11 @@ describe("cancellationOutcome", () => {
 
   it("refuses a cancellation once the session has started", () => {
     expect(() => cancellationOutcome(STARTS_AT, STARTS_AT)).toThrow(ConflictError);
+  });
+});
+
+describe("freeCancellationUntil", () => {
+  it("is 12 hours before the start", () => {
+    expect(freeCancellationUntil(STARTS_AT).toISOString()).toBe("2026-06-09T22:00:00.000Z");
   });
 });

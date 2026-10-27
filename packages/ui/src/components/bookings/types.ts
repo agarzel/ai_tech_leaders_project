@@ -2,7 +2,7 @@
 // import core, so they are restated here (C1, C2). Amounts are grosze; times are ISO UTC strings.
 
 /** The booking state machine (spec E02). `status` is the effective one: past `acceptBy` the server already reports `expired`. */
-export type BookingStatus = "pending_payment" | "awaiting_acceptance" | "confirmed" | "declined" | "expired" | "payment_expired";
+export type BookingStatus = "pending_payment" | "awaiting_acceptance" | "confirmed" | "declined" | "expired" | "payment_expired" | "cancelled";
 
 /** The payment's own lifecycle, including the refund (spec E02, "Refund lifecycle"). */
 export type PaymentStatus = "creating" | "open" | "paid" | "expired" | "refund_requested" | "refunded" | "refund_failed";

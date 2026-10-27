@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { canReadThread, createRequestScope, isMessagingOpen } from "@devmentor/core";
+import { canReadThread, createRequestScope, freeCancellationUntil, isMessagingOpen } from "@devmentor/core";
 import { LoadingMessage } from "@devmentor/ui/backend/feedback/LoadingMessage";
 import { PageLayout } from "@devmentor/ui/backend/layout/PageLayout";
 import { SiteHeader } from "../../../../components/site-header";
@@ -39,7 +39,11 @@ async function Gate({ params }: { params: Promise<{ id: string }> }) {
       : undefined;
   // The note shows once the mentor has written it: a draft to decide on, or the approved note.
   const note = confirmed ? await sessionNoteService.readForMentee(id, user.id) : null;
-  return <BookingDetail initial={booking} viewerId={user.id} thread={thread} note={note} />;
+  // Cancelling is offered until the start; the deadline and the refund wording come from the server rules.
+  const freeUntil = freeCancellationUntil(startsAt);
+  const cancellation =
+    confirmed && now < startsAt ? { freeUntil: freeUntil.toISOString(), refundable: now < freeUntil } : undefined;
+  return <BookingDetail initial={booking} viewerId={user.id} thread={thread} note={note} cancellation={cancellation} />;
 }
 
 export default function BookingPage(props: PageProps<"/bookings/[id]">) {

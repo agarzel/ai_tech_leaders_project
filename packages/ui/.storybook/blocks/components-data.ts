@@ -671,6 +671,15 @@ export const COMPONENTS: ComponentEntry[] = [
     whenNot: "The mentor's own note (SessionNoteEditor). A rejected note: it is not returned at all.",
   },
   {
+    name: "CancelBookingDialog",
+    group: "Session and aftermath (E03)",
+    section: "Product/E03",
+    importLine: `import { CancelBookingDialog } from "${product("bookings", "CancelBookingDialog")}"`,
+    purpose: "Lets the mentee cancel a confirmed booking, with the free-cancellation deadline in view.",
+    when: "The mentee's booking page while the session has not started.",
+    whenNot: "Declining as a mentor (DeclineBookingDialog, with a reason). Deleting a slot (AlertDialog in DeleteSlotDialog).",
+  },
+  {
     name: "SessionNoteEditor",
     group: "Session and aftermath (E03)",
     section: "Product/E03",

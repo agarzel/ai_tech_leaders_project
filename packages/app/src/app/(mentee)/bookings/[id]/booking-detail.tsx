@@ -9,6 +9,7 @@ import { BookingQuestion } from "@devmentor/ui/components/bookings/BookingQuesti
 import { BookingStatusPanel } from "@devmentor/ui/components/bookings/BookingStatusPanel";
 import { BookingSummary } from "@devmentor/ui/components/bookings/BookingSummary";
 import type { PaymentPendingPhase } from "@devmentor/ui/components/bookings/PaymentPending";
+import { CancelBookingDialog } from "@devmentor/ui/components/bookings/CancelBookingDialog";
 import { SessionNotePanel } from "@devmentor/ui/components/sessions/SessionNotePanel";
 import { SessionThread } from "@devmentor/ui/components/sessions/SessionThread";
 import { buttonVariants } from "@devmentor/ui/components/ui/button";
@@ -18,7 +19,7 @@ import { useTimeZone } from "../../../../lib/use-time-zone";
 const POLL_INTERVAL_MS = 3_000;
 const POLL_FOR_MS = 60_000;
 
-const ENDED = ["declined", "expired", "payment_expired"];
+const ENDED = ["declined", "expired", "payment_expired", "cancelled"];
 
 /** A booking of the caller: status and next step, the summary and the question; follows the payment while it settles. */
 export function BookingDetail({
@@ -26,6 +27,7 @@ export function BookingDetail({
   viewerId,
   thread,
   note,
+  cancellation,
 }: {
   initial: BookingDto;
   viewerId: string;
@@ -33,6 +35,8 @@ export function BookingDetail({
   thread?: { messages: MessageDto[]; canWrite: boolean };
   /** The mentor's note as the mentee may see it: a draft to decide on, or an approved note; null otherwise. */
   note: { status: "draft" | "approved" | "rejected"; body: string } | null;
+  /** Present while the booking can still be cancelled: the free-cancellation deadline and whether it is still in force. */
+  cancellation?: { freeUntil: string; refundable: boolean };
 }) {
   const timeZone = useTimeZone();
   const [booking, setBooking] = useState(initial);
@@ -72,6 +76,19 @@ export function BookingDetail({
           )
         }
       />
+      {cancellation && booking.status === "confirmed" && (
+        <CancelBookingDialog
+          mentorName={booking.mentor.name}
+          freeUntil={cancellation.freeUntil}
+          refundable={cancellation.refundable}
+          timeZone={timeZone}
+          onConfirm={async () => {
+            const result = await apiCall<{ outcome: string; booking: BookingDto }>(`/api/bookings/${booking.id}/cancel`, { method: "POST" });
+            if (result.ok) setBooking(result.data.booking);
+            return result;
+          }}
+        />
+      )}
       <section aria-labelledby="summary-heading" className="flex flex-col gap-in-group">
         <h2 id="summary-heading" className="type-section-title">
           Your booking
