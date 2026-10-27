@@ -34,8 +34,8 @@ The Integration tests job restores Chrome for Testing from the GitHub Actions ca
 
 ### Phase 1: Cache Chrome in the integration job
 
-- [ ] 1.1 Restore and save the agent-browser browsers directory around the install step
-- [ ] 1.2 Keep only the newest Chrome directory before saving
+- [x] 1.1 Restore and save the agent-browser browsers directory around the install step — 2f1ebd0
+- [x] 1.2 Keep only the newest Chrome directory before saving — 2f1ebd0
 
 ### Phase 2: Verify in CI
 
