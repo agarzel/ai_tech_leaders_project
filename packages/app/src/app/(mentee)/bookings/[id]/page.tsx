@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
-import { Suspense } from "react";
 import { canReadThread, createRequestScope, freeCancellationUntil, isMessagingOpen } from "@devmentor/core";
-import { LoadingMessage } from "@devmentor/ui/backend/feedback/LoadingMessage";
 import { PageLayout } from "@devmentor/ui/backend/layout/PageLayout";
 import { SiteHeader } from "../../../../components/site-header";
 import { isNotFound, requireUser } from "../../../../lib/require-user";
@@ -13,9 +11,12 @@ export const metadata: Metadata = {
   title: "Your booking – DevMentor",
 };
 
-async function Gate({ params }: { params: Promise<{ id: string }> }) {
+// The lookup runs before anything streams: notFound() inside a Suspense boundary would answer 200, not 404.
+export const instant = false;
+
+export default async function BookingPage(props: PageProps<"/bookings/[id]">) {
   await connection();
-  const { id } = await params;
+  const { id } = await props.params;
   const user = await requireUser(`/bookings/${encodeURIComponent(id)}`);
   const { bookingQueryService, sessionThreadService, sessionNoteService } = (await createRequestScope()).cradle;
   let booking;
@@ -43,15 +44,9 @@ async function Gate({ params }: { params: Promise<{ id: string }> }) {
   const freeUntil = freeCancellationUntil(startsAt);
   const cancellation =
     confirmed && now < startsAt ? { freeUntil: freeUntil.toISOString(), refundable: now < freeUntil } : undefined;
-  return <BookingDetail initial={booking} viewerId={user.id} thread={thread} note={note} cancellation={cancellation} />;
-}
-
-export default function BookingPage(props: PageProps<"/bookings/[id]">) {
   return (
     <PageLayout header={<SiteHeader />} title="Your booking">
-      <Suspense fallback={<LoadingMessage />}>
-        <Gate params={props.params} />
-      </Suspense>
+      <BookingDetail initial={booking} viewerId={user.id} thread={thread} note={note} cancellation={cancellation} />
     </PageLayout>
   );
 }
