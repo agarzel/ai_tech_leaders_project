@@ -16,6 +16,7 @@
     "lint:tokens": "node scripts/check-tokens.mjs",
     "docs:design-system": "node --disable-warning=ExperimentalWarning scripts/design-system-doc.mjs",
     "docs:design-system:check": "node --disable-warning=ExperimentalWarning scripts/design-system-doc.mjs --check",
+    "check:agents": "node scripts/check-agents.mjs",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "db:migrate": "npm run db:migrate -w @devmentor/db",
     "db:up": "docker compose up -d db",

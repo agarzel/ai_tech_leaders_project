@@ -125,6 +125,7 @@ Every PR passes the full validation gate before review sign-off, in this order:
 - `npm run build`
 - `npm run lint:tokens`
 - `npm run docs:design-system:check`
+- `npm run check:agents`
 - `npm run build-storybook`
 - `npm run test:storybook`
 - `npm run test:integration`

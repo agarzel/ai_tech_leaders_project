@@ -2,7 +2,7 @@
 
 DevMentor is a mentoring marketplace for developers (mentors, mentees, admins), built during the AI Tech Leaders course. See `README.md` for the product scope.
 
-This is an npm-workspaces monorepo. Each package may have its own `AGENTS.md` with package-specific rules – read it before working inside that package (e.g. `packages/app/AGENTS.md` for the Next.js app).
+This is an npm-workspaces monorepo. Read only what your task needs: the table in "Where to read" names the files. Each package has its own `AGENTS.md` with package-specific rules.
 
 ## Stack
 
@@ -33,117 +33,19 @@ tsconfig.base.json        Shared TypeScript options
 eslint.config.mjs         Lint rules for all packages, incl. dependency boundaries
 ```
 
-Each package has its own `AGENTS.md` – read it before working inside that package.
-
 **Dependency direction (enforced by ESLint `no-restricted-imports`):** `app → core → db`; `ui` is importable by `app` only. Only `db` imports `@mikro-orm/*` (others use its type re-exports); `core` never imports `next`/`react`; `app` never imports `db` directly. Do not loosen these rules for convenience.
 
-Internal packages are consumed as TypeScript source (`exports` → `src/`, compiled by Next.js via `transpilePackages`). Run npm commands from the repo root; root scripts delegate to the workspaces. Add a dependency to the package that uses it: `npm install <pkg> -w @devmentor/<name>`.
+Internal packages are consumed as TypeScript source (`exports` → `src/`, compiled by Next.js via `transpilePackages`). Run npm commands from the repo root; root scripts delegate to the workspaces.
 
-### Domain concept convention
+## Hard rules
 
-Domain code is not organized into `modules/`. Each concept (`auth`, `mentors`, `availability`, `bookings`, `payments`, `messages`, `favorites`, `reviews`, ...) is a same-named sub-folder repeated across the layers that need it:
-
-- `packages/db/src/entities/<concept>/<name>.entity.ts`
-- `packages/core/src/services/<concept>/<name>.service.ts`
-- `packages/core/src/validators/<concept>/` (shared Zod schemas, when needed)
-- `packages/app/src/app/api/<concept>/route.ts` and the matching `page.tsx` under the relevant persona route group
-
-Create a concept folder only when its first file is added – never scaffold empty ones. This is a directory convention, not a module runtime: there is no per-concept setup/ACL/auto-discovery. Infrastructure that is not a domain concept lives in `system` (e.g. `services/system/health.service.ts`).
-
-Event IDs follow `concept.entity.action` (e.g. `bookings.booking.created`) and are emitted through the typed emitter in `packages/core/src/events`, registered on the `Cradle` – in-process only; there is no queue/worker in this project. (Not implemented yet – add it with the first feature that emits an event.)
-
-### Reusable API & UI layer
-
-Every route and every page reuses two shared layers instead of re-implementing fetch/validation/auth/error-handling per feature:
-
-- `packages/core/src/http/` – `errors.ts` (typed `AppError` hierarchy), `apiHandler.ts` (wraps a route: catches `AppError`s, maps to status + JSON envelope, logs unexpected failures), `makeCrudRoute.ts` (schema + service in, `{ GET, POST, PUT, DELETE }` out, for plain CRUD resources), `auth.ts` (`requireSession`, `requireRole`, ownership assertions).
-- `packages/ui/src/backend/` – `api/apiCall.ts` (the only sanctioned `fetch()` call site), `forms/CrudForm.tsx`, `tables/DataTable.tsx`, `feedback/{LoadingMessage,ErrorMessage,EmptyState}.tsx`.
-
-Implemented. `auth.ts` has `requireSession`, `requireRole`, `assertOwner` and `requireAdmin(request, authService)` (valid admin session or 401/403 – no development bypass). `makeCrudRoute` guards receive the request and the request-scoped cradle.
-
-**Reference example – copy it for every new resource:** `UserService` (`core/src/services/auth/user.service.ts`) + validators (`core/src/validators/auth/`) → `api/users/users.crud.ts` (`makeCrudRoute`) re-exported by `api/users/route.ts` and `api/users/[id]/route.ts` → `admin/users/` page using `apiCall`, `DataTable` and `CrudForm`.
-
-JSON envelope: `{ ok: true, data }` / `{ ok: false, error: { code, message, fieldErrors? } }`. State-changing requests must send `x-devmentor-client: 1` (CSRF) – `apiCall` does it for you.
-
-New reusable components have one designated home each – never scattered ad hoc:
-
-1. Shadcn primitive → `ui/src/components/ui/` (via `npx shadcn@latest add`, never hand-written).
-2. Generic, concept-agnostic panel pattern → `ui/src/backend/<category>/`.
-3. Component tied to one concept's domain shape → `ui/src/components/<concept>/`, named after the same concept folder used in `db`/`core`.
-4. Used by exactly one page → colocate next to that `page.tsx` until a second consumer appears.
-
-### Design system – read first when building a screen
-
-Before you build or change any UI, read `.ai/docs/design-system.md`: product character, component table (import / when / when not), semantic tokens, "if … then use …" guides, what to avoid and the Storybook commands. The full documentation is the Storybook in `packages/ui` (`npm run storybook`; pages under "Design system").
-
-### Engineering standards
-
-The full standards – naming table, principles (SRP, DRY, dependency inversion, YAGNI, fail closed, idempotency), security minimums, code quality rules and the code review checklist – are in `.ai/docs/engineering-standards.md`. Follow them; its preface lists the adaptations for this repo (Next.js 16 `connection()` instead of `force-dynamic`, MikroORM 7 `defineEntity`).
-
-Key naming rules: packages `@devmentor/<name>`; tables plural snake_case (`users`), columns snake_case; entities PascalCase singular in `<name>.entity.ts`; services `<Name>Service` in `<name>.service.ts`; cradle keys camelCase; Zod schemas `<name>Schema` in `<name>.schema.ts`; pages default-export `<Segment>Page`.
-
-## Testing – mandatory
-
-**Every new feature and every change must be 100% covered by unit tests** (statements, branches, functions, lines) for `@devmentor/core`, `@devmentor/db`, `@devmentor/ui` and the repo `scripts/`. CI fails below 100% – do not lower the thresholds, do not add `/* v8 ignore */` comments and do not widen the coverage `exclude` list to get green. If code is genuinely unreachable, delete it or restructure it.
-
-- **Runner:** Vitest (`vitest.config.mts`, one project per package: `core` and `db` in Node, `ui` in jsdom with Testing Library).
-- **Location:** colocated `<file>.test.ts(x)` next to the code it tests.
-- **Storybook story tests** are separate from unit coverage: stories live in `packages/ui/stories/` (outside the coverage glob) and run in Chromium through `npm run test:storybook` (`packages/ui/vitest.storybook.config.mts`, light and dark theme, accessibility violations fail). Run in CI by the "Storybook tests" job (`build-storybook` + `test:storybook`).
-- **Excluded from unit coverage (by design):** barrels (`src/index.ts`), type-only modules, generated shadcn primitives (`ui/src/components/ui/`), migrations (checked by the CI migrations job), and the Next.js app (`packages/app` – pages and route wiring are covered by integration tests).
-- **Style:** test behaviour through the public API; mock only boundaries (database `EntityManager`, `fetch`, the container, env). Arrange / act / assert, one behaviour per test, descriptive names.
-- A bug fix ships with a regression test that fails without the fix.
-- `vi.mock` must be called at the top level of a test file (Vitest 5 throws otherwise); `clearMocks` is on by default.
-
-### Integration tests
-
-- **What:** the real app in a real browser. `packages/app/tests/integration/*.int.test.ts`, config `vitest.integration.config.mts`.
-- **How:** `global-setup.ts` starts an ephemeral PostgreSQL with testcontainers, runs all migrations, seeds known rows, boots the app (`next dev` on port 3100, build dir `.next-test`) and tears everything down afterwards. Tests drive headless Chrome through the agent-browser CLI (`support/browser.ts`).
-- **Requires:** Docker running and Chrome for agent-browser (`npm run test:integration:setup`, once).
-- **Rule:** every new page or user-facing flow gets an integration test of its main path, plus a screenshot (`browser.screenshot(name)` → `.artifacts/`, uploaded by CI).
-- Locate elements the way users do – by role + accessible name or by label (`browser.click("button", "Create user")`, `browser.fill("Email", …)`). Repeated controls (row actions) need unique accessible names, e.g. `aria-label="Delete {name}"`.
-- Each test file uses its own browser session; files run sequentially against one app and database, so tests must not depend on data created by another file.
-
-## Delivery process (SDLC)
-
-The `om-*` skills run this repository's process from `.ai/agentic.config.json` (tracker `github`, browser `agent-browser`, QA gate on, full label taxonomy). Humans and agents read:
-
-- `SDLC.md` – ticket → PR → review → QA → merge flow, label state machine, QA gate, claim protocol (`in-progress`).
-- `CODE_REVIEW.md` – review priorities, repo-specific checks and severities (applied automatically by `om-code-review`).
-- `BACKWARD_COMPATIBILITY.md` – protected contract surfaces (API envelope, migrations, package exports, env, npm scripts) and the required path for changing them. Warn the user when a change violates it.
-- `.ai/trackers/github.md`, `.ai/browsers/agent-browser.md` – how skills talk to GitHub and the browser; edit these to change that behaviour.
-
-The validation gate in the config (`lint`, `typecheck`, `test:coverage`, `build`, `lint:tokens`, `docs:design-system:check`, `build-storybook`, `test:storybook`, `test:integration`) and the one in `SDLC.md` must stay in sync with CI; change them together and re-run `om-setup-agent-pipeline` when the toolchain or labels change.
-
-## AI skills
-
-The Open Mercato skills (`om-*`, from [open-mercato/skills](https://github.com/open-mercato/skills)) are installed **per project**:
-
-- `.agents/skills/` – the skill files (read by Codex and other agents); `.claude/skills/` – symlinks to them for Claude Code.
-- `skills-lock.json` – pinned versions. Update with `npx skills update -p`; reinstall from the lock file with `npx skills experimental_install`.
-- Do not edit installed skills. To adapt a skill to this project, create a skill with the same name in `.ai/skills/` – it overrides the matching parts of the generic one.
-- Current overrides: `.ai/skills/om-code-review/` – DevMentor review rules R1–R5 (contract registry sync, actionable script errors, never destroy local state, real-run evidence, self-review disclosure).
-- Run them as `/om-<name>` in Claude Code, `$om-<name>` in Codex.
-- Also installed per project from [mattpocock/skills](https://github.com/mattpocock/skills): `grill-me` (entry point, `/grill-me`) and `grilling` (the interview it delegates to) – used after the cross-model review of a spec to surface remaining ambiguities (lesson 5).
-
-## The `.ai` folder – mandatory
-
-All AI agents working in this repository MUST use these structures:
-
-- `.ai/specs/` – specifications for spec-driven development (SDD).
-  - File name: `YYYY-MM-DD-slug.md` (date the spec was created, short kebab-case slug).
-  - Write or update a spec **before** implementing any non-trivial feature, and keep it in sync with what was built.
-  - `.ai/specs/implemented/` – move a spec here once it is fully implemented and merged.
-  - `.ai/specs/archive/` – move specs here that were abandoned or superseded.
-- `.ai/runs/` – one log per autonomous AI run (implementing a feature, fixing a bug, refactoring).
-  - File name: `YYYY-MM-DD-slug.md`.
-  - Contents: goal, plan, decisions made and why, what was verified (commands + results), open issues, and a handoff section so another agent can resume if the run is interrupted.
-- `.ai/docs/` – long-lived project documentation (e.g. `engineering-standards.md`).
-- `.ai/skills/` – project-specific overrides of installed skills (same name as the skill they adapt).
-- `.ai/lessons.md` – short, durable lessons learned (bugs found, gotchas, conventions discovered). Append an entry after fixing a bug, after a correction from the user, or whenever something is worth remembering long term.
-  - `.ai/lessons/` – longer write-ups; link them from `lessons.md`.
-  - Read `.ai/lessons.md` before starting work.
-
-Use today's date in file names. Never delete specs, runs or lessons – move them instead.
+- Work on a feature branch and open a pull request against `main`; never commit directly to `main`.
+- Every change is 100% covered by unit tests for `core`, `db`, `ui` and `scripts`. CI fails below 100%; never lower the thresholds, add `/* v8 ignore */` or widen the coverage exclude list.
+- Add a dependency to the package that uses it: `npm install <pkg> -w @devmentor/<name>`.
+- The validation gate in `.ai/agentic.config.json` and in `SDLC.md` stays in sync with CI; change them together.
+- Never delete specs, runs or lessons; move them instead.
+- Do not edit installed skills; project overrides go to `.ai/skills/`.
+- Before finishing, run `npm run lint`, `npm run typecheck`, `npm run test:coverage` and `npm run build` and report the results honestly.
 
 ## Commands
 
@@ -162,23 +64,38 @@ npm run test:integration       # integration tests (needs Docker; first run: npm
 npm run storybook              # design-system Storybook on http://localhost:6006
 npm run build-storybook        # static Storybook build (packages/ui/storybook-static)
 npm run test:storybook         # every story as a browser test, both themes, a11y errors fail (first run: npx playwright install chromium)
-npm run lint:tokens            # design-system and app code: fails on colour literals outside packages/ui/src/styles/tokens.css, Tailwind palette classes, arbitrary values, gradients, backdrop blur, shadows, rounded-full (allow-list in scripts/check-tokens.mjs), emoji and the Sparkles icon
+npm run lint:tokens            # design tokens: no colour literals or palette classes outside the token layer (rules in scripts/check-tokens.mjs)
 npm run docs:design-system     # regenerate the component tables in .ai/docs/design-system.md from packages/ui/.storybook/blocks/components-data.ts
 npm run docs:design-system:check  # fail when those tables are stale (CI "Design tokens" job)
+npm run check:agents           # fail when AGENTS.md files exceed their budget, a routed path is missing or a CLAUDE.md is not just the import
 npm run db:migrate             # apply pending migrations
 npm run db:migration:create    # generate a migration from entity changes
 npm run db:migration:check     # fail if entities and migrations are out of sync
-npm run auth:set-password -- --email you@example.com --admin   # sets/resets a password (--admin: create or promote to admin); run once after `npm run setup` – admin pages need it. The password is read from DEVMENTOR_PASSWORD (e.g. `read -rs DEVMENTOR_PASSWORD && export DEVMENTOR_PASSWORD`), never an argument
+npm run auth:set-password -- --email you@example.com --admin   # set/reset a password; run once after `npm run setup`; password from DEVMENTOR_PASSWORD (`read -rs DEVMENTOR_PASSWORD && export DEVMENTOR_PASSWORD`), never an argument
 npm run db:up                  # PostgreSQL only (docker compose up -d db), for npm run dev
 npm run db:down                # stop the compose stack (docker compose down)
 docker compose up --build      # app + PostgreSQL in containers
 ```
 
-## Workflow rules
+## Where to read
 
-- Work on a feature branch and open a pull request against `main`; never commit directly to `main`.
-- Every PR must pass CI (lint, typecheck, build, unit tests with 100% coverage, design tokens, Storybook tests, integration tests, database migrations, Docker image) before merge.
-- Before finishing, run `npm run lint`, `npm run typecheck`, `npm run test:coverage` and `npm run build` locally and report the results honestly.
-- Plan before coding anything non-trivial; if the plan turns out wrong, stop and re-plan instead of pushing on.
-- Prefer the simplest change that solves the problem; touch only what the task needs.
-- Keep this file up to date: when you add a convention, command, folder or tool, document it here in the same PR.
+| Task | Read |
+|---|---|
+| Any task, first | `.ai/lessons.md` |
+| Bug fix | `.ai/docs/engineering-standards.md`, `.ai/docs/testing.md` |
+| New feature | `.ai/specs/` (write the spec first), `.ai/docs/architecture.md`, `.ai/docs/engineering-standards.md` |
+| Refactor | `.ai/docs/architecture.md`, `.ai/docs/engineering-standards.md` |
+| Review | `CODE_REVIEW.md`, `BACKWARD_COMPATIBILITY.md` |
+| Writing unit tests | `.ai/docs/testing.md` |
+| Naming | `.ai/docs/engineering-standards.md` (naming table) |
+| Domain code, shared API and UI layers | `.ai/docs/architecture.md` |
+| Services, validators, Awilix container | `packages/core/AGENTS.md` |
+| Entities, migrations | `packages/db/AGENTS.md`, `BACKWARD_COMPATIBILITY.md` |
+| Next.js routes, pages, route handlers | `packages/app/AGENTS.md` |
+| Integration tests | `packages/app/AGENTS.md` (section "Integration tests") |
+| Any screen or UI component | `.ai/docs/design-system.md`, `packages/ui/AGENTS.md` |
+| Storybook story tests | `packages/ui/AGENTS.md` |
+| Tickets, PRs, QA, labels | `SDLC.md` |
+| Specs, runs, lessons | `.ai/docs/ai-folder.md` |
+| AI skills: install, update, override | `.ai/docs/ai-skills.md` |
+| Editing any `AGENTS.md` | Commands section, npm run check:agents (routes exist, root ≤ 150 lines, unit ≤ 120) |

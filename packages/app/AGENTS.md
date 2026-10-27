@@ -21,7 +21,7 @@ src/app/              App Router: pages, layouts, route handlers
   api/<concept>/      Route handlers, one route.ts per resource (api/health/ – DB health check)
   api/users/          Reference CRUD API: users.crud.ts (makeCrudRoute) → route.ts, [id]/route.ts
 public/               Static assets
-tests/integration/    Integration tests (testcontainers + agent-browser) – see the root AGENTS.md "Testing" section
+tests/integration/    Integration tests (testcontainers + agent-browser) – see "Integration tests" below
 next.config.ts        transpilePackages for @devmentor/*, MikroORM server externals, standalone output
 ```
 
@@ -34,3 +34,12 @@ next.config.ts        transpilePackages for @devmentor/*, MikroORM server extern
 - Cache Components: code that reads the database or request data calls `await connection()` (from `next/server`) first; in pages such components sit inside `<Suspense>` so the static shell can be prerendered. Do not use `export const dynamic`.
 - Pages: `<segment>/page.tsx` with a default export named `<Segment>Page`. Persona route groups (`(marketing)`, `(auth)`, `(student)`, `(mentor)`) are created with their first page.
 - UI: admin pages use `@devmentor/ui` components (`@devmentor/ui/components/ui/<name>`); public pages use Tailwind with the design-system pieces (`PageLayout`, `AppHeader`, `type-*` roles, semantic tokens) – no palette classes, gradients, shadows or emoji (`npm run lint:tokens` scans `packages/app/src`). `src/app/globals.css` holds the theme and `@source`s the ui package.
+
+## Integration tests
+
+- **What:** the real app in a real browser. `tests/integration/*.int.test.ts`, config `vitest.integration.config.mts`.
+- **How:** `global-setup.ts` starts an ephemeral PostgreSQL with testcontainers, runs all migrations, seeds known rows, boots the app (`next dev` on port 3100, build dir `.next-test`) and tears everything down afterwards. Tests drive headless Chrome through the agent-browser CLI (`support/browser.ts`).
+- **Requires:** Docker running and Chrome for agent-browser (`npm run test:integration:setup`, once).
+- **Rule:** every new page or user-facing flow gets an integration test of its main path, plus a screenshot (`browser.screenshot(name)` → `.artifacts/`, uploaded by CI).
+- Locate elements the way users do – by role + accessible name or by label (`browser.click("button", "Create user")`, `browser.fill("Email", …)`). Repeated controls (row actions) need unique accessible names, e.g. `aria-label="Delete {name}"`.
+- Each test file uses its own browser session; files run sequentially against one app and database, so tests must not depend on data created by another file.
