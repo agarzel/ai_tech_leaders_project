@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
-import { Suspense } from "react";
 import { canReadThread, createRequestScope, isMessagingOpen, sessionEndsAt } from "@devmentor/core";
-import { LoadingMessage } from "@devmentor/ui/backend/feedback/LoadingMessage";
 import { PageLayout } from "@devmentor/ui/backend/layout/PageLayout";
 import { SiteHeader } from "../../../../../components/site-header";
 import { isNotFound, requireUser } from "../../../../../lib/require-user";
@@ -13,9 +11,12 @@ export const metadata: Metadata = {
   title: "Session – DevMentor",
 };
 
-async function Gate({ params }: { params: Promise<{ id: string }> }) {
+// The lookup runs before anything streams: notFound() inside a Suspense boundary would answer 200, not 404.
+export const instant = false;
+
+export default async function MentorBookingPage(props: PageProps<"/mentor/bookings/[id]">) {
   await connection();
-  const { id } = await params;
+  const { id } = await props.params;
   const user = await requireUser(`/mentor/bookings/${encodeURIComponent(id)}`);
   const { bookingQueryService, sessionThreadService, sessionNoteService } = (await createRequestScope()).cradle;
   let booking;
@@ -39,15 +40,10 @@ async function Gate({ params }: { params: Promise<{ id: string }> }) {
       : undefined;
   const note = confirmed ? await sessionNoteService.readForMentor(id, user.id) : null;
   const canWriteNote = confirmed && now >= sessionEndsAt(startsAt, booking.lengthMinutes) && (note === null || note.status === "draft");
-  return <MentorBookingDetail booking={booking} viewerId={user.id} thread={thread} note={note} canWriteNote={canWriteNote} />;
-}
-
-export default function MentorBookingPage(props: PageProps<"/mentor/bookings/[id]">) {
   return (
     <PageLayout header={<SiteHeader />} title="Session">
-      <Suspense fallback={<LoadingMessage />}>
-        <Gate params={props.params} />
-      </Suspense>
+      <MentorBookingDetail booking={booking} viewerId={user.id} thread={thread} note={note} canWriteNote={canWriteNote} />
     </PageLayout>
   );
 }
+
