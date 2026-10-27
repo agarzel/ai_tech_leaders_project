@@ -1,5 +1,5 @@
 import { randomInt } from "node:crypto";
-import { CURRENCY, MentorProfile, Slot, UniqueConstraintViolationException, User, type EntityManager, type IMentorProfile } from "@devmentor/db";
+import { CURRENCY, MentorProfile, SESSION_LENGTHS, Slot, UniqueConstraintViolationException, User, type EntityManager, type IMentorProfile, type SessionLength } from "@devmentor/db";
 import type { Clock } from "../../clock";
 import type { Page } from "../../http/crud";
 import { ConflictError, NotFoundError, ValidationError } from "../../http/errors";
@@ -149,6 +149,21 @@ export class MentorService {
       ? await this.deps.em.find(Slot, { mentor: profile.id, status: "open", startsAt: bookableWindow(now) }, { orderBy: { startsAt: "asc" } })
       : [];
     return { ...toPublicDto(profile, slots[0]?.startsAt), slots: slots.map((slot) => toSlotDto(slot, now)) };
+  }
+
+  /**
+   * The price in grosze of one session length on a profile, read at booking time. Fails closed: an unsupported
+   * length, an unknown profile or a price that is not set is an error, never a default or zero.
+   */
+  async priceFor(mentorProfileId: string, lengthMinutes: number): Promise<number> {
+    if (!SESSION_LENGTHS.includes(lengthMinutes as SessionLength)) {
+      throw new ValidationError("Pick a session length", { lengthMinutes: ["Pick a session length"] });
+    }
+    const profile = await this.deps.em.findOne(MentorProfile, { id: mentorProfileId });
+    if (!profile) throw new NotFoundError("Mentor not found");
+    const price = lengthMinutes === 25 ? profile.price25 : profile.price50;
+    if (price == null) throw new ConflictError("This mentor has not set a price for this session length");
+    return price;
   }
 
   private findProfile(userId: string): Promise<IMentorProfile | null> {

@@ -1,10 +1,10 @@
 import type Stripe from "stripe";
 import { logger } from "../logger";
 import { PaymentUnavailableError, ValidationError } from "../http/errors";
-import type { CheckoutInput, CheckoutSession, PaymentEvent, PaymentGateway } from "./payment-gateway";
+import type { CheckoutInput, CheckoutSession, ExpiredCheckout, PaymentEvent, PaymentGateway } from "./payment-gateway";
 
 /** The slice of the Stripe SDK this gateway uses; injected so unit tests never touch the network. */
-export type StripeClient = Pick<Stripe, "checkout" | "webhooks">;
+export type StripeClient = Pick<Stripe, "checkout" | "refunds" | "webhooks">;
 
 export class StripeGateway implements PaymentGateway {
   constructor(private readonly options: { client: StripeClient; webhookSecret: string }) {}
@@ -43,6 +43,36 @@ export class StripeGateway implements PaymentGateway {
     }
     if (!session.url) throw new PaymentUnavailableError();
     return { sessionId: session.id, url: session.url };
+  }
+
+  async expireCheckout(sessionId: string): Promise<ExpiredCheckout> {
+    try {
+      const sessions = this.options.client.checkout.sessions;
+      // Read first: expiring a completed or already expired session is an error at Stripe, and both outcomes are answers here.
+      const session = await sessions.retrieve(sessionId);
+      if (session.status === "complete") {
+        if (session.payment_status !== "paid") throw new Error("Checkout completed without payment");
+        return { state: "paid", paymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : null };
+      }
+      if (session.status === "open") await sessions.expire(sessionId);
+      return { state: "expired" };
+    } catch (error) {
+      logger.error({ errorType: error instanceof Error ? error.name : typeof error }, "Stripe Checkout expiry failed");
+      throw new PaymentUnavailableError();
+    }
+  }
+
+  async refund(input: { paymentIntentId: string; amount: number; idempotencyKey: string }): Promise<string> {
+    try {
+      const refund = await this.options.client.refunds.create(
+        { payment_intent: input.paymentIntentId, amount: input.amount },
+        { idempotencyKey: input.idempotencyKey },
+      );
+      return refund.id;
+    } catch (error) {
+      logger.error({ errorType: error instanceof Error ? error.name : typeof error }, "Stripe refund failed");
+      throw new PaymentUnavailableError();
+    }
   }
 
   parseWebhook(rawBody: string, headers: Headers): PaymentEvent {

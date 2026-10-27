@@ -18,8 +18,15 @@ const input: CheckoutInput = {
 function setup() {
   const create = vi.fn();
   const constructEvent = vi.fn();
-  const client = { checkout: { sessions: { create } }, webhooks: { constructEvent } } as unknown as StripeClient;
-  return { create, constructEvent, gateway: new StripeGateway({ client, webhookSecret: "whsec_test" }) };
+  const retrieve = vi.fn();
+  const expire = vi.fn();
+  const refundCreate = vi.fn();
+  const client = {
+    checkout: { sessions: { create, retrieve, expire } },
+    refunds: { create: refundCreate },
+    webhooks: { constructEvent },
+  } as unknown as StripeClient;
+  return { create, constructEvent, retrieve, expire, refundCreate, gateway: new StripeGateway({ client, webhookSecret: "whsec_test" }) };
 }
 
 describe("StripeGateway.createCheckout", () => {
@@ -137,5 +144,91 @@ describe("StripeGateway.parseWebhook", () => {
 
     expect(() => gateway.parseWebhook("{}", new Headers())).toThrow(ValidationError);
     expect(constructEvent).not.toHaveBeenCalled();
+  });
+});
+
+describe("StripeGateway.expireCheckout", () => {
+  it("expires an open session", async () => {
+    const { retrieve, expire, gateway } = setup();
+    retrieve.mockResolvedValue({ status: "open" });
+
+    await expect(gateway.expireCheckout("cs_1")).resolves.toEqual({ state: "expired" });
+    expect(expire).toHaveBeenCalledWith("cs_1");
+  });
+
+  it("treats an already expired session as success without expiring it again", async () => {
+    const { retrieve, expire, gateway } = setup();
+    retrieve.mockResolvedValue({ status: "expired" });
+
+    await expect(gateway.expireCheckout("cs_1")).resolves.toEqual({ state: "expired" });
+    expect(expire).not.toHaveBeenCalled();
+  });
+
+  it("reports a completed paid session with its payment intent", async () => {
+    const { retrieve, expire, gateway } = setup();
+    retrieve.mockResolvedValue({ status: "complete", payment_status: "paid", payment_intent: "pi_1" });
+
+    await expect(gateway.expireCheckout("cs_1")).resolves.toEqual({ state: "paid", paymentIntentId: "pi_1" });
+    expect(expire).not.toHaveBeenCalled();
+  });
+
+  it("reports a null payment intent when the paid session carries none as a string", async () => {
+    const { retrieve, gateway } = setup();
+    retrieve.mockResolvedValue({ status: "complete", payment_status: "paid", payment_intent: null });
+
+    await expect(gateway.expireCheckout("cs_1")).resolves.toEqual({ state: "paid", paymentIntentId: null });
+  });
+
+  it("refuses a completed session that is not paid", async () => {
+    const { retrieve, gateway } = setup();
+    retrieve.mockResolvedValue({ status: "complete", payment_status: "unpaid" });
+
+    await expect(gateway.expireCheckout("cs_1")).rejects.toBeInstanceOf(PaymentUnavailableError);
+  });
+
+  it("maps a provider failure to PaymentUnavailableError without leaking the message", async () => {
+    const { retrieve, gateway } = setup();
+    retrieve.mockRejectedValue(new Error("secret provider detail"));
+
+    const error = await gateway.expireCheckout("cs_1").catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(PaymentUnavailableError);
+    expect((error as Error).message).not.toContain("secret provider detail");
+  });
+
+  it("maps a thrown non-Error value to PaymentUnavailableError", async () => {
+    const { retrieve, gateway } = setup();
+    retrieve.mockRejectedValue("boom");
+
+    await expect(gateway.expireCheckout("cs_1")).rejects.toBeInstanceOf(PaymentUnavailableError);
+  });
+});
+
+describe("StripeGateway.refund", () => {
+  it("refunds the full amount with the idempotency key and returns the refund id", async () => {
+    const { refundCreate, gateway } = setup();
+    refundCreate.mockResolvedValue({ id: "re_1" });
+
+    const id = await gateway.refund({ paymentIntentId: "pi_1", amount: 15000, idempotencyKey: "refund:booking-1" });
+
+    expect(id).toBe("re_1");
+    expect(refundCreate).toHaveBeenCalledWith({ payment_intent: "pi_1", amount: 15000 }, { idempotencyKey: "refund:booking-1" });
+  });
+
+  it("maps a provider failure to PaymentUnavailableError without leaking the message", async () => {
+    const { refundCreate, gateway } = setup();
+    refundCreate.mockRejectedValue(new Error("secret provider detail"));
+
+    const error = await gateway.refund({ paymentIntentId: "pi_1", amount: 1, idempotencyKey: "k" }).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(PaymentUnavailableError);
+    expect((error as Error).message).not.toContain("secret provider detail");
+  });
+
+  it("maps a thrown non-Error value to PaymentUnavailableError", async () => {
+    const { refundCreate, gateway } = setup();
+    refundCreate.mockRejectedValue("boom");
+
+    await expect(gateway.refund({ paymentIntentId: "pi_1", amount: 1, idempotencyKey: "k" })).rejects.toBeInstanceOf(PaymentUnavailableError);
   });
 });

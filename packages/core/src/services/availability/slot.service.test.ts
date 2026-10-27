@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { LockMode, MentorProfile, Slot, UniqueConstraintViolationException, type EntityManager } from "@devmentor/db";
+import { Booking, LIVE_BOOKING_STATUSES, LockMode, MentorProfile, Slot, UniqueConstraintViolationException, type EntityManager } from "@devmentor/db";
 import { FakeClock } from "../../testing/fake-clock";
 import { ConflictError, NotFoundError, ValidationError } from "../../http/errors";
 import { SlotService } from "./slot.service";
@@ -13,6 +13,7 @@ function makeEm() {
   const em = {
     findOne: vi.fn(),
     find: vi.fn(),
+    count: vi.fn(),
     create: vi.fn(),
     flush: vi.fn(),
     remove: vi.fn(),
@@ -194,5 +195,120 @@ describe("SlotService.listBookable", () => {
     await service.listBookable("p1");
 
     expect(em.find.mock.calls[0]![1].startsAt.$gte).toEqual(at(2 * DAY));
+  });
+});
+
+describe("SlotService.assertBookable", () => {
+  beforeEach(() => {
+    em.count.mockResolvedValue(0);
+  });
+
+  it("returns an open slot inside the window with no live booking", async () => {
+    const slot = slotRow("s1", at(2 * DAY));
+    em.findOne.mockResolvedValue(slot);
+
+    await expect(service.assertBookable("s1", NOW)).resolves.toBe(slot);
+    expect(em.count).toHaveBeenCalledWith(Booking, { slot: "s1", status: { $in: [...LIVE_BOOKING_STATUSES] } });
+  });
+
+  it("accepts a slot exactly at the lead time and exactly at the horizon", async () => {
+    em.findOne.mockResolvedValueOnce(slotRow("s1", at(24 * HOUR))).mockResolvedValueOnce(slotRow("s2", at(60 * DAY)));
+
+    await expect(service.assertBookable("s1", NOW)).resolves.toBeDefined();
+    await expect(service.assertBookable("s2", NOW)).resolves.toBeDefined();
+  });
+
+  it("reads the slot with the given lock on the given EntityManager", async () => {
+    const other = { findOne: vi.fn().mockResolvedValue(slotRow("s1", at(2 * DAY))), count: vi.fn().mockResolvedValue(0) };
+
+    await service.assertBookable("s1", NOW, other as unknown as EntityManager, LockMode.PESSIMISTIC_WRITE);
+
+    expect(other.findOne).toHaveBeenCalledWith(Slot, { id: "s1" }, { lockMode: LockMode.PESSIMISTIC_WRITE });
+    expect(em.findOne).not.toHaveBeenCalled();
+  });
+
+  it("reads without a lock by default", async () => {
+    em.findOne.mockResolvedValue(slotRow("s1", at(2 * DAY)));
+
+    await service.assertBookable("s1", NOW);
+
+    expect(em.findOne).toHaveBeenCalledWith(Slot, { id: "s1" }, {});
+  });
+
+  it("refuses an unknown slot", async () => {
+    em.findOne.mockResolvedValue(null);
+
+    await expect(service.assertBookable("nope", NOW)).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it("refuses a slot that is not open", async () => {
+    em.findOne.mockResolvedValue(slotRow("s1", at(2 * DAY), "booked"));
+
+    await expect(service.assertBookable("s1", NOW)).rejects.toBeInstanceOf(ConflictError);
+  });
+
+  it("refuses a slot that starts before the lead time", async () => {
+    em.findOne.mockResolvedValue(slotRow("s1", at(24 * HOUR - 1)));
+
+    await expect(service.assertBookable("s1", NOW)).rejects.toThrow(/at least 24 hours/);
+  });
+
+  it("refuses a slot beyond the horizon", async () => {
+    em.findOne.mockResolvedValue(slotRow("s1", at(60 * DAY + 1)));
+
+    await expect(service.assertBookable("s1", NOW)).rejects.toThrow(/at most 60 days/);
+  });
+
+  it("refuses a slot that already has a live booking", async () => {
+    em.findOne.mockResolvedValue(slotRow("s1", at(2 * DAY)));
+    em.count.mockResolvedValue(1);
+
+    await expect(service.assertBookable("s1", NOW)).rejects.toBeInstanceOf(ConflictError);
+  });
+});
+
+describe("SlotService.release", () => {
+  it("reopens a booked slot that has no live booking, under a row lock in a transaction", async () => {
+    const slot = slotRow("s1", at(2 * DAY), "booked");
+    em.findOne.mockResolvedValue(slot);
+    em.count.mockResolvedValue(0);
+
+    await service.release("s1");
+
+    expect(em.transactional).toHaveBeenCalledTimes(1);
+    expect(em.findOne).toHaveBeenCalledWith(Slot, { id: "s1" }, { lockMode: LockMode.PESSIMISTIC_WRITE });
+    expect(slot.status).toBe("open");
+    expect(em.flush).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves a slot that still has a live booking", async () => {
+    const slot = slotRow("s1", at(2 * DAY), "booked");
+    em.findOne.mockResolvedValue(slot);
+    em.count.mockResolvedValue(1);
+
+    await service.release("s1");
+
+    expect(slot.status).toBe("booked");
+    expect(em.flush).not.toHaveBeenCalled();
+  });
+
+  it("does nothing for a slot that is already open (idempotent)", async () => {
+    const slot = slotRow("s1", at(2 * DAY), "open");
+    em.findOne.mockResolvedValue(slot);
+
+    await service.release("s1");
+    await service.release("s1");
+
+    expect(em.count).not.toHaveBeenCalled();
+    expect(em.flush).not.toHaveBeenCalled();
+  });
+
+  it("does nothing for an unknown slot and never deletes", async () => {
+    em.findOne.mockResolvedValue(null);
+
+    await service.release("nope");
+
+    expect(em.flush).not.toHaveBeenCalled();
+    expect(em.remove).not.toHaveBeenCalled();
   });
 });

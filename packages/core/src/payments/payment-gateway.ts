@@ -14,6 +14,9 @@ export type CheckoutInput = {
 
 export type CheckoutSession = { sessionId: string; url: string };
 
+/** What the provider says about a Checkout session the sweep tried to expire. */
+export type ExpiredCheckout = { state: "expired" } | { state: "paid"; paymentIntentId: string | null };
+
 /** A verified webhook event, reduced to what the app acts on. Anything else is `ignored` (answered with 200). */
 export type PaymentEvent =
   | {
@@ -31,6 +34,13 @@ export type PaymentEvent =
 export interface PaymentGateway {
   /** Throws `PaymentUnavailableError` when the provider cannot create the session; nothing was charged then. */
   createCheckout(input: CheckoutInput): Promise<CheckoutSession>;
+  /**
+   * Closes an unpaid session so it can no longer be paid. Idempotent: an already expired session is success.
+   * Returns `paid` when the session was completed and paid before it could be closed. Throws `PaymentUnavailableError` on a provider failure.
+   */
+  expireCheckout(sessionId: string): Promise<ExpiredCheckout>;
+  /** Returns the full amount to the payer. Idempotent by key (same key → same refund id). Throws `PaymentUnavailableError` on a provider failure. */
+  refund(input: { paymentIntentId: string; amount: number; idempotencyKey: string }): Promise<string>;
   /** Verifies the provider's signature over the raw body, then parses it. Throws `ValidationError` when it does not verify. */
   parseWebhook(rawBody: string, headers: Headers): PaymentEvent;
 }

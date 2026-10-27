@@ -454,3 +454,43 @@ describe("MentorService.getPublicBySlug", () => {
     );
   });
 });
+
+describe("MentorService.priceFor", () => {
+  let em: ReturnType<typeof makeEm>;
+  let service: MentorService;
+
+  beforeEach(() => {
+    em = makeEm();
+    service = new MentorService({ em: em as unknown as EntityManager, clock: new FakeClock(new Date("2026-06-01T08:00:00Z")) });
+  });
+
+  it("returns the 25-minute price in grosze", async () => {
+    em.findOne.mockResolvedValue(storedProfile({ price25: 15_000, price50: 28_000 }));
+
+    await expect(service.priceFor("p1", 25)).resolves.toBe(15_000);
+    expect(em.findOne).toHaveBeenCalledWith(MentorProfile, { id: "p1" });
+  });
+
+  it("returns the 50-minute price in grosze", async () => {
+    em.findOne.mockResolvedValue(storedProfile({ price25: 15_000, price50: 28_000 }));
+
+    await expect(service.priceFor("p1", 50)).resolves.toBe(28_000);
+  });
+
+  it.each([25, 50])("fails closed when the %i-minute price is not set", async (length) => {
+    em.findOne.mockResolvedValue(storedProfile());
+
+    await expect(service.priceFor("p1", length)).rejects.toBeInstanceOf(ConflictError);
+  });
+
+  it("refuses a length that is not offered, without reading the profile", async () => {
+    await expect(service.priceFor("p1", 30)).rejects.toBeInstanceOf(ValidationError);
+    expect(em.findOne).not.toHaveBeenCalled();
+  });
+
+  it("refuses an unknown profile", async () => {
+    em.findOne.mockResolvedValue(null);
+
+    await expect(service.priceFor("nope", 25)).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
