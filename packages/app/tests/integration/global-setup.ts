@@ -2,7 +2,7 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { createWriteStream, mkdirSync } from "node:fs";
 import path from "node:path";
-import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
+import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import type { TestProject } from "vitest/node";
 import { ARTIFACTS_DIR, REPO_ROOT, run } from "./support/process";
 
@@ -44,7 +44,7 @@ export default async function setup(project: TestProject) {
   const databaseUrl = database.getConnectionUri();
 
   await run("npm", ["run", "db:migrate"], { DATABASE_URL: databaseUrl });
-  await seed(database);
+  await run("npm", ["run", "db:seed"], { DATABASE_URL: databaseUrl });
   const admin = { email: "admin@devmentor.test", password: randomBytes(18).toString("base64url") };
   await createAdmin(admin, databaseUrl);
 
@@ -68,14 +68,6 @@ export default async function setup(project: TestProject) {
     await stopApp(server);
     await database.stop();
   };
-}
-
-// Known rows the tests can rely on.
-async function seed(database: StartedPostgreSqlContainer) {
-  const sql = `insert into users (id, email, name, role, created_at, updated_at) values
-    (gen_random_uuid(), 'seeded.mentor@devmentor.test', 'Seeded Mentor', 'mentor', now(), now());`;
-  const result = await database.exec(["psql", "-U", "devmentor", "-d", "devmentor", "-v", "ON_ERROR_STOP=1", "-c", sql]);
-  if (result.exitCode !== 0) throw new Error(`Seeding failed: ${result.output}`);
 }
 
 // Same path as local development: the `auth:set-password` script, which goes through AuthService.
