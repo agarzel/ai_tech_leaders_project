@@ -17,10 +17,10 @@ The Integration tests job restores Chrome for Testing from the GitHub Actions ca
 
 `agent-browser install` (0.39.0) installs the latest known-good Chrome, not a version pinned by the lockfile. Checked locally on 2026-10-27: the first run downloaded Chrome 156 next to an existing 155; a second run printed "Chrome 156.0.8078.47 is already installed" and took 0.4 s. A key from `hashFiles('package-lock.json')` would keep hitting a stale cache after every Chrome release and download again on every run, because a cache whose key hit is never re-saved. So the cache is keyed by the **installed Chrome directory** instead:
 
-1. `actions/cache/restore` with the prefix `Linux-agent-browser-chrome-` (newest matching cache wins).
+1. `actions/cache/restore` with the prefix `Linux-agent-browser-` (newest matching cache wins).
 2. Install as today (skips the download when the restored Chrome is the current one).
 3. Remove older `chrome-*` directories, keep the newest.
-4. `actions/cache/save` with the key `Linux-agent-browser-chrome-<directory>` only when it differs from the restored key.
+4. `actions/cache/save` with the key `Linux-agent-browser-<directory>` (e.g. `Linux-agent-browser-chrome-156.0.8078.47`) only when it differs from the restored key.
 
 ## Risks
 
@@ -39,5 +39,5 @@ The Integration tests job restores Chrome for Testing from the GitHub Actions ca
 
 ### Phase 2: Verify in CI
 
-- [ ] 2.1 First CI run: cache miss, Chrome downloaded and saved
+- [x] 2.1 First CI run: cache miss, Chrome downloaded and saved — run 40538137754: "Cache not found", Chrome 156 installed in 14s, cache saved in 4s; all 7 jobs green
 - [ ] 2.2 Second CI run: cache hit, download skipped, durations recorded

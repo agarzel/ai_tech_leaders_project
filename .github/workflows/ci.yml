@@ -77,8 +77,8 @@ jobs:
         uses: actions/cache/restore@v6
         with:
           path: ~/.agent-browser/browsers
-          key: ${{ runner.os }}-agent-browser-chrome-
-          restore-keys: ${{ runner.os }}-agent-browser-chrome-
+          key: ${{ runner.os }}-agent-browser-
+          restore-keys: ${{ runner.os }}-agent-browser-
 
       # Chrome for Testing + Linux libraries for the headless browser (the libraries install on every run).
       - run: npx agent-browser install --with-deps
@@ -93,11 +93,11 @@ jobs:
           echo "dir=$newest" >> "$GITHUB_OUTPUT"
 
       - name: Save agent-browser Chrome
-        if: steps.chrome-cache.outputs.cache-matched-key != format('{0}-agent-browser-chrome-{1}', runner.os, steps.chrome.outputs.dir)
+        if: steps.chrome-cache.outputs.cache-matched-key != format('{0}-agent-browser-{1}', runner.os, steps.chrome.outputs.dir)
         uses: actions/cache/save@v6
         with:
           path: ~/.agent-browser/browsers
-          key: ${{ runner.os }}-agent-browser-chrome-${{ steps.chrome.outputs.dir }}
+          key: ${{ runner.os }}-agent-browser-${{ steps.chrome.outputs.dir }}
 
       # Ephemeral PostgreSQL via testcontainers (Docker is available on the runner),
       # migrations + seed, the app in dev mode, browser tests with agent-browser.
