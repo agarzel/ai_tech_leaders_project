@@ -28,6 +28,7 @@ export {
   BOOKING_HOLD_MINUTES,
   BookingService,
   CHECKOUT_MARGIN_MINUTES,
+  MAX_PENDING_PAYMENT_BOOKINGS,
   type CreatedBookingDto,
 } from "./services/bookings/booking.service";
 export { canReadThread, freeCancellationUntil, isMessagingOpen, sessionEndsAt } from "./services/sessions/session-rules";

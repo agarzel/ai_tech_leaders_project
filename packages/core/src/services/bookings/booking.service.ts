@@ -1,7 +1,7 @@
 import { Booking, CURRENCY, LockMode, MentorProfile, Payment, User, type EntityManager } from "@devmentor/db";
 import type { Clock } from "../../clock";
 import type { Env } from "../../config/env";
-import { ForbiddenError } from "../../http/errors";
+import { ConflictError, ForbiddenError } from "../../http/errors";
 import { parseOrThrow } from "../../http/body";
 import type { PaymentGateway } from "../../payments/payment-gateway";
 import { bookingCreateSchema } from "../../validators/bookings/booking-create.schema";
@@ -10,6 +10,8 @@ import type { MentorService } from "../mentors/mentor.service";
 
 /** A new booking holds its slot this long while the mentee pays (spec: Hold, 35 min). */
 export const BOOKING_HOLD_MINUTES = 35;
+/** Maximum simultaneous unexpired `pending_payment` bookings per mentee (spec: Slot hoarding). */
+export const MAX_PENDING_PAYMENT_BOOKINGS = 2;
 /** The Checkout session ends this long before the hold does (spec: state machine). */
 export const CHECKOUT_MARGIN_MINUTES = 1;
 
@@ -41,6 +43,17 @@ export class BookingService {
     const holdExpiresAt = new Date(now.getTime() + BOOKING_HOLD_MINUTES * MINUTE_MS);
 
     const created = await this.deps.em.transactional(async (em) => {
+      // Serialize creates by this mentee before counting, even when they target different slots.
+      await em.findOne(User, { id: menteeUserId }, { lockMode: LockMode.PESSIMISTIC_WRITE });
+      const activePendingBookings = await em.count(Booking, {
+        mentee: menteeUserId,
+        status: "pending_payment",
+        holdExpiresAt: { $gt: now },
+      });
+      if (activePendingBookings >= MAX_PENDING_PAYMENT_BOOKINGS) {
+        throw new ConflictError("Finish or abandon your previous payment first");
+      }
+
       // SELECT ... FOR UPDATE on the slot: a parallel booking of the same slot waits here and then sees it taken.
       const slot = await this.deps.slotService.assertBookable(slotId, now, em, LockMode.PESSIMISTIC_WRITE);
       const mentorId = slot.mentor.id;

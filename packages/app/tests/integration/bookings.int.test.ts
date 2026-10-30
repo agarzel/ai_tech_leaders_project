@@ -112,6 +112,10 @@ describe("booking and prepayment", () => {
   let slotC = "";
   let slotD = "";
   let slotE = "";
+  let slotF = "";
+  let slotG = "";
+  let slotH = "";
+  let slotI = "";
   let acceptedBookingId = "";
 
   beforeAll(async () => {
@@ -123,7 +127,16 @@ describe("booking and prepayment", () => {
     expect(saved.status).toBe(200);
     // The soonest time (3 days ahead) is the one the page flow books; the others are for the API-driven tests.
     await publishSlot(3);
-    [slotB, slotC, slotD, slotE] = [await publishSlot(4), await publishSlot(5), await publishSlot(6), await publishSlot(7)];
+    [slotB, slotC, slotD, slotE, slotF, slotG, slotH, slotI] = [
+      await publishSlot(4),
+      await publishSlot(5),
+      await publishSlot(6),
+      await publishSlot(7),
+      await publishSlot(8),
+      await publishSlot(9),
+      await publishSlot(10),
+      await publishSlot(11),
+    ];
 
     await registerMentee(mentee1, menteeOneName, `bookings.one.${stamp}@devmentor.test`);
     await registerMentee(mentee2, menteeTwo.name, menteeTwo.email);
@@ -251,6 +264,21 @@ describe("booking and prepayment", () => {
     const loser = replies.find((reply) => reply.status === 409);
     expect(loser?.body.error?.message).toBe("This time was just taken");
     expect(await sql(`select count(*) from bookings where slot_id = '${slotE}' and status in ('pending_payment','awaiting_acceptance','confirmed')`)).toBe("1");
+  });
+
+  // Scenario: .ai/qa/BOOKINGS/BOOKINGS-002-two-active-unpaid-bookings-per-mentee.md
+  it("serializes parallel creates and limits each mentee to two active unpaid bookings", async () => {
+    expect((await book(mentee1, slotF)).status).toBe(201);
+
+    const parallel = await Promise.all([book(mentee1, slotG), book(mentee1, slotH)]);
+    expect(parallel.map((reply) => reply.status).sort()).toEqual([201, 409]);
+    expect(parallel.find((reply) => reply.status === 409)?.body.error?.message).toBe("Finish or abandon your previous payment first");
+    expect(await sql(`select count(*) from bookings where mentee_id = (select id from users where email = 'bookings.one.${stamp}@devmentor.test') and status = 'pending_payment' and hold_expires_at > now()`)).toBe("2");
+
+    expect((await book(mentee1, slotI)).status).toBe(409);
+    await sql(`update bookings set hold_expires_at = now() - interval '1 minute' where slot_id = '${slotF}'`);
+    expect((await book(mentee1, slotI)).status).toBe(201);
+    await sql(`update bookings set hold_expires_at = now() - interval '1 minute' where slot_id = '${slotI}'`);
   });
 
   it("records `list` for a booking started from the public list", async () => {
