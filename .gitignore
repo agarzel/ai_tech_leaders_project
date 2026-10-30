@@ -69,3 +69,6 @@ packages/ui/.storybook/public/prototypes/
 .ai/qa/test-env.lock/
 .ai/qa/test-env-build-cache.json
 .ai/qa/test-env-app.log
+
+# Cezar task worktrees and state (npx cezar-cli)
+.ai/cezar/
