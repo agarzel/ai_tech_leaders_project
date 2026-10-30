@@ -160,9 +160,14 @@ export class SweepService {
           idempotencyKey: `refund:${bookingId}`,
         });
         const after = await this.deps.paymentGateway.listRefunds(payment.paymentIntentId);
-        const confirmed = after.find((refund) => refund.id === newRefundId && refund.status === "succeeded");
-        if (confirmed) refundId = confirmed.id;
-        // Otherwise the refund is pending or failed at the provider; the webhook or a later sweep run settles it.
+        const created = after.find((refund) => refund.id === newRefundId);
+        if (created?.status === "succeeded") {
+          refundId = created.id;
+        } else if (created?.status === "failed") {
+          failed = true;
+          lastError = "Refund attempt failed: provider reported the refund failed".slice(0, LAST_ERROR_MAX_LENGTH);
+        }
+        // Still pending: neither refunded nor a counted attempt — the webhook or a later sweep run settles it.
       }
     } catch (error) {
       failed = true;

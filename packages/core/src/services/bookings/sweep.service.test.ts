@@ -272,6 +272,18 @@ describe("SweepService.run: refund reconciliation", () => {
     expect(summary).toMatchObject({ refundsReconciled: 0, failed: 0 });
   });
 
+  it("counts an attempt when the provider confirms the fresh refund failed outright", async () => {
+    const payment = refundPayment();
+    ctx = setup({ refunds: [payment] });
+    ctx.locked.set("pay1", payment);
+    ctx.gateway.listRefunds.mockReset().mockResolvedValueOnce([]).mockResolvedValueOnce([{ id: "re_1", status: "failed" }]);
+
+    const summary = await ctx.service.run(NOW);
+
+    expect(payment).toMatchObject({ status: "refund_requested", refundAttempts: 1, refundId: null });
+    expect(summary).toMatchObject({ refundsReconciled: 0, failed: 1 });
+  });
+
   it("counts an attempt and stores a short error that carries no provider detail when the refund fails", async () => {
     const payment = refundPayment();
     ctx = setup({ refunds: [payment] });
