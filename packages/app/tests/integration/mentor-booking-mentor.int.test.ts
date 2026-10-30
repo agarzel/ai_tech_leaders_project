@@ -46,7 +46,7 @@ describe("a mentor who booked another mentor", () => {
 
     // The session has ended: writing and deciding the note are both open.
     await sql(`update slots set starts_at = now() - interval '1 hour' where id = (select slot_id from bookings where id = '${noted}')`);
-    const written = await api(mentorA, "POST", `/api/mentor/bookings/${noted}/note`, { body: "Good session, keep practicing." });
+    const written = await api(mentorA, "PUT", `/api/mentor/bookings/${noted}/note`, { body: "Good session, keep practicing." });
     expect(written.status).toBe(200);
 
     const read = await api(mentorB, "GET", `/api/bookings/${noted}/note`);
