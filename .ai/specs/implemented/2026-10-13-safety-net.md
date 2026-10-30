@@ -1,7 +1,7 @@
 # Spec: Safety net – unit and integration tests in CI
 
 - **Date:** 2026-10-13
-- **Status:** part 1 merged (#9); part 2 (integration tests) implemented
+- **Status:** implemented and merged – part 1 (#9), part 2 integration tests (#10)
 - **Source:** course lesson 2, "Safety net – siatka bezpieczeństwa" + homework (CI that checks compilation and unit and/or integration tests)
 
 ## Goal

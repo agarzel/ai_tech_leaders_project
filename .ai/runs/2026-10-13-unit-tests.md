@@ -3,7 +3,7 @@
 - **Date:** 2026-10-13
 - **Agent:** Claude Code
 - **Branch:** `unit-tests`
-- **Spec:** `.ai/specs/2026-10-13-safety-net.md`
+- **Spec:** `.ai/specs/implemented/2026-10-13-safety-net.md`
 
 ## Goal
 

@@ -1,5 +1,7 @@
 # Mentor accounts and bookable offer
 
+Status: **implemented** – all four phases merged (#50–#61); #25–#28 closed.
+
 ## 📝 TLDR
 Future behavior: a developer can register and sign in with email and password; a senior engineer invited by the founders can register as a mentor, set prices for 25- and 50-minute text sessions, publish bookable slots, and share a personal link to that offer, optionally appearing on a public list. Today the app has only an admin user CRUD guarded by a temporary `requireAdmin()` that is open in development; nobody can sign in. This spec covers backlog #26, #25, #27, #28 (epic #21) and builds once the foundations that booking (#29–#32) and sessions (#33–#36) reuse: sessions and ownership checks, money and slot-time rules, and the mentor and slot read models.
 

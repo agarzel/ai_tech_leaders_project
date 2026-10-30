@@ -1,7 +1,7 @@
 # Spec: Base stack – monorepo, MikroORM, Awilix, shadcn/ui
 
 - **Date:** 2026-10-13
-- **Status:** implemented (PR pending review)
+- **Status:** implemented and merged (#6)
 - **Source:** AI Tech Leaders course, lesson 2 ("Modyfikujemy / generujemy podstawowy szablon dla naszej aplikacji")
 
 ## Goal

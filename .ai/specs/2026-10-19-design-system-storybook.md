@@ -3,7 +3,7 @@
 - Date: 2026-10-19
 - Owner: Arkadiusz
 - Task: `lekcja-06/prompt-storybook.md` (lesson 6, exercise 3); progress in `packages/ui/POSTEP.md`
-- Sources: `lekcja-06/referencje.md` (R01.x, R02.x, A01–A05, K1–K4, P1–P21), `lekcja-06/tokeny.md` (T1–T16, accent), `.ai/specs/product-brief.md`, `.ai/specs/backlog.md`, `.ai/specs/2026-10-19-mentor-accounts-and-offer.md`, `.ai/specs/2026-10-19-booking-and-prepayment.md`
+- Sources: `lekcja-06/referencje.md` (R01.x, R02.x, A01–A05, K1–K4, P1–P21), `lekcja-06/tokeny.md` (T1–T16, accent), `.ai/specs/product-brief.md`, `.ai/specs/backlog.md`, `.ai/specs/implemented/2026-10-19-mentor-accounts-and-offer.md`, `.ai/specs/2026-10-19-booking-and-prepayment.md`
 
 ## TLDR
 

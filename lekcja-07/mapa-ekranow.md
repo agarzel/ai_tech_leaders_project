@@ -2,7 +2,7 @@
 
 Status: DO ZATWIERDZENIA. Niczego nie zbudowano. Identyfikatory ekranów (s01–s12), scenariuszy (c01–c22) i luk (L01–L16, G01–G07) są trwałe: do nich przypinamy komentarze, więc po zatwierdzeniu ich nie zmieniamy ani nie przenumerowujemy.
 
-Zakres: przepływ Epiku 01 ze specyfikacji `.ai/specs/2026-10-19-mentor-accounts-and-offer.md` (rejestracja mentee, logowanie, rejestracja mentora z zaproszenia, panel zaproszeń admina, strona startowa każdej roli, brak dostępu, profil i ceny, sloty, link do udostępniania, lista publiczna z opt-in). Rezerwacje i płatności (E02, #29–#32) są poza zakresem; pojawiają się tylko tam, gdzie dotykają ekranów E01 (zob. L05). Weryfikacji e-maila nie ma w 1.0, więc nie jest ekranem ani wymaganiem (jedno pytanie: L01).
+Zakres: przepływ Epiku 01 ze specyfikacji `.ai/specs/implemented/2026-10-19-mentor-accounts-and-offer.md` (rejestracja mentee, logowanie, rejestracja mentora z zaproszenia, panel zaproszeń admina, strona startowa każdej roli, brak dostępu, profil i ceny, sloty, link do udostępniania, lista publiczna z opt-in). Rezerwacje i płatności (E02, #29–#32) są poza zakresem; pojawiają się tylko tam, gdzie dotykają ekranów E01 (zob. L05). Weryfikacji e-maila nie ma w 1.0, więc nie jest ekranem ani wymaganiem (jedno pytanie: L01).
 
 Źródła: spec (rozdziały API Contracts, UI/UX, Edge Cases), `.ai/specs/product-brief.md` (R01–R08, D01–D16, N01–N03), issues GitHub #25, #26, #27, #28 (przeczytane `gh issue view`), `.ai/specs/backlog.md`, wywiady w `.ai/specs/research/`, design system (`.ai/docs/design-system.md`, `packages/ui/stories/design-system/WhatIsMissing.mdx`, `packages/ui/stories/product/E01/Screens.mdx`). Osobnych plików z personami w `research/` nie ma, są tylko wywiady; używam ich jako źródła zachowań.
 

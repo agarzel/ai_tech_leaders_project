@@ -2,7 +2,7 @@
 >
 > - Next.js 16 with Cache Components: `export const dynamic = "force-dynamic"` is not used. Code that touches the database calls `await connection()` (from `next/server`) and, in pages, sits inside `<Suspense>`. The app still builds and boots without a database.
 > - MikroORM 7: entities are written with `defineEntity` (no decorators); `base.entity.ts` exports shared properties instead of a base class. There is no `define.ts`.
-> - Items that refer to code from the course bootstrap that does not exist here yet (`mentor-profile.entity.ts`, `user.service.ts`, `/admin/users`, `withScope`, `env.ts`, `logger.ts`, `docs/product-scope.md`) are created when the corresponding step is implemented – see `.ai/specs/2026-10-13-engineering-standards.md`.
+> - Items that refer to code from the course bootstrap that does not exist here yet (`mentor-profile.entity.ts`, `user.service.ts`, `/admin/users`, `withScope`, `env.ts`, `logger.ts`, `docs/product-scope.md`) are created when the corresponding step is implemented – see `.ai/specs/implemented/2026-10-13-engineering-standards.md`.
 > - Request scope helper is `createRequestScope()` from `@devmentor/core` (the course calls it `withScope`).
 
 # DevMentor — Engineering Standards & Package Structure

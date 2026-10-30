@@ -3,7 +3,7 @@
 - **Date:** 2026-10-13
 - **Agent:** Claude Code
 - **Branch:** `reusable-layers`
-- **Spec:** `.ai/specs/2026-10-13-engineering-standards.md` (PR B); standards §1 "Reusable API & UI Layer", §5 steps 2–3
+- **Spec:** `.ai/specs/implemented/2026-10-13-engineering-standards.md` (PR B); standards §1 "Reusable API & UI Layer", §5 steps 2–3
 
 ## Goal
 
