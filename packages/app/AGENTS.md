@@ -39,7 +39,8 @@ next.config.ts        transpilePackages for @devmentor/*, MikroORM server extern
 
 - **What:** the real app in a real browser. `tests/integration/*.int.test.ts`, config `vitest.integration.config.mts`.
 - **How:** `global-setup.ts` starts an ephemeral PostgreSQL with testcontainers, runs all migrations, seeds known rows, boots the app (`next dev` on port 3100, build dir `.next-test`) and tears everything down afterwards. Tests drive headless Chrome through the agent-browser CLI (`support/browser.ts`).
-- **Requires:** Docker running and Chrome for agent-browser (`npm run test:integration:setup`, once).
+- **Requires:** Docker running and Chrome for agent-browser (`npm run test:integration:setup`, once). On macOS without `/var/run/docker.sock`, testcontainers fails with "Could not find a working container runtime strategy": run with `DOCKER_HOST=unix://$HOME/.docker/run/docker.sock`.
+- **Scenarios:** every test has a Markdown scenario in `.ai/qa/{AREA}/` linked both ways; rules in `.ai/skills/om-integration-tests/SKILL.md`. Shared setup helpers: `support/flow.ts`.
 - **Rule:** every new page or user-facing flow gets an integration test of its main path, plus a screenshot (`browser.screenshot(name)` → `.artifacts/`, uploaded by CI).
 - Locate elements the way users do – by role + accessible name or by label (`browser.click("button", "Create user")`, `browser.fill("Email", …)`). Repeated controls (row actions) need unique accessible names, e.g. `aria-label="Delete {name}"`.
 - Each test file uses its own browser session; files run sequentially against one app and database, so tests must not depend on data created by another file.

@@ -61,6 +61,8 @@ const eslintConfig = defineConfig([
   globalIgnores([
     "**/.next/**",
     "**/.next-test/**",
+    // Build dir of the dev server started by .ai/scripts/test-env-up.sh.
+    "**/.next-test-env/**",
     "**/out/**",
     "**/build/**",
     "**/next-env.d.ts",
