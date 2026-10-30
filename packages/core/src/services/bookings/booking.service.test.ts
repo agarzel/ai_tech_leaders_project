@@ -5,7 +5,7 @@ import type { PaymentGateway } from "../../payments/payment-gateway";
 import { FakeClock } from "../../testing/fake-clock";
 import type { SlotService } from "../availability/slot.service";
 import type { MentorService } from "../mentors/mentor.service";
-import { BOOKING_HOLD_MINUTES, BookingService } from "./booking.service";
+import { BOOKING_HOLD_MINUTES, BookingService, MAX_PENDING_PAYMENT_BOOKINGS } from "./booking.service";
 
 const MINUTE = 60_000;
 const NOW = new Date("2026-06-01T08:00:00Z");
@@ -125,7 +125,7 @@ describe("BookingService.create", () => {
   });
 
   it("rejects creation when the mentee already has two active unpaid bookings", async () => {
-    ctx.tx.count.mockResolvedValueOnce(2);
+    ctx.tx.count.mockImplementation(async (entity: unknown) => (entity === Booking ? MAX_PENDING_PAYMENT_BOOKINGS : 0));
 
     await expect(ctx.service.create("u1", input)).rejects.toMatchObject({
       code: "conflict",

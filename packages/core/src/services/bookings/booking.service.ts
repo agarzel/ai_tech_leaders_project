@@ -10,6 +10,8 @@ import type { MentorService } from "../mentors/mentor.service";
 
 /** A new booking holds its slot this long while the mentee pays (spec: Hold, 35 min). */
 export const BOOKING_HOLD_MINUTES = 35;
+/** Maximum simultaneous unexpired `pending_payment` bookings per mentee (spec: Slot hoarding). */
+export const MAX_PENDING_PAYMENT_BOOKINGS = 2;
 /** The Checkout session ends this long before the hold does (spec: state machine). */
 export const CHECKOUT_MARGIN_MINUTES = 1;
 
@@ -48,7 +50,7 @@ export class BookingService {
         status: "pending_payment",
         holdExpiresAt: { $gt: now },
       });
-      if (activePendingBookings >= 2) {
+      if (activePendingBookings >= MAX_PENDING_PAYMENT_BOOKINGS) {
         throw new ConflictError("Finish or abandon your previous payment first");
       }
 
