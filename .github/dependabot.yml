@@ -1,0 +1,23 @@
+# npm workspaces keep one package-lock.json at the root, so Dependabot must run from "/":
+# from a package directory it edits package.json without the lockfile and `npm ci` fails.
+# Security updates only (version updates are off); packages that are released in lockstep
+# go into one PR, because they pin each other with exact peer versions.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    groups:
+      vitest:
+        applies-to: security-updates
+        patterns: ["vitest", "@vitest/*"]
+      storybook:
+        applies-to: security-updates
+        patterns: ["storybook", "@storybook/*"]
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
