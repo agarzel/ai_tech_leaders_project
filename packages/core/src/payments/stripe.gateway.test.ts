@@ -21,12 +21,21 @@ function setup() {
   const retrieve = vi.fn();
   const expire = vi.fn();
   const refundCreate = vi.fn();
+  const refundList = vi.fn();
   const client = {
     checkout: { sessions: { create, retrieve, expire } },
-    refunds: { create: refundCreate },
+    refunds: { create: refundCreate, list: refundList },
     webhooks: { constructEvent },
   } as unknown as StripeClient;
-  return { create, constructEvent, retrieve, expire, refundCreate, gateway: new StripeGateway({ client, webhookSecret: "whsec_test" }) };
+  return {
+    create,
+    constructEvent,
+    retrieve,
+    expire,
+    refundCreate,
+    refundList,
+    gateway: new StripeGateway({ client, webhookSecret: "whsec_test" }),
+  };
 }
 
 describe("StripeGateway.createCheckout", () => {
@@ -130,6 +139,73 @@ describe("StripeGateway.parseWebhook", () => {
     expect(gateway.parseWebhook("{}", headers)).toEqual({ type: "ignored", providerType: "charge.succeeded" });
   });
 
+  it("maps a refund.updated event reporting success", () => {
+    const { constructEvent, gateway } = setup();
+    constructEvent.mockReturnValue({
+      type: "refund.updated",
+      data: { object: { id: "re_1", payment_intent: "pi_1", status: "succeeded" } },
+    });
+
+    expect(gateway.parseWebhook("{}", headers)).toEqual({ type: "refund.updated", paymentIntentId: "pi_1", refundId: "re_1", status: "succeeded" });
+  });
+
+  it("maps a refund.updated event reporting a definite failure", () => {
+    const { constructEvent, gateway } = setup();
+    constructEvent.mockReturnValue({
+      type: "refund.updated",
+      data: { object: { id: "re_1", payment_intent: "pi_1", status: "failed" } },
+    });
+
+    expect(gateway.parseWebhook("{}", headers)).toEqual({ type: "refund.updated", paymentIntentId: "pi_1", refundId: "re_1", status: "failed" });
+  });
+
+  it("maps a canceled refund to a failure", () => {
+    const { constructEvent, gateway } = setup();
+    constructEvent.mockReturnValue({
+      type: "refund.updated",
+      data: { object: { id: "re_1", payment_intent: "pi_1", status: "canceled" } },
+    });
+
+    expect(gateway.parseWebhook("{}", headers)).toMatchObject({ status: "failed" });
+  });
+
+  it("ignores a refund.updated event that is still pending", () => {
+    const { constructEvent, gateway } = setup();
+    constructEvent.mockReturnValue({
+      type: "refund.updated",
+      data: { object: { id: "re_1", payment_intent: "pi_1", status: "pending" } },
+    });
+
+    expect(gateway.parseWebhook("{}", headers)).toEqual({ type: "ignored", providerType: "refund.updated" });
+  });
+
+  it("ignores a refund.updated event with an expanded or missing payment intent", () => {
+    const { constructEvent, gateway } = setup();
+    constructEvent.mockReturnValue({
+      type: "refund.updated",
+      data: { object: { id: "re_1", payment_intent: { id: "pi_1" }, status: "succeeded" } },
+    });
+
+    expect(gateway.parseWebhook("{}", headers)).toEqual({ type: "ignored", providerType: "refund.updated" });
+  });
+
+  it("maps a charge.refunded event from its latest refund", () => {
+    const { constructEvent, gateway } = setup();
+    constructEvent.mockReturnValue({
+      type: "charge.refunded",
+      data: { object: { refunds: { data: [{ id: "re_1", payment_intent: "pi_1", status: "succeeded" }] } } },
+    });
+
+    expect(gateway.parseWebhook("{}", headers)).toEqual({ type: "refund.updated", paymentIntentId: "pi_1", refundId: "re_1", status: "succeeded" });
+  });
+
+  it("ignores a charge.refunded event that carries no refund", () => {
+    const { constructEvent, gateway } = setup();
+    constructEvent.mockReturnValue({ type: "charge.refunded", data: { object: { refunds: { data: [] } } } });
+
+    expect(gateway.parseWebhook("{}", headers)).toEqual({ type: "ignored", providerType: "charge.refunded" });
+  });
+
   it("rejects a body whose signature does not verify", () => {
     const { constructEvent, gateway } = setup();
     constructEvent.mockImplementation(() => {
@@ -230,5 +306,46 @@ describe("StripeGateway.refund", () => {
     refundCreate.mockRejectedValue("boom");
 
     await expect(gateway.refund({ paymentIntentId: "pi_1", amount: 1, idempotencyKey: "k" })).rejects.toBeInstanceOf(PaymentUnavailableError);
+  });
+});
+
+describe("StripeGateway.listRefunds", () => {
+  it("lists the refunds of a payment intent, mapping each status", async () => {
+    const { refundList, gateway } = setup();
+    refundList.mockResolvedValue({
+      data: [
+        { id: "re_1", status: "succeeded" },
+        { id: "re_2", status: "failed" },
+        { id: "re_3", status: "canceled" },
+        { id: "re_4", status: "pending" },
+      ],
+    });
+
+    const refunds = await gateway.listRefunds("pi_1");
+
+    expect(refundList).toHaveBeenCalledWith({ payment_intent: "pi_1" });
+    expect(refunds).toEqual([
+      { id: "re_1", status: "succeeded" },
+      { id: "re_2", status: "failed" },
+      { id: "re_3", status: "failed" },
+      { id: "re_4", status: "pending" },
+    ]);
+  });
+
+  it("maps a provider failure to PaymentUnavailableError without leaking the message", async () => {
+    const { refundList, gateway } = setup();
+    refundList.mockRejectedValue(new Error("secret provider detail"));
+
+    const error = await gateway.listRefunds("pi_1").catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(PaymentUnavailableError);
+    expect((error as Error).message).not.toContain("secret provider detail");
+  });
+
+  it("maps a thrown non-Error value to PaymentUnavailableError", async () => {
+    const { refundList, gateway } = setup();
+    refundList.mockRejectedValue("boom");
+
+    await expect(gateway.listRefunds("pi_1")).rejects.toBeInstanceOf(PaymentUnavailableError);
   });
 });

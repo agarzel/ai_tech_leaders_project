@@ -122,4 +122,24 @@ describe("FakeGateway", () => {
     expect(await fake.refund(refund)).toBe("fake_re_refund:booking-1");
     expect(await fake.refund(refund)).toBe(await fake.refund(refund));
   });
+
+  it("lists a refund as succeeded once it was created", async () => {
+    const fake = gateway();
+
+    await fake.refund({ paymentIntentId: "pi_1", amount: 15000, idempotencyKey: "refund:booking-1" });
+
+    await expect(fake.listRefunds("pi_1")).resolves.toEqual([{ id: "fake_re_refund:booking-1", status: "succeeded" }]);
+  });
+
+  it("lists no refunds for a payment intent it never refunded", async () => {
+    await expect(gateway().listRefunds("pi_unknown")).resolves.toEqual([]);
+  });
+
+  it("does not list another payment intent's refund", async () => {
+    const fake = gateway();
+
+    await fake.refund({ paymentIntentId: "pi_1", amount: 15000, idempotencyKey: "refund:booking-1" });
+
+    await expect(fake.listRefunds("pi_2")).resolves.toEqual([]);
+  });
 });

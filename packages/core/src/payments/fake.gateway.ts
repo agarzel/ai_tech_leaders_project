@@ -1,7 +1,7 @@
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { ValidationError } from "../http/errors";
-import type { CheckoutInput, CheckoutSession, ExpiredCheckout, PaymentEvent, PaymentGateway } from "./payment-gateway";
+import type { CheckoutInput, CheckoutSession, ExpiredCheckout, PaymentEvent, PaymentGateway, RefundRecord } from "./payment-gateway";
 
 export const FAKE_SIGNATURE_HEADER = "x-fake-signature";
 
@@ -24,6 +24,8 @@ export class FakeGateway implements PaymentGateway {
   private readonly sessions = new Map<string, FakeCheckoutSession>();
   // Sessions a signed "completed" event was created for: expiring one of them reports `paid`, like the real provider.
   private readonly paid = new Set<string>();
+  // Keyed by refund id, so a retried idempotency key finds the same record instead of creating a second one.
+  private readonly refunds = new Map<string, RefundRecord & { paymentIntentId: string }>();
 
   constructor(private readonly options: { secret: string; appUrl: string }) {}
 
@@ -39,9 +41,17 @@ export class FakeGateway implements PaymentGateway {
     return this.paid.has(sessionId) ? { state: "paid", paymentIntentId: `fake_pi_${sessionId}` } : { state: "expired" };
   }
 
-  /** Deterministic: the refund id is derived from the key, so the same key always gives the same refund. */
+  /** Deterministic: the refund id is derived from the key, so the same key always gives the same refund. Succeeds immediately. */
   async refund(input: { paymentIntentId: string; amount: number; idempotencyKey: string }): Promise<string> {
-    return `fake_re_${input.idempotencyKey}`;
+    const id = `fake_re_${input.idempotencyKey}`;
+    if (!this.refunds.has(id)) this.refunds.set(id, { id, paymentIntentId: input.paymentIntentId, status: "succeeded" });
+    return id;
+  }
+
+  async listRefunds(paymentIntentId: string): Promise<RefundRecord[]> {
+    return [...this.refunds.values()]
+      .filter((refund) => refund.paymentIntentId === paymentIntentId)
+      .map(({ id, status }) => ({ id, status }));
   }
 
   getSession(sessionId: string): FakeCheckoutSession | undefined {

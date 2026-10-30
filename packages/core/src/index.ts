@@ -13,7 +13,7 @@ export { webhookHandler } from "./http/webhookHandler";
 export { makeCrudRoute } from "./http/makeCrudRoute";
 export { SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS, sessionCookieOptions, type SessionCookieOptions } from "./http/session-cookie";
 export { FAKE_SIGNATURE_HEADER, FakeGateway, type FakeCheckoutSession } from "./payments/fake.gateway";
-export type { CheckoutInput, CheckoutSession, ExpiredCheckout, PaymentEvent, PaymentGateway } from "./payments/payment-gateway";
+export type { CheckoutInput, CheckoutSession, ExpiredCheckout, PaymentEvent, PaymentGateway, RefundRecord } from "./payments/payment-gateway";
 export { logger, type Logger } from "./logger";
 export { RateLimiter, type RateLimitCheck, type RateLimiterOptions } from "./rate-limiter";
 export { AuthService, LOGIN_RATE_LIMIT, PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH, type SessionUserDto } from "./services/auth/auth.service";

@@ -6,6 +6,7 @@ import type { PaymentEvent } from "../../payments/payment-gateway";
 import { FakeClock } from "../../testing/fake-clock";
 import type { SlotService } from "../availability/slot.service";
 import { ACCEPTANCE_LEAD_HOURS, BookingTransitions } from "./booking-transitions.service";
+import { MAX_REFUND_ATTEMPTS } from "./sweep.service";
 
 const HOUR = 3_600_000;
 const NOW = new Date("2026-06-01T08:00:00Z");
@@ -181,6 +182,51 @@ describe("BookingTransitions.handlePaymentEvent", () => {
     expect(ctx.payment.status).toBe("open");
     expect(ctx.tx.flush).not.toHaveBeenCalled();
     expect(ctx.logger.error).toHaveBeenCalledWith({ sessionId: "cs_1", bookingId: "b1" }, "Paid event does not match the booking, no transition");
+  });
+});
+
+describe("BookingTransitions.handlePaymentEvent: refund outcome", () => {
+  it("marks the payment refunded when a refund.updated webhook confirms success", async () => {
+    ctx = setup({ payment: { status: "refund_requested", paymentIntentId: "pi_1", refundAttempts: 0 } });
+
+    await ctx.service.handlePaymentEvent({ type: "refund.updated", paymentIntentId: "pi_1", refundId: "re_1", status: "succeeded" });
+
+    expect(ctx.payment).toMatchObject({ status: "refunded", refundId: "re_1", refundedAt: NOW, lastError: null });
+    expect(ctx.tx.findOne).toHaveBeenCalledWith(Payment, { paymentIntentId: "pi_1" }, { lockMode: LockMode.PESSIMISTIC_WRITE });
+  });
+
+  it("counts a failed attempt and marks refund_failed after the maximum", async () => {
+    ctx = setup({ payment: { status: "refund_requested", paymentIntentId: "pi_1", refundAttempts: MAX_REFUND_ATTEMPTS - 1 } });
+
+    await ctx.service.handlePaymentEvent({ type: "refund.updated", paymentIntentId: "pi_1", refundId: "re_1", status: "failed" });
+
+    expect(ctx.payment).toMatchObject({ status: "refund_failed", refundAttempts: MAX_REFUND_ATTEMPTS });
+    expect(ctx.logger.error).toHaveBeenCalledWith({ paymentIntentId: "pi_1", refundAttempts: MAX_REFUND_ATTEMPTS }, "Refund failed after the maximum attempts");
+  });
+
+  it("keeps retrying below the maximum", async () => {
+    ctx = setup({ payment: { status: "refund_requested", paymentIntentId: "pi_1", refundAttempts: 0 } });
+
+    await ctx.service.handlePaymentEvent({ type: "refund.updated", paymentIntentId: "pi_1", refundId: "re_1", status: "failed" });
+
+    expect(ctx.payment).toMatchObject({ status: "refund_requested", refundAttempts: 1 });
+  });
+
+  it("ignores a refund webhook when no matching payment is found", async () => {
+    ctx.tx.findOne.mockResolvedValueOnce(null);
+
+    await ctx.service.handlePaymentEvent({ type: "refund.updated", paymentIntentId: "pi_missing", refundId: "re_1", status: "succeeded" });
+
+    expect(ctx.tx.flush).not.toHaveBeenCalled();
+  });
+
+  it("does nothing for a refund webhook once the payment already settled", async () => {
+    ctx = setup({ payment: { status: "refunded", paymentIntentId: "pi_1" } });
+
+    await ctx.service.handlePaymentEvent({ type: "refund.updated", paymentIntentId: "pi_1", refundId: "re_1", status: "succeeded" });
+
+    expect(ctx.payment.status).toBe("refunded");
+    expect(ctx.tx.flush).not.toHaveBeenCalled();
   });
 });
 
