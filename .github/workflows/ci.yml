@@ -4,12 +4,33 @@ on:
   pull_request:
   push:
     branches: [main]
+  # Night shift (lesson 13): the full CI on main every night catches what changes without a commit –
+  # a new dependency advisory, a Chrome or runner update, a flaky test. Also runnable by hand.
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
 
 concurrency:
-  group: ci-${{ github.ref }}
+  # The event is part of the group, so the nightly run never cancels a push run on main (or the other way round).
+  group: ci-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:
+  # Night shift only: known vulnerabilities in production dependencies. Not part of the PR gate – a new advisory
+  # appears without any change in this repo, so it must not turn an unrelated PR red.
+  audit:
+    name: Dependency audit
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - run: npm audit --omit=dev --audit-level=high
+
   check:
     name: Lint, typecheck, build
     runs-on: ubuntu-latest
@@ -81,15 +102,17 @@ jobs:
           restore-keys: ${{ runner.os }}-agent-browser-
 
       # Chrome for Testing + Linux libraries for the headless browser (the libraries install on every run).
+      # timeout: apt in --with-deps once hung 13 min on the Ubuntu mirror (PR #83); fail fast and rerun instead.
       - run: npx agent-browser install --with-deps
+        timeout-minutes: 5
 
       # Keep only the newest Chrome, so the cache does not grow with every release.
       - name: Prune older Chrome versions
         id: chrome
         run: |
           cd ~/.agent-browser/browsers
-          newest=$(ls -d chrome-* | sort -V | tail -n 1)
-          for dir in chrome-*; do [ "$dir" = "$newest" ] || rm -rf "$dir"; done
+          newest=$(ls -d chrome-[0-9]* | sort -V | tail -n 1)
+          for dir in chrome-[0-9]*; do [ "$dir" = "$newest" ] || rm -rf "$dir"; done
           echo "dir=$newest" >> "$GITHUB_OUTPUT"
 
       - name: Save agent-browser Chrome
