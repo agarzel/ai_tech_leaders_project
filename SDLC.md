@@ -132,6 +132,8 @@ Every PR passes the full validation gate before review sign-off, in this order:
 
 Any non-zero exit fails the gate and blocks the PR. The implementing skills run the gate before opening a PR, and `om-check-and-commit` runs it before pushing a hand-worked branch. The command list lives in `.ai/agentic.config.json`; when it changes, update it there and in this section together.
 
+**Night shift.** CI also runs on `main` every night (`schedule`, or by hand with `workflow_dispatch`), plus a `Dependency audit` job (`npm audit --omit=dev --audit-level=high`) that runs only then. The audit is not part of the PR gate: a new advisory appears without any change in the repo. A red nightly run becomes a maintenance task – type *parallel* in `.ai/runs/2026-10-30-lesson-13-backlog-triage.md`.
+
 ## Amending this process
 
 This document and `.ai/agentic.config.json` describe the same process: change them together, and re-run the `om-setup-agent-pipeline` skill when the toolchain or label taxonomy changes.
