@@ -18,6 +18,7 @@ function setup() {
   const calls: Calls = [];
   const tx = {
     count: vi.fn().mockResolvedValue(0),
+    findOne: vi.fn().mockResolvedValue({ id: "u1" }),
     create: vi.fn((entity: unknown, data: Record<string, unknown>) => ({ id: entity === Booking ? "b1" : "pay1", ...data })),
     getReference: vi.fn((_entity: unknown, id: string) => ({ ref: id })),
     flush: vi.fn(async () => {
@@ -107,6 +108,34 @@ describe("BookingService.create", () => {
 
     expect(ctx.slotService.assertBookable).toHaveBeenCalledWith("s1", NOW, ctx.tx, LockMode.PESSIMISTIC_WRITE);
     expect(ctx.calls.indexOf("tx:start")).toBeLessThan(ctx.calls.indexOf("flush"));
+  });
+
+  it("locks the mentee before counting only unexpired pending-payment bookings", async () => {
+    ctx.tx.count.mockResolvedValueOnce(1);
+
+    await ctx.service.create("u1", input);
+
+    expect(ctx.tx.findOne).toHaveBeenCalledWith(User, { id: "u1" }, { lockMode: LockMode.PESSIMISTIC_WRITE });
+    expect(ctx.tx.count).toHaveBeenNthCalledWith(1, Booking, {
+      mentee: "u1",
+      status: "pending_payment",
+      holdExpiresAt: { $gt: NOW },
+    });
+    expect(ctx.tx.findOne.mock.invocationCallOrder[0]).toBeLessThan(ctx.tx.count.mock.invocationCallOrder[0]);
+  });
+
+  it("rejects creation when the mentee already has two active unpaid bookings", async () => {
+    ctx.tx.count.mockResolvedValueOnce(2);
+
+    await expect(ctx.service.create("u1", input)).rejects.toMatchObject({
+      code: "conflict",
+      status: 409,
+      message: "Finish or abandon your previous payment first",
+    });
+
+    expect(ctx.slotService.assertBookable).not.toHaveBeenCalled();
+    expect(ctx.tx.create).not.toHaveBeenCalled();
+    expect(ctx.paymentGateway.createCheckout).not.toHaveBeenCalled();
   });
 
   it("creates the checkout only after the commit, then opens the payment", async () => {
