@@ -3,7 +3,7 @@
 - **Date:** 2026-10-13
 - **Agent:** Claude Code
 - **Branch:** `engineering-standards`
-- **Spec:** `.ai/specs/2026-10-13-engineering-standards.md`
+- **Spec:** `.ai/specs/implemented/2026-10-13-engineering-standards.md`
 - **Source doc:** `.ai/docs/engineering-standards.md` (course file `2026-09-01-engineering-standards.md` + adaptations preface)
 
 ## Goal

@@ -3,7 +3,7 @@
 - **Date:** 2026-10-13
 - **Agent:** Claude Code
 - **Branch:** `base-stack`
-- **Spec:** `.ai/specs/2026-10-13-base-stack.md`
+- **Spec:** `.ai/specs/implemented/2026-10-13-base-stack.md`
 
 ## Goal
 

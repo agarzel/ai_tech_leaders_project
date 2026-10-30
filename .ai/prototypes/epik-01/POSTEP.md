@@ -6,7 +6,7 @@ Zadanie: `lekcja-07/klikalny-prototyp-devmentor.txt` (ćwiczenie 2b), dostosowan
 
 - Mapa ekranów: `lekcja-07/mapa-ekranow.md` (decyzje właściciela 2026-10-23 na początku sekcji 4; ID ekranów s01–s12, stanów sNN.k, scenariuszy c01–c22, luk L/G stałe).
 - Szary prototyp (zachowanie, założenia A01–A10): `.ai/prototypes/discovery/mentor-onboarding/revision-001/` (`index.html`, `README.md`). A01–A06 zaakceptowane, A07–A10 otwarte.
-- Spec: `.ai/specs/2026-10-19-mentor-accounts-and-offer.md`; brief: `.ai/specs/product-brief.md` (D10–D16, N01–N03).
+- Spec: `.ai/specs/implemented/2026-10-19-mentor-accounts-and-offer.md`; brief: `.ai/specs/product-brief.md` (D10–D16, N01–N03).
 - Design system: `packages/ui` (`src/styles/tokens.css`, `theme.css`, `src/components/ui`, `src/components/{auth,mentors,availability}`, `src/backend`), `.ai/docs/design-system.md`, `AGENTS.md`, `packages/ui/AGENTS.md`. Wzorce składania ekranów: `packages/ui/stories/product/E01/screens/*.stories.tsx` i `stories/mocks/fixtures.ts`.
 - Silnik przeglądu: `lekcja-07/silnik-przegladu/` (README: `prototype.js`, `comments.js`, `prototype.css`, `mostek.css`).
 - Kod prototypu: `.ai/prototypes/epik-01/`. Wynik budowania (nie commitować): `packages/ui/.storybook/public/prototypes/epik-01/index.html` → podgląd w Storybooku pod `/prototypes/epik-01/index.html`.

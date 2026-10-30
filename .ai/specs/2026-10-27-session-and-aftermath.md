@@ -1,6 +1,6 @@
 # Session and aftermath (Epic 03)
 
-Status: **ready for implementation** (phases 1–3). Open Questions 1, 2, 4 and 5 are answered with the recommendations below, accepted by the owner on 2026-10-27 ("rekomendowane"). Question 3 (Q03) stays open and keeps #35 out of this spec.
+Status: **implemented, not yet closed** – phases 1–3 merged (#73, #74). Before moving to `implemented/`: the manual Stripe test-mode check of the cancellation refund (tracked in #31) and closing #33, #34, #36. Open Questions 1, 2, 4 and 5 are answered with the recommendations below, accepted by the owner on 2026-10-27 ("rekomendowane"). Question 3 (Q03) stays open and keeps #35 out of this spec.
 
 ## 📝 TLDR
 Future behavior: a booked session takes place at its time as a text exchange between the mentor and the mentee; the mentee can cancel and sees whether the booking is refunded; the mentor can write an optional private note that the mentee approves before anyone else sees it. This spec covers backlog #33, #34 and #36 (epic #23). No-show settlement (#35) is parked until Q03 is answered. It reuses the booking state machine, the payment port, `SweepService` and the booking screens from `2026-10-19-booking-and-prepayment.md`.
