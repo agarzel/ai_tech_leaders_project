@@ -70,6 +70,7 @@ const refundPayment = (id = "pay1", bookingId = "b1"): Row => ({
   amount: 15_000,
   paymentIntentId: `pi_${id}`,
   refundAttempts: 0,
+  refundFailureIds: [],
   refundId: null,
   refundedAt: null,
   lastError: null,
@@ -270,6 +271,32 @@ describe("SweepService.run: refund reconciliation", () => {
     expect(payment).toMatchObject({ status: "refund_requested", refundAttempts: 0, refundId: null });
     expect(ctx.tx.flush).not.toHaveBeenCalled();
     expect(summary).toMatchObject({ refundsReconciled: 0, failed: 0 });
+  });
+
+  it("does not create another refund when a previous provider refund is still pending", async () => {
+    const payment = refundPayment();
+    ctx = setup({ refunds: [payment] });
+    ctx.locked.set("pay1", payment);
+    ctx.gateway.listRefunds.mockReset().mockResolvedValue([{ id: "re_pending", status: "pending" }]);
+
+    const summary = await ctx.service.run(NOW);
+
+    expect(ctx.gateway.refund).not.toHaveBeenCalled();
+    expect(payment).toMatchObject({ status: "refund_requested", refundAttempts: 0, refundFailureIds: [] });
+    expect(summary.refundsReconciled).toBe(0);
+  });
+
+  it("counts a provider failure id once even when the sweep sees it again", async () => {
+    const payment = refundPayment();
+    ctx = setup({ refunds: [payment] });
+    ctx.locked.set("pay1", payment);
+    ctx.gateway.refund.mockResolvedValue("re_failed");
+    ctx.gateway.listRefunds.mockReset().mockResolvedValue([{ id: "re_failed", status: "failed" }]);
+
+    await ctx.service.run(NOW);
+    await ctx.service.run(NOW);
+
+    expect(payment).toMatchObject({ refundAttempts: 1, refundFailureIds: ["re_failed"] });
   });
 
   it("counts an attempt when the provider confirms the fresh refund failed outright", async () => {

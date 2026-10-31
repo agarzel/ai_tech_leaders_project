@@ -64,6 +64,19 @@ describe("FakeGateway", () => {
     });
   });
 
+  it("accepts a signed failed refund event", () => {
+    const fake = gateway();
+    const rawBody = JSON.stringify({ type: "refund.updated", paymentIntentId: "pi_1", refundId: "re_1", status: "failed" });
+    const signature = createHmac("sha256", secret).update(rawBody).digest("hex");
+
+    expect(fake.parseWebhook(rawBody, new Headers({ [FAKE_SIGNATURE_HEADER]: signature }))).toEqual({
+      type: "refund.updated",
+      paymentIntentId: "pi_1",
+      refundId: "re_1",
+      status: "failed",
+    });
+  });
+
   it("rejects a tampered body", async () => {
     const fake = gateway();
     const { sessionId } = await fake.createCheckout(input);

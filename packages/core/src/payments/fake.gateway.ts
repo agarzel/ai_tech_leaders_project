@@ -13,6 +13,12 @@ const fakeEventSchema = z.object({
   currency: z.string().nullable(),
   paymentIntentId: z.string().nullable(),
 });
+const fakeRefundEventSchema = z.object({
+  type: z.literal("refund.updated"),
+  paymentIntentId: z.string(),
+  refundId: z.string(),
+  status: z.enum(["succeeded", "failed"]),
+});
 
 export type FakeCheckoutSession = CheckoutInput & { sessionId: string };
 
@@ -84,6 +90,8 @@ export class FakeGateway implements PaymentGateway {
     } catch {
       throw new ValidationError("Invalid webhook payload");
     }
+    const refund = fakeRefundEventSchema.safeParse(payload);
+    if (refund.success) return refund.data;
     const parsed = fakeEventSchema.safeParse(payload);
     if (!parsed.success) throw new ValidationError("Invalid webhook payload");
     return { type: "checkout.completed", ...parsed.data };

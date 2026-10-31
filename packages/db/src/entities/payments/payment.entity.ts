@@ -39,6 +39,8 @@ export const Payment = defineSingletonEntity("Payment", () =>
       currency: p.string().length(3).default(CURRENCY),
       refundId: p.string().nullable(),
       refundAttempts: p.integer().default(0),
+      // Provider refund ids already counted as failed; shared by webhook and sweep retries.
+      refundFailureIds: p.json<string[]>().default("[]").onCreate(() => []),
       paidAt: p.datetime().nullable(),
       refundedAt: p.datetime().nullable(),
       // Grosze the mentor keeps when a late cancellation keeps the payment; paying it out is a later spec (D14, Q05).

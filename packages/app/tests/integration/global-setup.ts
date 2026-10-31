@@ -24,6 +24,8 @@ declare module "vitest" {
     accounts: { admin: { email: string; password: string } };
     /** Id of the PostgreSQL container, for tests that seed or inspect rows (`support/database.ts`). */
     databaseContainerId: string;
+    /** Connection string for commands that need to exercise migrations against the ephemeral database. */
+    databaseUrl: string;
     /** The sweep endpoint's token (`x-sweep-token`), the same value the app runs with. */
     sweepSecret: string;
   }
@@ -62,6 +64,7 @@ export default async function setup(project: TestProject) {
   project.provide("baseUrl", baseUrl);
   project.provide("accounts", { admin });
   project.provide("databaseContainerId", database.getId());
+  project.provide("databaseUrl", databaseUrl);
   project.provide("sweepSecret", INTEGRATION_PAYMENTS_ENV.SWEEP_SECRET);
 
   return async () => {
