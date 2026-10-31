@@ -62,31 +62,49 @@ describe("note status", () => {
     expect(noteEffectiveStatus("draft", STARTS_AT, 25, deadline)).toBe("rejected");
   });
 
+  it("starts a replaced draft's approval window at the replacement time", () => {
+    const replacedAt = new Date(deadline.getTime() + 1);
+    const sevenDaysAfterReplacement = new Date(replacedAt.getTime() + 7 * DAY);
+
+    expect(noteEffectiveStatus("draft", STARTS_AT, 25, replacedAt, replacedAt)).toBe("draft");
+    expect(noteEffectiveStatus("draft", STARTS_AT, 25, new Date(sevenDaysAfterReplacement.getTime() - 1), replacedAt)).toBe("draft");
+    expect(noteEffectiveStatus("draft", STARTS_AT, 25, sevenDaysAfterReplacement, replacedAt)).toBe("rejected");
+  });
+
   it("never changes an approved or rejected note", () => {
     expect(noteEffectiveStatus("approved", STARTS_AT, 25, deadline)).toBe("approved");
     expect(noteEffectiveStatus("rejected", STARTS_AT, 25, deadline)).toBe("rejected");
   });
 
   it("lets the mentor write only a draft after the session has ended", () => {
-    expect(() => assertNoteWritable("draft", STARTS_AT, 25, ENDS_AT)).not.toThrow();
+    expect(() => assertNoteWritable("draft", 0, null, STARTS_AT, 25, ENDS_AT)).not.toThrow();
   });
 
   it("refuses a note before the session ends", () => {
-    expect(() => assertNoteWritable("draft", STARTS_AT, 25, new Date(ENDS_AT.getTime() - 1))).toThrow(ConflictError);
+    expect(() => assertNoteWritable("draft", 0, null, STARTS_AT, 25, new Date(ENDS_AT.getTime() - 1))).toThrow(ConflictError);
   });
 
   it("refuses to replace a decided note", () => {
-    expect(() => assertNoteWritable("approved", STARTS_AT, 25, ENDS_AT)).toThrow(ConflictError);
-    expect(() => assertNoteWritable("rejected", STARTS_AT, 25, ENDS_AT)).toThrow(ConflictError);
+    expect(() => assertNoteWritable("approved", 0, null, STARTS_AT, 25, ENDS_AT)).toThrow(ConflictError);
+    expect(() => assertNoteWritable("rejected", 1, null, STARTS_AT, 25, ENDS_AT)).toThrow(ConflictError);
+  });
+
+  it("allows one replacement of a rejected note", () => {
+    expect(() => assertNoteWritable("rejected", 0, null, STARTS_AT, 25, deadline)).not.toThrow();
   });
 
   it("refuses to write a draft whose approval window has closed", () => {
-    expect(() => assertNoteWritable("draft", STARTS_AT, 25, deadline)).toThrow(ConflictError);
+    expect(() => assertNoteWritable("draft", 0, null, STARTS_AT, 25, deadline)).toThrow(ConflictError);
+    const replacedAt = new Date(deadline.getTime() + 1);
+    expect(() => assertNoteWritable("draft", 1, replacedAt, STARTS_AT, 25, replacedAt)).not.toThrow();
+    expect(() => assertNoteWritable("draft", 1, replacedAt, STARTS_AT, 25, new Date(replacedAt.getTime() + 7 * DAY))).toThrow(ConflictError);
   });
 
   it("lets the mentee decide only a draft inside its window", () => {
     expect(() => assertNoteDecidable("draft", STARTS_AT, 25, ENDS_AT)).not.toThrow();
     expect(() => assertNoteDecidable("draft", STARTS_AT, 25, deadline)).toThrow(ConflictError);
+    expect(() => assertNoteDecidable("draft", STARTS_AT, 25, new Date(deadline.getTime() + 7 * DAY - 1), new Date(deadline.getTime() + 1))).not.toThrow();
+    expect(() => assertNoteDecidable("draft", STARTS_AT, 25, new Date(deadline.getTime() + 7 * DAY + 1), new Date(deadline.getTime() + 1))).toThrow(ConflictError);
     expect(() => assertNoteDecidable("approved", STARTS_AT, 25, ENDS_AT)).toThrow(ConflictError);
   });
 });

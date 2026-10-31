@@ -55,6 +55,29 @@ describe("SessionNoteService.write", () => {
     expect(em.flush).toHaveBeenCalled();
   });
 
+  it("replaces a rejected note once and resets it for the mentee to decide again", async () => {
+    const replacementTime = new Date(DEADLINE.getTime() + 1);
+    const existing = { status: "rejected", body: "old", rejectedReplacementCount: 0, decidedAt: new Date(), replacedAt: null };
+    const { em, service } = setup({ note: existing, now: replacementTime });
+
+    await expect(service.write("b1", "mentor", " corrected ")).resolves.toEqual({ status: "draft", body: "corrected" });
+
+    expect(existing).toMatchObject({
+      status: "draft",
+      body: "corrected",
+      rejectedReplacementCount: 1,
+      decidedAt: null,
+      replacedAt: replacementTime,
+    });
+    expect(em.flush).toHaveBeenCalled();
+  });
+
+  it("refuses a second replacement after the replacement is rejected", async () => {
+    const { service } = setup({ note: { status: "rejected", body: "again", rejectedReplacementCount: 1 } });
+
+    await expect(service.write("b1", "mentor", "third attempt")).rejects.toThrow(ConflictError);
+  });
+
   it("answers not_found for a user who is not the mentor", async () => {
     const { service } = setup();
 

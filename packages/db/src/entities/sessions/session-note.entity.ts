@@ -19,6 +19,8 @@ export const SessionNote = defineSingletonEntity("SessionNote", () =>
       body: p.text(),
       status: p.string().$type<SessionNoteStatus>().default("draft"),
       decidedAt: p.datetime().nullable(),
+      rejectedReplacementCount: p.integer().default(0),
+      replacedAt: p.datetime().nullable(),
     },
     uniques: [{ name: "session_notes_booking_id_unique", properties: ["booking"] }],
   }),
