@@ -72,7 +72,7 @@ export class SweepService {
         // Past the hold the expire step owns the booking.
         booking: { status: "pending_payment", holdExpiresAt: { $gt: now } },
       },
-      { populate: ["booking"], limit: SWEEP_BATCH_SIZE },
+      { populate: ["booking", "booking.mentee"], limit: SWEEP_BATCH_SIZE },
     );
   }
 
@@ -96,6 +96,7 @@ export class SweepService {
     const returnUrl = new URL(`/bookings/${booking.id}`, this.deps.env.APP_URL).toString();
     const session = await this.deps.paymentGateway.createCheckout({
       bookingId: booking.id,
+      customerEmail: booking.mentee.email,
       amount: payment.amount,
       currency: payment.currency,
       description: `DevMentor session, ${booking.lengthMinutes} min`,
