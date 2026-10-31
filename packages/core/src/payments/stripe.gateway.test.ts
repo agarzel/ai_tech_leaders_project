@@ -15,18 +15,47 @@ const input: CheckoutInput = {
   customerEmail: "mentee@devmentor.test",
 };
 
+/** Every gateway method maps a provider rejection (Error or not) to PaymentUnavailableError without leaking it. */
+function itMapsProviderFailures(reject: (ctx: ReturnType<typeof setup>) => ReturnType<typeof vi.fn>, call: (gateway: StripeGateway) => Promise<unknown>) {
+  it("maps a provider failure to PaymentUnavailableError without leaking the message", async () => {
+    const ctx = setup();
+    reject(ctx).mockRejectedValue(new Error("secret provider detail"));
+
+    const error = await call(ctx.gateway).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(PaymentUnavailableError);
+    expect((error as Error).message).not.toContain("secret provider detail");
+  });
+
+  it("maps a thrown non-Error value to PaymentUnavailableError", async () => {
+    const ctx = setup();
+    reject(ctx).mockRejectedValue("boom");
+
+    await expect(call(ctx.gateway)).rejects.toBeInstanceOf(PaymentUnavailableError);
+  });
+}
+
 function setup() {
   const create = vi.fn();
   const constructEvent = vi.fn();
   const retrieve = vi.fn();
   const expire = vi.fn();
   const refundCreate = vi.fn();
+  const refundList = vi.fn();
   const client = {
     checkout: { sessions: { create, retrieve, expire } },
-    refunds: { create: refundCreate },
+    refunds: { create: refundCreate, list: refundList },
     webhooks: { constructEvent },
   } as unknown as StripeClient;
-  return { create, constructEvent, retrieve, expire, refundCreate, gateway: new StripeGateway({ client, webhookSecret: "whsec_test" }) };
+  return {
+    create,
+    constructEvent,
+    retrieve,
+    expire,
+    refundCreate,
+    refundList,
+    gateway: new StripeGateway({ client, webhookSecret: "whsec_test" }),
+  };
 }
 
 describe("StripeGateway.createCheckout", () => {
@@ -55,22 +84,7 @@ describe("StripeGateway.createCheckout", () => {
     );
   });
 
-  it("maps a provider failure to PaymentUnavailableError without leaking the provider message", async () => {
-    const { create, gateway } = setup();
-    create.mockRejectedValue(new Error("secret provider detail"));
-
-    const error = await gateway.createCheckout(input).catch((e: unknown) => e);
-
-    expect(error).toBeInstanceOf(PaymentUnavailableError);
-    expect((error as Error).message).not.toContain("secret provider detail");
-  });
-
-  it("maps a non-Error rejection to PaymentUnavailableError", async () => {
-    const { create, gateway } = setup();
-    create.mockRejectedValue("boom");
-
-    await expect(gateway.createCheckout(input)).rejects.toBeInstanceOf(PaymentUnavailableError);
-  });
+  itMapsProviderFailures((ctx) => ctx.create, (gateway) => gateway.createCheckout(input));
 
   it("treats a session without a url as unavailable", async () => {
     const { create, gateway } = setup();
@@ -130,6 +144,45 @@ describe("StripeGateway.parseWebhook", () => {
     expect(gateway.parseWebhook("{}", headers)).toEqual({ type: "ignored", providerType: "charge.succeeded" });
   });
 
+  it.each([
+    ["succeeded", { type: "refund.updated", paymentIntentId: "pi_1", refundId: "re_1", status: "succeeded" }],
+    ["failed", { type: "refund.updated", paymentIntentId: "pi_1", refundId: "re_1", status: "failed" }],
+    ["canceled", { type: "refund.updated", paymentIntentId: "pi_1", refundId: "re_1", status: "failed" }],
+    ["pending", { type: "ignored", providerType: "refund.updated" }],
+  ])("maps a refund.updated event with provider status %s", (status, expected) => {
+    const { constructEvent, gateway } = setup();
+    constructEvent.mockReturnValue({ type: "refund.updated", data: { object: { id: "re_1", payment_intent: "pi_1", status } } });
+
+    expect(gateway.parseWebhook("{}", headers)).toEqual(expected);
+  });
+
+  it("ignores a refund.updated event with an expanded or missing payment intent", () => {
+    const { constructEvent, gateway } = setup();
+    constructEvent.mockReturnValue({
+      type: "refund.updated",
+      data: { object: { id: "re_1", payment_intent: { id: "pi_1" }, status: "succeeded" } },
+    });
+
+    expect(gateway.parseWebhook("{}", headers)).toEqual({ type: "ignored", providerType: "refund.updated" });
+  });
+
+  it("maps a charge.refunded event from its latest refund", () => {
+    const { constructEvent, gateway } = setup();
+    constructEvent.mockReturnValue({
+      type: "charge.refunded",
+      data: { object: { refunds: { data: [{ id: "re_1", payment_intent: "pi_1", status: "succeeded" }] } } },
+    });
+
+    expect(gateway.parseWebhook("{}", headers)).toEqual({ type: "refund.updated", paymentIntentId: "pi_1", refundId: "re_1", status: "succeeded" });
+  });
+
+  it("ignores a charge.refunded event that carries no refund", () => {
+    const { constructEvent, gateway } = setup();
+    constructEvent.mockReturnValue({ type: "charge.refunded", data: { object: { refunds: { data: [] } } } });
+
+    expect(gateway.parseWebhook("{}", headers)).toEqual({ type: "ignored", providerType: "charge.refunded" });
+  });
+
   it("rejects a body whose signature does not verify", () => {
     const { constructEvent, gateway } = setup();
     constructEvent.mockImplementation(() => {
@@ -186,22 +239,7 @@ describe("StripeGateway.expireCheckout", () => {
     await expect(gateway.expireCheckout("cs_1")).rejects.toBeInstanceOf(PaymentUnavailableError);
   });
 
-  it("maps a provider failure to PaymentUnavailableError without leaking the message", async () => {
-    const { retrieve, gateway } = setup();
-    retrieve.mockRejectedValue(new Error("secret provider detail"));
-
-    const error = await gateway.expireCheckout("cs_1").catch((e: unknown) => e);
-
-    expect(error).toBeInstanceOf(PaymentUnavailableError);
-    expect((error as Error).message).not.toContain("secret provider detail");
-  });
-
-  it("maps a thrown non-Error value to PaymentUnavailableError", async () => {
-    const { retrieve, gateway } = setup();
-    retrieve.mockRejectedValue("boom");
-
-    await expect(gateway.expireCheckout("cs_1")).rejects.toBeInstanceOf(PaymentUnavailableError);
-  });
+  itMapsProviderFailures((ctx) => ctx.retrieve, (gateway) => gateway.expireCheckout("cs_1"));
 });
 
 describe("StripeGateway.refund", () => {
@@ -215,20 +253,31 @@ describe("StripeGateway.refund", () => {
     expect(refundCreate).toHaveBeenCalledWith({ payment_intent: "pi_1", amount: 15000 }, { idempotencyKey: "refund:booking-1" });
   });
 
-  it("maps a provider failure to PaymentUnavailableError without leaking the message", async () => {
-    const { refundCreate, gateway } = setup();
-    refundCreate.mockRejectedValue(new Error("secret provider detail"));
+  itMapsProviderFailures((ctx) => ctx.refundCreate, (gateway) => gateway.refund({ paymentIntentId: "pi_1", amount: 1, idempotencyKey: "k" }));
+});
 
-    const error = await gateway.refund({ paymentIntentId: "pi_1", amount: 1, idempotencyKey: "k" }).catch((e: unknown) => e);
+describe("StripeGateway.listRefunds", () => {
+  it("lists the refunds of a payment intent, mapping each status", async () => {
+    const { refundList, gateway } = setup();
+    refundList.mockResolvedValue({
+      data: [
+        { id: "re_1", status: "succeeded" },
+        { id: "re_2", status: "failed" },
+        { id: "re_3", status: "canceled" },
+        { id: "re_4", status: "pending" },
+      ],
+    });
 
-    expect(error).toBeInstanceOf(PaymentUnavailableError);
-    expect((error as Error).message).not.toContain("secret provider detail");
+    const refunds = await gateway.listRefunds("pi_1");
+
+    expect(refundList).toHaveBeenCalledWith({ payment_intent: "pi_1" });
+    expect(refunds).toEqual([
+      { id: "re_1", status: "succeeded" },
+      { id: "re_2", status: "failed" },
+      { id: "re_3", status: "failed" },
+      { id: "re_4", status: "pending" },
+    ]);
   });
 
-  it("maps a thrown non-Error value to PaymentUnavailableError", async () => {
-    const { refundCreate, gateway } = setup();
-    refundCreate.mockRejectedValue("boom");
-
-    await expect(gateway.refund({ paymentIntentId: "pi_1", amount: 1, idempotencyKey: "k" })).rejects.toBeInstanceOf(PaymentUnavailableError);
-  });
+  itMapsProviderFailures((ctx) => ctx.refundList, (gateway) => gateway.listRefunds("pi_1"));
 });

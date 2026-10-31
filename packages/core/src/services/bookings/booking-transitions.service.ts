@@ -7,6 +7,7 @@ import type { PaymentEvent } from "../../payments/payment-gateway";
 import { bookingDeclineSchema } from "../../validators/bookings/booking-decline.schema";
 import type { SlotService } from "../availability/slot.service";
 import { cancellationOutcome, type CancellationOutcome } from "../sessions/session-rules";
+import { MAX_REFUND_ATTEMPTS } from "./sweep.service";
 
 /** The mentor decides until this many hours before the session starts (spec: state machine, R05). */
 export const ACCEPTANCE_LEAD_HOURS = 12;
@@ -26,8 +27,12 @@ type PaidEvent = Extract<PaymentEvent, { type: "checkout.completed" }>;
 export class BookingTransitions {
   constructor(private readonly deps: { em: EntityManager; clock: Clock; logger: Logger; slotService: SlotService }) {}
 
-  /** Applies a verified provider event. Anything but a paid Checkout completion is ignored. */
+  /** Applies a verified provider event: a paid Checkout completion or a refund outcome. Anything else is ignored. */
   async handlePaymentEvent(event: PaymentEvent): Promise<void> {
+    if (event.type === "refund.updated") {
+      await this.applyRefundOutcome(event);
+      return;
+    }
     if (event.type !== "checkout.completed") {
       this.deps.logger.info({ providerType: event.providerType }, "Payment event ignored: type not handled");
       return;
@@ -135,6 +140,30 @@ export class BookingTransitions {
       payment.status = "refund_requested";
       await em.flush();
       return booking.slot.id;
+    });
+  }
+
+  /** A refund webhook's final outcome: moves `refund_requested` to `refunded`, or counts a failed attempt (spec: 3 max). */
+  private async applyRefundOutcome(event: Extract<PaymentEvent, { type: "refund.updated" }>): Promise<void> {
+    const now = this.deps.clock.now();
+    await this.deps.em.transactional(async (em) => {
+      const payment = await em.findOne(Payment, { paymentIntentId: event.paymentIntentId }, { lockMode: LockMode.PESSIMISTIC_WRITE });
+      if (!payment || payment.status !== "refund_requested") return;
+      if (event.status === "succeeded") {
+        payment.status = "refunded";
+        payment.refundId = event.refundId;
+        payment.refundedAt = now;
+        payment.lastError = null;
+        await em.flush();
+        return;
+      }
+      payment.refundAttempts += 1;
+      payment.lastError = "Refund failed (webhook)";
+      if (payment.refundAttempts >= MAX_REFUND_ATTEMPTS) {
+        payment.status = "refund_failed";
+        this.deps.logger.error({ paymentIntentId: event.paymentIntentId, refundAttempts: payment.refundAttempts }, "Refund failed after the maximum attempts");
+      }
+      await em.flush();
     });
   }
 

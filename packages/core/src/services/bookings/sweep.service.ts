@@ -135,19 +135,42 @@ export class SweepService {
     return this.deps.bookingTransitions.expirePayment(bookingId, now);
   }
 
-  /** Calls the provider outside any transaction, then records the outcome under a row lock. A failed attempt counts as `failed`. */
+  /**
+   * Calls the provider outside any transaction, then records the outcome under a row lock. Never trusts `refund()`'s
+   * return value alone: it lists the intent's refunds first (a prior refund may already have succeeded under a since-pruned
+   * idempotency key) and, after creating one, only finalizes once the provider reports it `succeeded`. A still-`pending`
+   * refund is left as `refund_requested` for the next sweep run or the provider's webhook to confirm. A provider failure
+   * counts as `failed`.
+   */
   private async reconcileRefund(payment: IPayment, now: Date): Promise<boolean> {
     const bookingId = payment.booking.id;
     let refundId: string | null = null;
+    let failed = false;
     let lastError = "";
     try {
       if (!payment.paymentIntentId) throw new Error("Payment has no payment intent");
-      refundId = await this.deps.paymentGateway.refund({
-        paymentIntentId: payment.paymentIntentId,
-        amount: payment.amount,
-        idempotencyKey: `refund:${bookingId}`,
-      });
+      const existing = await this.deps.paymentGateway.listRefunds(payment.paymentIntentId);
+      const succeeded = existing.find((refund) => refund.status === "succeeded");
+      if (succeeded) {
+        refundId = succeeded.id;
+      } else {
+        const newRefundId = await this.deps.paymentGateway.refund({
+          paymentIntentId: payment.paymentIntentId,
+          amount: payment.amount,
+          idempotencyKey: `refund:${bookingId}`,
+        });
+        const after = await this.deps.paymentGateway.listRefunds(payment.paymentIntentId);
+        const created = after.find((refund) => refund.id === newRefundId);
+        if (created?.status === "succeeded") {
+          refundId = created.id;
+        } else if (created?.status === "failed") {
+          failed = true;
+          lastError = "Refund attempt failed: provider reported the refund failed".slice(0, LAST_ERROR_MAX_LENGTH);
+        }
+        // Still pending: neither refunded nor a counted attempt — the webhook or a later sweep run settles it.
+      }
     } catch (error) {
+      failed = true;
       // The error's type only: a provider message can carry request details.
       lastError = `Refund attempt failed: ${error instanceof Error ? error.name : "unknown error"}`.slice(0, LAST_ERROR_MAX_LENGTH);
     }
@@ -163,6 +186,7 @@ export class SweepService {
         await em.flush();
         return "refunded";
       }
+      if (!failed) return "skipped";
       current.refundAttempts += 1;
       current.lastError = lastError;
       if (current.refundAttempts >= MAX_REFUND_ATTEMPTS) {

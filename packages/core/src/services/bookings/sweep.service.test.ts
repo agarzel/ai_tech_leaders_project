@@ -36,6 +36,8 @@ function setup(
     createCheckout: vi.fn().mockResolvedValue({ sessionId: "cs_new", url: "https://pay.test/cs_new" }),
     expireCheckout: vi.fn().mockResolvedValue({ state: "expired" }),
     refund: vi.fn().mockResolvedValue("re_1"),
+    // Pre-check finds nothing, post-check confirms the fresh refund succeeded: the default "happy path".
+    listRefunds: vi.fn().mockResolvedValueOnce([]).mockResolvedValue([{ id: "re_1", status: "succeeded" }]),
   };
   const transitions = {
     expirePayment: vi.fn().mockResolvedValue(true),
@@ -241,6 +243,45 @@ describe("SweepService.run: refund reconciliation", () => {
     await ctx.service.run(NOW);
 
     expect(ctx.gateway.refund.mock.invocationCallOrder[0]).toBeLessThan(ctx.em.transactional.mock.invocationCallOrder[0]);
+  });
+
+  it("finds an already-succeeded refund under a pruned idempotency key and never creates a new one", async () => {
+    const payment = refundPayment();
+    ctx = setup({ refunds: [payment] });
+    ctx.locked.set("pay1", payment);
+    ctx.gateway.listRefunds.mockReset().mockResolvedValue([{ id: "re_prior", status: "succeeded" }]);
+
+    const summary = await ctx.service.run(NOW);
+
+    expect(ctx.gateway.refund).not.toHaveBeenCalled();
+    expect(payment).toMatchObject({ status: "refunded", refundId: "re_prior", refundedAt: NOW });
+    expect(summary.refundsReconciled).toBe(1);
+  });
+
+  it("leaves the payment as refund_requested while a fresh refund is still pending at the provider", async () => {
+    const payment = refundPayment();
+    ctx = setup({ refunds: [payment] });
+    ctx.locked.set("pay1", payment);
+    ctx.gateway.listRefunds.mockReset().mockResolvedValueOnce([]).mockResolvedValueOnce([{ id: "re_1", status: "pending" }]);
+
+    const summary = await ctx.service.run(NOW);
+
+    expect(ctx.gateway.refund).toHaveBeenCalled();
+    expect(payment).toMatchObject({ status: "refund_requested", refundAttempts: 0, refundId: null });
+    expect(ctx.tx.flush).not.toHaveBeenCalled();
+    expect(summary).toMatchObject({ refundsReconciled: 0, failed: 0 });
+  });
+
+  it("counts an attempt when the provider confirms the fresh refund failed outright", async () => {
+    const payment = refundPayment();
+    ctx = setup({ refunds: [payment] });
+    ctx.locked.set("pay1", payment);
+    ctx.gateway.listRefunds.mockReset().mockResolvedValueOnce([]).mockResolvedValueOnce([{ id: "re_1", status: "failed" }]);
+
+    const summary = await ctx.service.run(NOW);
+
+    expect(payment).toMatchObject({ status: "refund_requested", refundAttempts: 1, refundId: null });
+    expect(summary).toMatchObject({ refundsReconciled: 0, failed: 1 });
   });
 
   it("counts an attempt and stores a short error that carries no provider detail when the refund fails", async () => {
