@@ -93,11 +93,11 @@ export class BookingTransitions {
     return true;
   }
 
-  /** The hold passed without payment: `pending_payment` becomes `payment_expired` and the slot is freed. False when nothing changed. */
-  async expirePayment(bookingId: string, now: Date): Promise<boolean> {
+  /** Expires a pending payment after the hold passes, or immediately after a definite checkout-creation failure. */
+  async expirePayment(bookingId: string, now: Date, reason: "hold-expired" | "checkout-failed" = "hold-expired"): Promise<boolean> {
     const slotId = await this.deps.em.transactional(async (em) => {
       const booking = await em.findOne(Booking, { id: bookingId }, { lockMode: LockMode.PESSIMISTIC_WRITE });
-      if (!booking || booking.status !== "pending_payment" || booking.holdExpiresAt.getTime() > now.getTime()) return null;
+      if (!booking || booking.status !== "pending_payment" || (reason === "hold-expired" && booking.holdExpiresAt.getTime() > now.getTime())) return null;
       booking.status = "payment_expired";
       const payment = await em.findOne(Payment, { booking: booking.id });
       if (payment && (payment.status === "creating" || payment.status === "open")) payment.status = "expired";
