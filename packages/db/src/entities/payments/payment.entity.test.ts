@@ -77,11 +77,14 @@ describe("Payment entity", () => {
   });
 
   it("starts with no refund and counts attempts from zero", () => {
-    const { refundId, refundAttempts } = meta().properties;
+    const { refundId, refundAttempts, refundFailureIds } = meta().properties;
 
     expect(refundId.nullable).toBe(true);
     expect(refundAttempts.default).toBe(0);
     expect(refundAttempts.nullable).toBeFalsy();
+    expect(refundFailureIds.default).toBe("[]");
+    expect(refundFailureIds.nullable).toBeFalsy();
+    expect(refundFailureIds.onCreate?.({} as never, {} as never)).toEqual([]);
   });
 
   it("leaves the payment, refund times and last error empty until they apply", () => {

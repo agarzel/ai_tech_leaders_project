@@ -5,6 +5,7 @@ import type { Logger } from "../../logger";
 import type { PaymentGateway } from "../../payments/payment-gateway";
 import { CHECKOUT_MARGIN_MINUTES } from "./booking.service";
 import type { BookingTransitions } from "./booking-transitions.service";
+import { recordRefundFailures } from "./payment-refund-attempts";
 
 /** Spec: a payment stuck in `creating` this long lost its Checkout call (crash between commit and the provider call). */
 export const CHECKOUT_RETRY_AFTER_MINUTES = 2;
@@ -145,14 +146,21 @@ export class SweepService {
   private async reconcileRefund(payment: IPayment, now: Date): Promise<boolean> {
     const bookingId = payment.booking.id;
     let refundId: string | null = null;
-    let failed = false;
+    let failureWithoutRefundId = false;
+    let pending = false;
+    let failedRefundIds: string[] = [];
     let lastError = "";
     try {
       if (!payment.paymentIntentId) throw new Error("Payment has no payment intent");
       const existing = await this.deps.paymentGateway.listRefunds(payment.paymentIntentId);
       const succeeded = existing.find((refund) => refund.status === "succeeded");
+      failedRefundIds = existing.filter((refund) => refund.status === "failed").map((refund) => refund.id);
+      if (failedRefundIds.length > 0) lastError = "Refund attempt failed: provider reports a failed refund";
       if (succeeded) {
         refundId = succeeded.id;
+      } else if (existing.some((refund) => refund.status === "pending")) {
+        // A refund is already in flight; creating another one can over-refund after the provider's idempotency window.
+        pending = true;
       } else {
         const newRefundId = await this.deps.paymentGateway.refund({
           paymentIntentId: payment.paymentIntentId,
@@ -160,17 +168,18 @@ export class SweepService {
           idempotencyKey: `refund:${bookingId}`,
         });
         const after = await this.deps.paymentGateway.listRefunds(payment.paymentIntentId);
+        failedRefundIds.push(...after.filter((refund) => refund.status === "failed").map((refund) => refund.id));
+        const afterSucceeded = after.find((refund) => refund.status === "succeeded");
+        if (afterSucceeded) refundId = afterSucceeded.id;
         const created = after.find((refund) => refund.id === newRefundId);
-        if (created?.status === "succeeded") {
-          refundId = created.id;
-        } else if (created?.status === "failed") {
-          failed = true;
+        if (created?.status === "failed") {
           lastError = "Refund attempt failed: provider reported the refund failed".slice(0, LAST_ERROR_MAX_LENGTH);
         }
+        pending = !refundId && after.some((refund) => refund.status === "pending");
         // Still pending: neither refunded nor a counted attempt — the webhook or a later sweep run settles it.
       }
     } catch (error) {
-      failed = true;
+      failureWithoutRefundId = true;
       // The error's type only: a provider message can carry request details.
       lastError = `Refund attempt failed: ${error instanceof Error ? error.name : "unknown error"}`.slice(0, LAST_ERROR_MAX_LENGTH);
     }
@@ -178,6 +187,7 @@ export class SweepService {
     const outcome = await this.deps.em.transactional(async (em): Promise<"refunded" | "failed" | "skipped"> => {
       const current = await em.findOne(Payment, { id: payment.id }, { lockMode: LockMode.PESSIMISTIC_WRITE });
       if (!current || current.status !== "refund_requested") return "skipped";
+      const newRefundFailures = recordRefundFailures(current, failedRefundIds);
       if (refundId) {
         current.status = "refunded";
         current.refundId = refundId;
@@ -186,10 +196,10 @@ export class SweepService {
         await em.flush();
         return "refunded";
       }
-      if (!failed) return "skipped";
-      current.refundAttempts += 1;
+      if (failureWithoutRefundId) current.refundAttempts += 1;
+      if (newRefundFailures === 0 && !failureWithoutRefundId) return "skipped";
       current.lastError = lastError;
-      if (current.refundAttempts >= MAX_REFUND_ATTEMPTS) {
+      if (!pending && current.refundAttempts >= MAX_REFUND_ATTEMPTS) {
         current.status = "refund_failed";
         this.deps.logger.error({ bookingId, refundAttempts: current.refundAttempts }, "Refund failed after the maximum attempts");
       }

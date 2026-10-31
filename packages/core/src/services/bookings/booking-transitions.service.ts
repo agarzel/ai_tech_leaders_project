@@ -7,6 +7,7 @@ import type { PaymentEvent } from "../../payments/payment-gateway";
 import { bookingDeclineSchema } from "../../validators/bookings/booking-decline.schema";
 import type { SlotService } from "../availability/slot.service";
 import { cancellationOutcome, type CancellationOutcome } from "../sessions/session-rules";
+import { recordRefundFailures } from "./payment-refund-attempts";
 import { MAX_REFUND_ATTEMPTS } from "./sweep.service";
 
 /** The mentor decides until this many hours before the session starts (spec: state machine, R05). */
@@ -157,7 +158,7 @@ export class BookingTransitions {
         await em.flush();
         return;
       }
-      payment.refundAttempts += 1;
+      if (recordRefundFailures(payment, [event.refundId]) === 0) return;
       payment.lastError = "Refund failed (webhook)";
       if (payment.refundAttempts >= MAX_REFUND_ATTEMPTS) {
         payment.status = "refund_failed";

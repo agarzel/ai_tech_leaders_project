@@ -41,6 +41,8 @@ function setup(overrides: { booking?: Record<string, unknown>; payment?: Record<
     currency: "PLN",
     checkoutSessionId: "cs_1",
     paymentIntentId: null,
+    refundAttempts: 0,
+    refundFailureIds: [],
     paidAt: null,
     booking: { id: "b1" },
     ...overrides.payment,
@@ -202,6 +204,24 @@ describe("BookingTransitions.handlePaymentEvent: refund outcome", () => {
 
     expect(ctx.payment).toMatchObject({ status: "refund_failed", refundAttempts: MAX_REFUND_ATTEMPTS });
     expect(ctx.logger.error).toHaveBeenCalledWith({ paymentIntentId: "pi_1", refundAttempts: MAX_REFUND_ATTEMPTS }, "Refund failed after the maximum attempts");
+  });
+
+  it("counts a failed refund webhook only once for the same refund id", async () => {
+    ctx = setup({ payment: { status: "refund_requested", paymentIntentId: "pi_1", refundAttempts: 0 } });
+    const event: PaymentEvent = { type: "refund.updated", paymentIntentId: "pi_1", refundId: "re_1", status: "failed" };
+
+    await ctx.service.handlePaymentEvent(event);
+    await ctx.service.handlePaymentEvent(event);
+
+    expect(ctx.payment).toMatchObject({ status: "refund_requested", refundAttempts: 1, refundFailureIds: ["re_1"] });
+  });
+
+  it("does not recount a failure already recorded by the sweep", async () => {
+    ctx = setup({ payment: { status: "refund_requested", paymentIntentId: "pi_1", refundAttempts: 1, refundFailureIds: ["re_1"] } });
+
+    await ctx.service.handlePaymentEvent({ type: "refund.updated", paymentIntentId: "pi_1", refundId: "re_1", status: "failed" });
+
+    expect(ctx.payment).toMatchObject({ status: "refund_requested", refundAttempts: 1, refundFailureIds: ["re_1"] });
   });
 
   it("keeps retrying below the maximum", async () => {
