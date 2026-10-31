@@ -46,6 +46,7 @@ function setup() {
     }),
     parseWebhook: vi.fn(),
   };
+  const bookingTransitions = { expirePayment: vi.fn().mockResolvedValue(true) };
   const service = new BookingService({
     em: em as unknown as EntityManager,
     clock: new FakeClock(NOW),
@@ -53,8 +54,9 @@ function setup() {
     paymentGateway: paymentGateway as unknown as PaymentGateway,
     slotService: slotService as unknown as SlotService,
     mentorService: mentorService as unknown as MentorService,
+    bookingTransitions: bookingTransitions as never,
   });
-  return { calls, tx, em, slot, slotService, mentorService, paymentGateway, service };
+  return { calls, tx, em, slot, slotService, mentorService, paymentGateway, bookingTransitions, service };
 }
 
 let ctx: ReturnType<typeof setup>;
@@ -155,14 +157,23 @@ describe("BookingService.create", () => {
     expect(ctx.em.nativeUpdate).toHaveBeenCalledWith(Payment, { id: "pay1", status: "creating" }, { status: "open", checkoutSessionId: "cs_1" });
   });
 
-  it("keeps the booking pending and the payment creating when the checkout fails", async () => {
+  it("expires the booking after a definite checkout failure and propagates the payment error", async () => {
     ctx.paymentGateway.createCheckout.mockRejectedValue(new PaymentUnavailableError());
 
     await expect(ctx.service.create("u1", input)).rejects.toBeInstanceOf(PaymentUnavailableError);
 
     expect(ctx.em.nativeUpdate).not.toHaveBeenCalled();
     expect(ctx.paymentGateway.createCheckout).toHaveBeenCalledTimes(1);
+    expect(ctx.bookingTransitions.expirePayment).toHaveBeenCalledWith("b1", NOW, "checkout-failed");
     expect(ctx.calls).toEqual(["tx:start", "flush", "tx:commit"]);
+  });
+
+  it("does not expire a booking for an unclassified checkout failure", async () => {
+    ctx.paymentGateway.createCheckout.mockRejectedValue(new Error("unknown provider response"));
+
+    await expect(ctx.service.create("u1", input)).rejects.toThrow("unknown provider response");
+
+    expect(ctx.bookingTransitions.expirePayment).not.toHaveBeenCalled();
   });
 
   it("refuses a question over 2,000 characters before touching the database", async () => {

@@ -18,7 +18,8 @@ function setup(
 ) {
   const find = vi.fn(async (entity: unknown, where: Row) => {
     if (entity === Payment) return where.status === "creating" ? (rows.stuck ?? []) : (rows.refunds ?? []);
-    return where.status === "pending_payment" ? (rows.held ?? []) : (rows.late ?? []);
+    if (where.status === "pending_payment") return (rows.held ?? []).filter((booking) => (booking.status ?? "pending_payment") === where.status);
+    return rows.late ?? [];
   });
   const findOne = vi.fn(async (entity: unknown, where: Row) => {
     if (entity === Payment && "booking" in where) return rows.paymentOf?.[where.booking as string] ?? null;
@@ -84,6 +85,16 @@ beforeEach(() => {
 });
 
 describe("SweepService.run: checkout retry", () => {
+  it("does not revisit a checkout failure already expired by the request", async () => {
+    ctx = setup({ held: [{ id: "b1", status: "payment_expired" }] });
+
+    const summary = await ctx.service.run(NOW);
+
+    expect(summary.holdsExpired).toBe(0);
+    expect(ctx.transitions.expirePayment).not.toHaveBeenCalled();
+    expect(ctx.em.find).toHaveBeenCalledWith(Booking, { status: "pending_payment", holdExpiresAt: { $lte: NOW } }, { limit: 100 });
+  });
+
   it("creates the session again with the same idempotency key and moves the payment to open", async () => {
     ctx = setup({ stuck: [stuckPayment()] });
 

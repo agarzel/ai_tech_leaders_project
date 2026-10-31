@@ -465,6 +465,14 @@ describe("BookingTransitions.expirePayment", () => {
     expect(ctx.slotService.release).not.toHaveBeenCalled();
   });
 
+  it("expires immediately after definite checkout failure even while the hold is valid", async () => {
+    await expect(ctx.service.expirePayment("b1", NOW, "checkout-failed")).resolves.toBe(true);
+
+    expect(ctx.booking.status).toBe("payment_expired");
+    expect(ctx.payment.status).toBe("expired");
+    expect(ctx.slotService.release).toHaveBeenCalledWith("s1");
+  });
+
   it.each(["awaiting_acceptance", "confirmed", "declined", "expired", "payment_expired"])("changes nothing for a %s booking", async (status) => {
     ctx.booking.status = status;
 

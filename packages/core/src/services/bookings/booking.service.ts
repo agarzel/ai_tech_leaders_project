@@ -7,6 +7,7 @@ import type { PaymentGateway } from "../../payments/payment-gateway";
 import { bookingCreateSchema } from "../../validators/bookings/booking-create.schema";
 import type { SlotService } from "../availability/slot.service";
 import type { MentorService } from "../mentors/mentor.service";
+import type { BookingTransitions } from "./booking-transitions.service";
 
 /** A new booking holds its slot this long while the mentee pays (spec: Hold, 35 min). */
 export const BOOKING_HOLD_MINUTES = 35;
@@ -29,13 +30,14 @@ export class BookingService {
       paymentGateway: PaymentGateway;
       slotService: SlotService;
       mentorService: MentorService;
+      bookingTransitions: BookingTransitions;
     },
   ) {}
 
   /**
    * Books a slot for the caller: validates, then in one transaction locks the slot, re-checks it, stores the price
    * read now, creates the `pending_payment` booking with its hold and a `creating` payment. Only after the commit
-   * is the Checkout session created; if that fails, the booking and payment stay for the sweep to retry.
+   * is the Checkout session created; a definite provider failure expires the booking immediately.
    */
   async create(menteeUserId: string, input: unknown): Promise<CreatedBookingDto> {
     const { slotId, lengthMinutes, question, entryPoint } = parseOrThrow(bookingCreateSchema, input);
@@ -86,16 +88,24 @@ export class BookingService {
 
     // After the commit: a slow or failing provider never holds a database transaction open.
     const returnUrl = new URL(`/bookings/${created.bookingId}`, this.deps.env.APP_URL).toString();
-    const session = await this.deps.paymentGateway.createCheckout({
-      bookingId: created.bookingId,
-      amount: created.priceAmount,
-      currency: CURRENCY,
-      description: `DevMentor session, ${lengthMinutes} min`,
-      successUrl: returnUrl,
-      cancelUrl: returnUrl,
-      expiresAt: new Date(holdExpiresAt.getTime() - CHECKOUT_MARGIN_MINUTES * MINUTE_MS),
-      idempotencyKey: created.idempotencyKey,
-    });
+    let session;
+    try {
+      session = await this.deps.paymentGateway.createCheckout({
+        bookingId: created.bookingId,
+        amount: created.priceAmount,
+        currency: CURRENCY,
+        description: `DevMentor session, ${lengthMinutes} min`,
+        successUrl: returnUrl,
+        cancelUrl: returnUrl,
+        expiresAt: new Date(holdExpiresAt.getTime() - CHECKOUT_MARGIN_MINUTES * MINUTE_MS),
+        idempotencyKey: created.idempotencyKey,
+      });
+    } catch (error) {
+      if (isPaymentUnavailableError(error)) {
+        await this.deps.bookingTransitions.expirePayment(created.bookingId, this.deps.clock.now(), "checkout-failed");
+      }
+      throw error;
+    }
     // Conditional: the sweep may have retried the session in the meantime.
     await this.deps.em.nativeUpdate(
       Payment,
@@ -104,4 +114,15 @@ export class BookingService {
     );
     return { bookingId: created.bookingId, checkoutUrl: session.url };
   }
+}
+
+function isPaymentUnavailableError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "payment_unavailable" &&
+    "status" in error &&
+    error.status === 503
+  );
 }
