@@ -18,7 +18,7 @@ function setup() {
   const calls: Calls = [];
   const tx = {
     count: vi.fn().mockResolvedValue(0),
-    findOne: vi.fn().mockResolvedValue({ id: "u1" }),
+    findOne: vi.fn().mockResolvedValue({ id: "u1", email: "mentee@example.com" }),
     create: vi.fn((entity: unknown, data: Record<string, unknown>) => ({ id: entity === Booking ? "b1" : "pay1", ...data })),
     getReference: vi.fn((_entity: unknown, id: string) => ({ ref: id })),
     flush: vi.fn(async () => {
@@ -146,6 +146,7 @@ describe("BookingService.create", () => {
     expect(ctx.calls).toEqual(["tx:start", "flush", "tx:commit", "checkout", "update-payment"]);
     expect(ctx.paymentGateway.createCheckout).toHaveBeenCalledWith({
       bookingId: "b1",
+      customerEmail: "mentee@example.com",
       amount: 15_000,
       currency: "PLN",
       description: "DevMentor session, 25 min",

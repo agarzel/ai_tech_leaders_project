@@ -62,7 +62,7 @@ const stuckPayment = (): Row => ({
   amount: 15_000,
   currency: "PLN",
   checkoutIdempotencyKey: "checkout:b1",
-  booking: { id: "b1", lengthMinutes: 60, holdExpiresAt: new Date(NOW.getTime() + 20 * MINUTE) },
+  booking: { id: "b1", lengthMinutes: 60, holdExpiresAt: new Date(NOW.getTime() + 20 * MINUTE), mentee: { email: "mentee@example.com" } },
 });
 
 const refundPayment = (id = "pay1", bookingId = "b1"): Row => ({
@@ -102,6 +102,7 @@ describe("SweepService.run: checkout retry", () => {
 
     expect(ctx.gateway.createCheckout).toHaveBeenCalledWith({
       bookingId: "b1",
+      customerEmail: "mentee@example.com",
       amount: 15_000,
       currency: "PLN",
       description: "DevMentor session, 60 min",
@@ -128,7 +129,7 @@ describe("SweepService.run: checkout retry", () => {
         createdAt: { $lte: new Date(NOW.getTime() - 2 * MINUTE) },
         booking: { status: "pending_payment", holdExpiresAt: { $gt: NOW } },
       },
-      { populate: ["booking"], limit: 100 },
+      { populate: ["booking", "booking.mentee"], limit: 100 },
     );
   });
 

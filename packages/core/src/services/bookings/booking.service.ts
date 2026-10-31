@@ -46,7 +46,7 @@ export class BookingService {
 
     const created = await this.deps.em.transactional(async (em) => {
       // Serialize creates by this mentee before counting, even when they target different slots.
-      await em.findOne(User, { id: menteeUserId }, { lockMode: LockMode.PESSIMISTIC_WRITE });
+      const mentee = await em.findOne(User, { id: menteeUserId }, { lockMode: LockMode.PESSIMISTIC_WRITE });
       const activePendingBookings = await em.count(Booking, {
         mentee: menteeUserId,
         status: "pending_payment",
@@ -83,7 +83,7 @@ export class BookingService {
         amount: priceAmount,
       });
       await em.flush();
-      return { bookingId: booking.id, paymentId: payment.id, idempotencyKey, priceAmount };
+      return { bookingId: booking.id, paymentId: payment.id, idempotencyKey, priceAmount, customerEmail: mentee!.email };
     });
 
     // After the commit: a slow or failing provider never holds a database transaction open.
@@ -92,6 +92,7 @@ export class BookingService {
     try {
       session = await this.deps.paymentGateway.createCheckout({
         bookingId: created.bookingId,
+        customerEmail: created.customerEmail,
         amount: created.priceAmount,
         currency: CURRENCY,
         description: `DevMentor session, ${lengthMinutes} min`,
