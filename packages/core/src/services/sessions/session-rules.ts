@@ -34,14 +34,22 @@ export function assertMessagingOpen(startsAt: Date, lengthMinutes: number, now: 
 }
 
 /** A draft note the mentee never answered is rejected automatically and never shown. */
-export function noteEffectiveStatus(status: NoteStatus, startsAt: Date, lengthMinutes: number, now: Date): NoteStatus {
-  const deadline = sessionEndsAt(startsAt, lengthMinutes).getTime() + NOTE_APPROVAL_WINDOW_MS;
+export function noteEffectiveStatus(
+  status: NoteStatus,
+  startsAt: Date,
+  lengthMinutes: number,
+  now: Date,
+  replacedAt: Date | null = null,
+): NoteStatus {
+  const deadline = (replacedAt?.getTime() ?? sessionEndsAt(startsAt, lengthMinutes).getTime()) + NOTE_APPROVAL_WINDOW_MS;
   return status === "draft" && now.getTime() >= deadline ? "rejected" : status;
 }
 
 /** The mentor writes or replaces the note only after the session has ended, and only while it is a draft. */
 export function assertNoteWritable(
   status: NoteStatus,
+  rejectedReplacementCount: number,
+  replacedAt: Date | null,
   startsAt: Date,
   lengthMinutes: number,
   now: Date,
@@ -49,14 +57,21 @@ export function assertNoteWritable(
   if (now.getTime() < sessionEndsAt(startsAt, lengthMinutes).getTime()) {
     throw new ConflictError("The note can be written only after the session ends");
   }
-  if (noteEffectiveStatus(status, startsAt, lengthMinutes, now) !== "draft") {
+  if (noteEffectiveStatus(status, startsAt, lengthMinutes, now, replacedAt) !== "draft" &&
+      !(status === "rejected" && rejectedReplacementCount === 0)) {
     throw new ConflictError("The note is already decided");
   }
 }
 
 /** The mentee decides only a draft that is still inside its approval window. */
-export function assertNoteDecidable(status: NoteStatus, startsAt: Date, lengthMinutes: number, now: Date): void {
-  if (noteEffectiveStatus(status, startsAt, lengthMinutes, now) !== "draft") {
+export function assertNoteDecidable(
+  status: NoteStatus,
+  startsAt: Date,
+  lengthMinutes: number,
+  now: Date,
+  replacedAt: Date | null = null,
+): void {
+  if (noteEffectiveStatus(status, startsAt, lengthMinutes, now, replacedAt) !== "draft") {
     throw new ConflictError("The note is no longer waiting for approval");
   }
 }

@@ -61,4 +61,9 @@ describe("SessionNote entity", () => {
   it("keeps the decision time nullable until the mentee decides", () => {
     expect(meta().properties.decidedAt.nullable).toBe(true);
   });
+
+  it("tracks the one permitted replacement after rejection", () => {
+    expect(meta().properties.rejectedReplacementCount.default).toBe(0);
+    expect(meta().properties.replacedAt.nullable).toBe(true);
+  });
 });

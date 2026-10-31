@@ -22,7 +22,14 @@ export class SessionNoteService {
     const { em } = this.deps;
     const now = this.deps.clock.now();
     const existing = await em.findOne(SessionNote, { booking: bookingId });
-    assertNoteWritable(existing?.status ?? "draft", booking.slot.startsAt, booking.lengthMinutes, now);
+    assertNoteWritable(
+      existing?.status ?? "draft",
+      existing?.rejectedReplacementCount ?? 0,
+      existing?.replacedAt ?? null,
+      booking.slot.startsAt,
+      booking.lengthMinutes,
+      now,
+    );
 
     const text = body.trim();
     if (text.length === 0 || text.length > NOTE_MAX_LENGTH) {
@@ -31,6 +38,12 @@ export class SessionNoteService {
 
     if (existing) {
       existing.body = text;
+      if (existing.status === "rejected") {
+        existing.rejectedReplacementCount += 1;
+        existing.status = "draft";
+        existing.decidedAt = null;
+        existing.replacedAt = now;
+      }
     } else {
       em.create(SessionNote, { booking, body: text, status: "draft" });
     }
@@ -46,7 +59,7 @@ export class SessionNoteService {
       throw new NotFoundError("Note not found");
     }
     const now = this.deps.clock.now();
-    assertNoteDecidable(note.status, booking.slot.startsAt, booking.lengthMinutes, now);
+    assertNoteDecidable(note.status, booking.slot.startsAt, booking.lengthMinutes, now, note.replacedAt);
 
     note.status = decision === "approve" ? "approved" : "rejected";
     note.decidedAt = now;
@@ -74,7 +87,13 @@ export class SessionNoteService {
     if (!note) {
       return null;
     }
-    const status = noteEffectiveStatus(note.status, booking.slot.startsAt, booking.lengthMinutes, this.deps.clock.now());
+    const status = noteEffectiveStatus(
+      note.status,
+      booking.slot.startsAt,
+      booking.lengthMinutes,
+      this.deps.clock.now(),
+      note.replacedAt,
+    );
     return hideRejected && status === "rejected" ? null : { status, body: note.body };
   }
 
