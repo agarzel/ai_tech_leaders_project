@@ -61,7 +61,10 @@ describe("fake refund failure and retry", () => {
     expect(await postFailedRefundEvent(paymentIntentId, refundId)).toBe(200);
     expect(await sql(`select refund_attempts::text || '|' || refund_failure_ids::text from payments where booking_id = '${bookingId}'`)).toBe(`1|["${refundId}"]`);
 
-    expect(await runSweep()).toMatchObject({ status: 200, summary: { refundsReconciled: 1 } });
+    const sweep = await runSweep();
+    expect(sweep.status).toBe(200);
+    // Other integration files can leave refund requests for this shared database sweep.
+    expect(sweep.summary.refundsReconciled).toBeGreaterThanOrEqual(1);
     expect(await sql(`select status || '|' || refund_attempts::text || '|' || refund_id from payments where booking_id = '${bookingId}'`)).toBe(
       `refunded|1|fake_re_refund:${bookingId}`,
     );
