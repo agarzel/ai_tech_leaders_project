@@ -49,9 +49,16 @@ export class TooManyRequestsError extends AppError {
   }
 }
 
-/** The payment provider could not be reached or refused the request; nothing was charged. Safe to retry. */
+/**
+ * The payment provider could not be reached or refused the request; nothing was charged. Safe to retry.
+ * `outcome`: `definite` when the provider rejected the request for good (a retry cannot succeed), `unknown` when it
+ * may still have gone through (timeout, connection error, 5xx, rate limit) – then the sweep retries with the same key.
+ */
 export class PaymentUnavailableError extends AppError {
-  constructor(message = "Payment is temporarily unavailable. Try again shortly.") {
+  constructor(
+    message = "Payment is temporarily unavailable. Try again shortly.",
+    readonly outcome: "definite" | "unknown" = "unknown",
+  ) {
     super("payment_unavailable", 503, message);
   }
 }

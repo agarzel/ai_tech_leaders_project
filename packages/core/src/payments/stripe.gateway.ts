@@ -13,6 +13,20 @@ function mapRefundStatus(status: Stripe.Refund["status"]): RefundRecord["status"
 /** The slice of the Stripe SDK this gateway uses; injected so unit tests never touch the network. */
 export type StripeClient = Pick<Stripe, "checkout" | "refunds" | "webhooks">;
 
+/** Stripe error types that a retry with the same request cannot fix; everything else may still have gone through. */
+const DEFINITE_STRIPE_ERRORS = new Set([
+  "StripeCardError",
+  "StripeInvalidRequestError",
+  "StripeAuthenticationError",
+  "StripePermissionError",
+  "StripeIdempotencyError",
+]);
+
+function checkoutOutcome(error: unknown): "definite" | "unknown" {
+  const type = typeof error === "object" && error !== null && "type" in error ? error.type : undefined;
+  return typeof type === "string" && DEFINITE_STRIPE_ERRORS.has(type) ? "definite" : "unknown";
+}
+
 export class StripeGateway implements PaymentGateway {
   constructor(private readonly options: { client: StripeClient; webhookSecret: string }) {}
 
@@ -45,10 +59,11 @@ export class StripeGateway implements PaymentGateway {
       );
     } catch (error) {
       // Only the error's type is logged: the provider's message can carry credentials or request details.
-      logger.error({ errorType: error instanceof Error ? error.name : typeof error }, "Stripe Checkout creation failed");
-      throw new PaymentUnavailableError();
+      const outcome = checkoutOutcome(error);
+      logger.error({ errorType: error instanceof Error ? error.name : typeof error, outcome }, "Stripe Checkout creation failed");
+      throw new PaymentUnavailableError(undefined, outcome);
     }
-    if (!session.url) throw new PaymentUnavailableError();
+    if (!session.url) throw new PaymentUnavailableError(undefined, "definite");
     return { sessionId: session.id, url: session.url };
   }
 
