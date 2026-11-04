@@ -270,6 +270,12 @@
       "sourceType": "github",
       "skillPath": "skills/task-router/SKILL.md",
       "computedHash": "8208f1224a46e435398fce1f804d5ce2422aa65937415d80ca00572feb438fca"
+    },
+    "threat-model": {
+      "source": "pat-lewczuk/skills",
+      "sourceType": "github",
+      "skillPath": "skills/threat-model/SKILL.md",
+      "computedHash": "d01f1ff536273963b9bf77ce6fb39e8e9a0dd7a5e63a1e63b965b66ef48dba4c"
     }
   }
 }

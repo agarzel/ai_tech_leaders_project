@@ -150,7 +150,8 @@ export function CrudForm<S extends FormSchema>({
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="flex flex-col gap-between-groups">
+    // method="post": a submit before hydration (or with JS off) must not send the fields, passwords included, as a query string.
+    <form method="post" noValidate onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="flex flex-col gap-between-groups">
       {formError && (
         // Focus target when the server rejects the form without pointing at a field.
         <div id={formErrorId} tabIndex={-1} className="outline-none">
