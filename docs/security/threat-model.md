@@ -141,6 +141,7 @@ OWASP lists in scope: Web Top 10:2025 and API Security Top 10:2023 (a JSON API b
 | T-10 | `/api/health` is anonymous and runs `select 1` per call without a limit; it reveals only `status` and `database` reachability | I, D | `app/src/app/api/health/route.ts:4-11`; `core/src/services/system/health.service.ts:9-17` | L | L | Accept: output is minimal, errors are logged not returned; revisit if it grows | Yes: response `{ status, database }` only | DAST: anonymous GET returns no versions, hosts or error text | A02:2025, API8:2023, CWE-200 |
 | T-11 | Postgres is published on `5432` with default credentials `devmentor/devmentor` when `.env` does not override them; anyone on the network reads or changes every table, including password hashes and payments | I, T, E | `docker-compose.yml` (service `db`: `ports`, `POSTGRES_PASSWORD` default) | M | H | Mitigate: do not publish 5432 outside local development (bind to `127.0.0.1` or drop it), no default password | None | Config review / port scan of the deployed host in the isolated env; CI check that compose binds DB to localhost | A02:2025, CWE-1392, CWE-284 |
 | T-12 | Slot hoarding: each mentee account may hold 2 unpaid bookings for 35 min; with throwaway accounts from T-01 an attacker keeps a mentor's calendar blocked without paying | D | `core/src/services/bookings/booking.service.ts:13-15`, `:46-56` | M | M | Mitigate: fix T-01 first; optionally a per-mentor cap on concurrent holds or a shorter hold | Partial: `MAX_PENDING_PAYMENT_BOOKINGS = 2` per mentee, holds expire via sweep | Integration test: third pending booking → 409; after T-01, scripted registrations hit 429 | API6:2023, A06:2025, CWE-799 |
+| T-13 | Login and registration fields, password included, leave in the URL (`GET /login?email=…&password=…`) when the form is submitted before hydration or with JS off, and end up in browser history, server/proxy logs and `Referer` | I | `ui/src/backend/forms/CrudForm.tsx` (form without `method`) | M | H | Mitigated 2026-11-04: `method="post"` | Yes: `method="post"` on `CrudForm`; found by the ZAP baseline scan | `CrudForm.test.tsx` asserts `method="post"`; ZAP baseline shows no "Sensitive information in URL" | A04:2025, CWE-598 |
 
 ## 3. Test scope
 
@@ -172,3 +173,4 @@ OWASP lists in scope: Web Top 10:2025 and API Security Top 10:2023 (a JSON API b
 ## Changelog
 
 - 2026-11-04 Initial model (lesson 16)
+- 2026-11-04 T-13 added from the ZAP baseline scan and mitigated (`CrudForm` posts natively); ZAP confirmed T-08 (no CSP, no anti-clickjacking, `X-Powered-By`, no `nosniff`)

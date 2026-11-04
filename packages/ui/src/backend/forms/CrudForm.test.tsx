@@ -52,6 +52,13 @@ describe("CrudForm", () => {
     expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
   });
 
+  it("posts natively, so a submit before hydration never puts the values (passwords) in the URL", () => {
+    setup();
+
+    const form = screen.getByRole("textbox", { name: "Name" }).closest("form");
+    expect(form?.getAttribute("method")).toBe("post");
+  });
+
   it("uses initial values when provided, ignoring null ones", () => {
     setup({ initialValues: { name: "Grace", role: "mentee", age: 42, nickname: null } });
 
