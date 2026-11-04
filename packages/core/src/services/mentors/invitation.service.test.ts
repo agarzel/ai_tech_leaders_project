@@ -196,12 +196,14 @@ describe("InvitationService.guardPreview", () => {
 describe("InvitationService.guardRegistration", () => {
   const fail = () => Promise.reject(new NotFoundError("nope"));
 
-  it("returns the result and does not count a success", async () => {
-    for (let i = 0; i < 15; i += 1) {
-      await expect(service.guardRegistration("1.1.1.1", () => Promise.resolve("ok"))).resolves.toBe("ok");
+  it("counts successful registrations and refuses the 11th account from the same IP", async () => {
+    for (let i = 0; i < 10; i += 1) {
+      await expect(service.guardRegistration("3.3.3.3", () => Promise.resolve("created"))).resolves.toBe("created");
     }
 
-    expect(registrationLimiter.check("1.1.1.1").allowed).toBe(true);
+    await expect(service.guardRegistration("3.3.3.3", () => Promise.resolve("created"))).rejects.toBeInstanceOf(
+      TooManyRequestsError,
+    );
   });
 
   it("rethrows the original error and refuses the IP after 10 failures", async () => {

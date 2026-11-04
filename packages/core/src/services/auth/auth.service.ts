@@ -10,8 +10,11 @@ import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "../../validators/auth/
 
 const BCRYPT_COST = 12;
 
-/** Login policy: 5 failed attempts per e-mail within 15 minutes. The shared `rateLimiter` is built with it. */
+/** Login policy: 5 failed attempts per IP + e-mail within 15 minutes. */
 export const LOGIN_RATE_LIMIT: RateLimiterOptions = { maxAttempts: 5, windowMs: 15 * 60_000 };
+
+/** Separate password-spraying cap: 20 failed attempts per IP across e-mails within 15 minutes. */
+export const LOGIN_IP_RATE_LIMIT: RateLimiterOptions = { maxAttempts: 20, windowMs: 15 * 60_000 };
 
 export { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH };
 
@@ -34,6 +37,7 @@ export class AuthService {
       em: EntityManager;
       clock: Clock;
       rateLimiter: RateLimiter;
+      loginIpLimiter: RateLimiter;
       env: Pick<Env, "AUTH_SECRET">;
     },
   ) {}
@@ -52,15 +56,19 @@ export class AuthService {
     return this.createUser(em, { email, name, role: "mentor", password });
   }
 
-  async login(email: string, password: string): Promise<SessionUserDto> {
-    const key = normalizeEmail(email);
-    if (!this.deps.rateLimiter.check(key).allowed) throw new TooManyRequestsError();
+  async login(email: string, password: string, ip: string): Promise<SessionUserDto> {
+    const normalizedEmail = normalizeEmail(email);
+    const key = JSON.stringify([ip, normalizedEmail]);
+    if (!this.deps.rateLimiter.check(key).allowed || !this.deps.loginIpLimiter.check(ip).allowed) {
+      throw new TooManyRequestsError();
+    }
 
-    const user = await this.deps.em.findOne(User, { email: key });
+    const user = await this.deps.em.findOne(User, { email: normalizedEmail });
     // Always run one bcrypt comparison, whether or not the account (or its password) exists.
     const matches = await bcrypt.compare(password, user?.passwordHash ?? (await this.getDummyHash()));
     if (!user?.passwordHash || !matches) {
       this.deps.rateLimiter.record(key);
+      this.deps.loginIpLimiter.record(ip);
       throw new UnauthorizedError(INVALID_CREDENTIALS);
     }
 

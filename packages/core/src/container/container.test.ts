@@ -69,7 +69,9 @@ describe("container", () => {
 
     expect(cradle.invitationPreviewLimiter === scopeB.cradle.invitationPreviewLimiter).toBe(true);
     expect(cradle.invitationRegistrationLimiter === scopeB.cradle.invitationRegistrationLimiter).toBe(true);
+    expect(cradle.loginIpLimiter === scopeB.cradle.loginIpLimiter).toBe(true);
     expect(cradle.invitationPreviewLimiter === cradle.invitationRegistrationLimiter).toBe(false);
     expect(cradle.invitationPreviewLimiter === cradle.rateLimiter).toBe(false);
+    expect(cradle.loginIpLimiter === cradle.rateLimiter).toBe(false);
   });
 });
