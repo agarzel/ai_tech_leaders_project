@@ -11,6 +11,7 @@ const base = {
   LOG_LEVEL: "info",
   SWEEP_SECRET: "w".repeat(32),
   APP_URL: "http://localhost:3000",
+  TRUSTED_PROXY_HOPS: 1,
 } as const;
 
 describe("createPaymentGateway", () => {
