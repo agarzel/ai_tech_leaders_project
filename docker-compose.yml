@@ -22,7 +22,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devmentor}
       POSTGRES_DB: ${POSTGRES_DB:-devmentor}
     ports:
-      - "5432:5432"
+      # Local development only: never reachable from the network (threat model T-11).
+      - "127.0.0.1:5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
