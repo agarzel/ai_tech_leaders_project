@@ -54,16 +54,20 @@ const eslintConfig = defineConfig([
     paths: [...uiPaths, pkg("cn", 'Import cn from "@devmentor/ui/lib/utils" (configured for design-system classes).')],
     patterns: [mikroOrm, msw],
   }),
-  // A <form> without method="post" is submitted as GET before hydration (or with JS off), putting every field –
-  // passwords, private messages, notes – into the URL, browser history and server logs. Found by ZAP in lesson 16
-  // (threat model T-13) after every review had passed it; this rule keeps it from coming back.
+  // A <form> without method="post" is submitted as GET before hydration (or with JS off), putting its named fields –
+  // CrudForm's email and password – into the URL, browser history and server logs. Found by ZAP in lesson 16
+  // (threat model T-13) after every review had passed it; this rule keeps it from coming back. Forms with an `action`
+  // (React server or function actions) are exempt: React posts them itself and rejects an explicit method.
+  // Keep it the only `no-restricted-syntax` block for these files – a later one would replace it, not extend it.
+  // Regression test: scripts/form-method-rule.test.mjs.
   {
-    files: ["packages/app/src/**/*.tsx", "packages/ui/src/**/*.tsx"],
+    files: ["packages/app/src/**/*.{tsx,jsx}", "packages/ui/src/**/*.{tsx,jsx}"],
     rules: {
       "no-restricted-syntax": [
         "error",
         {
-          selector: "JSXOpeningElement[name.name='form']:not(:has(JSXAttribute[name.name='method']))",
+          selector:
+            "JSXOpeningElement[name.name='form']:not(:has(JSXAttribute[name.name='action'])):not(:has(JSXAttribute[name.name='method'][value.value=/^post$/i]))",
           message: 'Give every <form> method="post" – without it a submit before hydration sends the fields in the URL (threat model T-13).',
         },
       ],
