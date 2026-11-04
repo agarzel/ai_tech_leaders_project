@@ -43,4 +43,5 @@ next.config.ts        transpilePackages for @devmentor/*, MikroORM server extern
 - **Scenarios:** every test has a Markdown scenario in `.ai/qa/{AREA}/` linked both ways; rules in `.ai/skills/om-integration-tests/SKILL.md`. Shared setup helpers: `support/flow.ts`.
 - **Rule:** every new page or user-facing flow gets an integration test of its main path, plus a screenshot (`browser.screenshot(name)` → `.artifacts/`, uploaded by CI).
 - Locate elements the way users do – by role + accessible name or by label (`browser.click("button", "Create user")`, `browser.fill("Email", …)`). Repeated controls (row actions) need unique accessible names, e.g. `aria-label="Delete {name}"`.
+- **Access control:** a route that serves another user's data is tested with three checks – positive control for both accounts, refused read and write, and the owner's data compared after the attempt (`access-boundaries.int.test.ts`; rule R6 in `.ai/skills/om-code-review/SKILL.md`).
 - Each test file uses its own browser session; files run sequentially against one app and database, so tests must not depend on data created by another file.

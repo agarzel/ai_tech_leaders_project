@@ -57,6 +57,18 @@ If this review runs in the same session/agent that wrote the change (or the PR a
 
 This does not change the verdict rule; it makes the limitation visible.
 
+## R6 – Access-control tests make three checks
+
+A new or changed route that reads or writes another user's data (`api/bookings/[id]/**`, `api/mentor/**`, `api/users/**`, `api/admin/**`) needs an integration test that, against the same record id:
+
+1. **Positive control for both accounts:** the owner reads the record (200) and the other account is answered on a route it may use (200). Without this, a 401/403/404 can mean "not signed in", not "not allowed".
+2. **Refused read and refused write** from the other account (404 for objects of another user, 403 for a missing role – keep the policy consistent).
+3. **Owner's data after the attempt:** read it again and compare whole objects (or stored rows), not counts.
+
+Missing on such a route → **major**. Reference: `packages/app/tests/integration/access-boundaries.int.test.ts`, threats T-04/T-05 in `docs/security/threat-model.md`.
+
+*Why:* lesson 16 – an agent writes the endpoint and a green owner-only test; nobody gave it the "only the owner" rule, so only the happy path gets tested.
+
 ## Report additions
 
 - Tag findings that come from this extension with the rule id, e.g. `[R1]`, so it is clear which rules are DevMentor-specific.

@@ -1,0 +1,44 @@
+flowchart LR
+  subgraph internet [Untrusted: internet]
+    Anon[Anonymous visitor]
+    Mentee[Mentee A / mentee B]
+    Mentor[Mentor]
+    Admin[Admin]
+  end
+  subgraph ext [Semi-trusted: providers and operators]
+    Stripe[Stripe Checkout and webhooks]
+    Cron[External scheduler]
+  end
+  subgraph app [Trusted: Next.js app container]
+    Pages(Pages and layouts: AdminGate, mentor layout)
+    API(Route handlers: apiHandler, requireSession / requireRole / requireAdmin)
+    Hook(Webhook route: webhookHandler + parseWebhook)
+    Svc(Core services: ownership checks by booking.mentee / mentor.user)
+    RL[(In-memory rate limiters)]
+  end
+  subgraph data [Trusted: data]
+    DB[(PostgreSQL: users, bookings, payments, notes, messages, invitations)]
+  end
+  subgraph ops [Trusted: operator shell]
+    CLI(auth:set-password, db:seed)
+  end
+
+  Anon -->|"register, login, invitation token (T-01, T-02, T-03)"| API
+  Anon -->|"GET /api/health (T-10)"| API
+  Mentee -->|"session cookie, booking ids (T-04, T-07, T-12)"| API
+  Mentor -->|"session cookie, booking ids, note body (T-05)"| API
+  Admin -->|"user role edits, invitations (T-05, T-09)"| API
+  Mentee -->|"HTML pages, no security headers (T-08)"| Pages
+  Admin -->|"admin panel (T-08)"| Pages
+  Stripe -->|"signed payment and refund events (T-06)"| Hook
+  API -->|"Checkout session, refunds"| Stripe
+  Cron -->|"x-sweep-token"| API
+  API -->|"IP and email keys (T-02, T-03)"| RL
+  API --> Svc
+  Hook -->|"verified event only"| Svc
+  Svc -->|"queries per request EntityManager"| DB
+  CLI -->|"password hash, admin promotion (T-09)"| DB
+  Anon -.->|"port 5432, default credentials (T-11)"| DB
+
+  classDef boundary stroke-dasharray: 5 5
+  class internet,ext,app,data,ops boundary
