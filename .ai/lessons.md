@@ -2,6 +2,8 @@
 
 Short, durable findings for AI agents and humans. Newest first. Format: `- YYYY-MM-DD – lesson (context/link)`.
 
+- 2026-11-04 – A per-IP rate limit turns into a flaky integration test when every test browser shares one IP: the invitation preview allows 20 per IP per 15 min, all browsers counted against the app server's own address, and React's dev double effect sometimes sent a second preview – so the count hovered around the limit and `inviteMentor` waited 45 s for an email that a refused preview never shows (#116, first CI run of #114). Each `Browser` now sends its own test IP in `x-forwarded-for` (#112), and `inviteMentor` waits for either outcome and names the reason. When adding a limiter, check how many requests the whole suite makes from one key.
+
 - 2026-10-24 – Base UI checkboxes do not toggle when the hidden input or a label is clicked in browser tests: click the element with `role="checkbox"` (or `box.click()` in page script) and check `aria-checked` before saving. Verify the saved value in the database, not only the page text (Epic 01 phase 4 manual test).
 
 - 2026-10-24 – `instanceof` on core errors fails in Next.js dev: the cached container and a route handler can load the same error class from two module graphs, so a rule error (e.g. slot 24 h lead time) became a 500. `apiHandler` now recognises AppError by shape (status and code); regression test in `apiHandler.test.ts`. Do not rely on `instanceof` for errors that cross module boundaries.
