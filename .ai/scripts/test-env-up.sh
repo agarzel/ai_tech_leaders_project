@@ -44,10 +44,12 @@ QA_DIR=".ai/qa"
 DESCRIPTOR="$QA_DIR/test-env.json"
 CREDENTIALS_FILE="$QA_DIR/test-env.env"
 BUILD_CACHE="$QA_DIR/test-env-build-cache.json"
-APP_LOG="$QA_DIR/test-env-app.log"
 LOCK_DIR="$QA_DIR/test-env.lock"
 # Scoped per checkout, so worktrees never share or remove each other's database.
 CONTAINER="devmentor-test-env-$(printf '%s' "$ROOT" | cksum | awk '{print $1}')"
+# Outside the repo: Turbopack watches the whole repo root (next.config.ts), so a log inside it turned every
+# logged request into a rebuild, a full browser reload and the next logged request - an endless reload loop.
+APP_LOG="${TMPDIR:-/tmp}/$CONTAINER-app.log"
 mkdir -p "$QA_DIR"
 
 now() { date -u +%FT%TZ; }
@@ -244,7 +246,7 @@ cat > "$DESCRIPTOR" <<JSON
   "startedByThisRepo": true,
   "startScript": ".ai/scripts/test-env-up.sh",
   "stopScript": ".ai/scripts/test-env-down.sh",
-  "app": { "startCommand": "npm run dev -w @devmentor/app -- --hostname 127.0.0.1 --port $APP_PORT", "port": $APP_PORT, "healthPath": "$HEALTH_PATH", "pid": $APP_PID },
+  "app": { "startCommand": "npm run dev -w @devmentor/app -- --hostname 127.0.0.1 --port $APP_PORT", "port": $APP_PORT, "healthPath": "$HEALTH_PATH", "pid": $APP_PID, "log": "$APP_LOG" },
   "services": [
     { "type": "postgres", "host": "127.0.0.1", "port": $DB_PORT, "container": "$CONTAINER", "url": "$DATABASE_URL", "env": { "DATABASE_URL": "$DATABASE_URL" } }
   ],
