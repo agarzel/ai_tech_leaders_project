@@ -7,7 +7,7 @@ import type { RateLimiter, RateLimiterOptions } from "../../rate-limiter";
 /** How long an invitation link works (spec: mentor-accounts-and-offer, MentorInvitation.expiresAt). */
 export const INVITATION_TTL_MS = 14 * 24 * 60 * 60_000;
 
-/** Public invitation routes, keyed by client IP: 20 previews per 15 minutes; 10 failed registrations per hour. */
+/** Public invitation routes, keyed by client IP: 20 previews per 15 minutes; 10 registration attempts per hour. */
 export const INVITATION_RATE_LIMITS = {
   preview: { maxAttempts: 20, windowMs: 15 * 60_000 } satisfies RateLimiterOptions,
   registration: { maxAttempts: 10, windowMs: 60 * 60_000 } satisfies RateLimiterOptions,
@@ -57,16 +57,12 @@ export class InvitationService {
     limiter.record(ip);
   }
 
-  /** Refuses an IP over its failed-registration limit; runs `work`; counts it only when `work` throws. */
+  /** Reserves one registration attempt for the IP before running `work`, so concurrent requests cannot exceed the cap. */
   async guardRegistration<T>(ip: string, work: () => Promise<T>): Promise<T> {
     const limiter = this.deps.invitationRegistrationLimiter;
     if (!limiter.check(ip).allowed) throw new TooManyRequestsError();
-    try {
-      return await work();
-    } catch (error) {
-      limiter.record(ip);
-      throw error;
-    }
+    limiter.record(ip);
+    return work();
   }
 
   /** All invitations, newest first. Status is computed: used wins over everything, then revoked, then expired. */

@@ -5,7 +5,7 @@ import { getEnv } from "../config/env";
 import { logger } from "../logger";
 import { createPaymentGateway } from "../payments/create-payment-gateway";
 import { RateLimiter } from "../rate-limiter";
-import { AuthService, LOGIN_RATE_LIMIT } from "../services/auth/auth.service";
+import { AuthService, LOGIN_IP_RATE_LIMIT, LOGIN_RATE_LIMIT } from "../services/auth/auth.service";
 import { UserService } from "../services/auth/user.service";
 import { SlotService } from "../services/availability/slot.service";
 import { BookingService } from "../services/bookings/booking.service";
@@ -42,6 +42,7 @@ async function createAppContainer(): Promise<AppContainer> {
     paymentGateway: asValue(createPaymentGateway(env)),
     // One process-wide instance: the limiter's counters must outlive a single request.
     rateLimiter: asValue(new RateLimiter({ clock: realClock }, LOGIN_RATE_LIMIT)),
+    loginIpLimiter: asValue(new RateLimiter({ clock: realClock }, LOGIN_IP_RATE_LIMIT)),
     invitationPreviewLimiter: asValue(new RateLimiter({ clock: realClock }, INVITATION_RATE_LIMITS.preview)),
     invitationRegistrationLimiter: asValue(new RateLimiter({ clock: realClock }, INVITATION_RATE_LIMITS.registration)),
     healthService: asClass(HealthService).scoped(),

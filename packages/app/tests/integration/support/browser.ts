@@ -16,12 +16,15 @@ const COMMAND_TIMEOUT_MS = 45_000;
  */
 export class Browser {
   private readonly session: string;
+  readonly testIp: string;
 
   constructor(
     session: string,
     private readonly baseUrl: string,
   ) {
-    this.session = `${session}-${randomUUID().slice(0, 8)}`;
+    const id = randomUUID().replaceAll("-", "");
+    this.session = `${session}-${id.slice(0, 8)}`;
+    this.testIp = `198.18.${(Number.parseInt(id.slice(0, 2), 16) % 254) + 1}.${(Number.parseInt(id.slice(2, 4), 16) % 254) + 1}`;
   }
 
   /** Runs an agent-browser command; rejects with the CLI's message if it fails (e.g. element not found). */
@@ -38,7 +41,9 @@ export class Browser {
   }
 
   open(pathname: string) {
-    return this.run("open", new URL(pathname, this.baseUrl).toString());
+    return this.run("set", "headers", JSON.stringify({ "x-forwarded-for": this.testIp })).then(() =>
+      this.run("open", new URL(pathname, this.baseUrl).toString()),
+    );
   }
 
   title() {

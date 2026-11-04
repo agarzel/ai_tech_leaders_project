@@ -11,7 +11,7 @@ export type ApiReply = { status: number; body: { ok: boolean; data?: ReplyData; 
 
 /** A request from inside the browser session, so its cookie is used; POSTs carry the CSRF header. */
 export async function api(browser: Browser, method: string, path: string, body?: unknown): Promise<ApiReply> {
-  const call = `fetch(${JSON.stringify(path)}, { method: ${JSON.stringify(method)}, headers: { 'x-devmentor-client': '1', 'content-type': 'application/json' }, body: ${
+  const call = `fetch(${JSON.stringify(path)}, { method: ${JSON.stringify(method)}, headers: { 'x-devmentor-client': '1', 'content-type': 'application/json', 'x-forwarded-for': ${JSON.stringify(browser.testIp)} }, body: ${
     body === undefined ? "undefined" : JSON.stringify(JSON.stringify(body))
   } }).then(async (response) => ({ status: response.status, body: await response.json() }))`;
   return JSON.parse(JSON.parse(await browser.run("eval", `${call}.then((reply) => JSON.stringify(reply))`)) as string) as ApiReply;

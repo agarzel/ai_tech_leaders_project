@@ -134,7 +134,7 @@ All pages – public, mentee, mentor and admin – use the DevMentor design syst
 - Header shows *Log in* / *Register*, or the user's name and *Log out*.
 
 ## 📝 Edge Cases & Failure Scenarios
-- **Brute force:** 5 failed logins per IP + email within 15 min → 429 with a retry time; registration (both routes) is limited to 10 accounts per IP per hour. The limiter is in-memory, per process: acceptable for one container in 1.0; documented as needing a shared store before scaling out.
+- **Brute force:** 5 failed logins per IP + email and 20 failed logins per IP across emails within 15 min → 429 with a retry time; registration (both routes) is limited to 10 requests per IP per hour. The limiter is in-memory, per process: acceptable for one container in 1.0; documented as needing a shared store before scaling out.
 - **Invitation misuse:** used, expired, revoked or unknown token → one generic "This invitation is no longer valid" (no detail on which). Two parallel registrations with one token → the transaction's `usedAt IS NULL` condition lets exactly one succeed.
 - **Re-inviting an email** (Q6, owner decision 2026-10-20, design-system stage 3): a new invitation is created and any pending one for that email gets `revokedAt`; the old link stops working. Needed because the link is shown only once, so re-inviting is the only way to recover a lost link.
 - **Existing email at mentor registration** (someone registered as a mentee first) → `conflict`; the admin can promote the account instead (admin user edit already sets `role`; the profile is created on the first visit to `/mentor`, as for invited mentors).

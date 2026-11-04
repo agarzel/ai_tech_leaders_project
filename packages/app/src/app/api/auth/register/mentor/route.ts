@@ -4,7 +4,7 @@ import { clientIp } from "../../../../../lib/client-ip";
 import { startSession } from "../../session-cookie";
 
 // Public. The invitation decides the e-mail and the role; the invitation is used up in the same transaction.
-// Failed attempts count against the client IP (10 per hour); a successful registration does not.
+// Registration attempts count against the client IP (10 per hour), shared with mentee registration.
 export const POST = apiHandler(
   async ({ req }) => {
     const { cradle } = await createRequestScope();
