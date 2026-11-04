@@ -11,9 +11,15 @@ async function HeaderAccount() {
 
   return (
     <>
+      {/* A mentor receives bookings and may also book another mentor (#98), so they get both lists. */}
+      {user?.role === "mentor" && (
+        <Link href="/mentor/bookings" className={navLinkClassName}>
+          Bookings
+        </Link>
+      )}
       {user && user.role !== "admin" && (
-        <Link href={user.role === "mentor" ? "/mentor/bookings" : "/bookings"} className={navLinkClassName}>
-          {user.role === "mentor" ? "Bookings" : "My bookings"}
+        <Link href="/bookings" className={navLinkClassName}>
+          My bookings
         </Link>
       )}
       {user?.role === "admin" && (
