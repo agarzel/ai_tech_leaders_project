@@ -180,7 +180,7 @@ npm run db:migrate          # on first start – creates the tables (from the ho
 ```
 
 - app: [http://localhost:3000](http://localhost:3000)
-- PostgreSQL: `localhost:5432`, bound to `127.0.0.1` only – not reachable from other machines (user, password and database default to `devmentor`; change them in `.env`)
+- PostgreSQL: `localhost:5432`, bound to `127.0.0.1` only – not reachable from other machines (user, password and database come only from `.env` – `docker compose` refuses to start without them; `.env.example` uses `devmentor`)
 
 Stop with `docker compose down`. Database data stays in the `db-data` volume; remove it with `docker compose down -v`.
 
