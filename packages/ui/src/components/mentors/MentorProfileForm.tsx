@@ -176,7 +176,7 @@ export function MentorProfileForm({ initialValues, tagOptions, currency, onSubmi
   const invalid = (key: string) => (errors[key] ? true : undefined);
 
   return (
-    <form noValidate onSubmit={submit} className="flex max-w-xl flex-col gap-section">
+    <form method="post" noValidate onSubmit={submit} className="flex max-w-xl flex-col gap-section">
       {formError && (
         <div id={`${id}-form-error`} tabIndex={-1} className="outline-none">
           <ErrorMessage title="Could not save the profile" error={formError} />

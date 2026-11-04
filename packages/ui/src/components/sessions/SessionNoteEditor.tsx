@@ -62,7 +62,7 @@ export function SessionNoteEditor({ bookingId, note: initial, canWrite }: Sessio
       )}
 
       {note?.status !== "approved" && note?.status !== "rejected" && canWrite && (
-        <form onSubmit={save} className="flex flex-col gap-3">
+        <form method="post" onSubmit={save} className="flex flex-col gap-3">
           <Field>
             <FieldLabel htmlFor={`${id}-body`}>Your note</FieldLabel>
             <Textarea id={`${id}-body`} rows={5} value={draft} onChange={(event) => setDraft(event.target.value)} />

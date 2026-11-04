@@ -73,7 +73,7 @@ export function SessionThread({ bookingId, viewerId, counterpartName, timeZone, 
       )}
 
       {canWrite ? (
-        <form onSubmit={send} className="flex flex-col gap-3">
+        <form method="post" onSubmit={send} className="flex flex-col gap-3">
           <Field>
             <FieldLabel htmlFor={`${id}-body`}>Message</FieldLabel>
             <Textarea id={`${id}-body`} rows={4} value={draft} onChange={(event) => setDraft(event.target.value)} />
