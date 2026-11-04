@@ -5,7 +5,7 @@ import { UniqueConstraintViolationException, User, type EntityManager } from "@d
 import { ConflictError, NotFoundError, TooManyRequestsError, UnauthorizedError, ValidationError } from "../../http/errors";
 import { RateLimiter } from "../../rate-limiter";
 import { FakeClock } from "../../testing/fake-clock";
-import { AuthService, LOGIN_RATE_LIMIT } from "./auth.service";
+import { AuthService, LOGIN_IP_RATE_LIMIT, LOGIN_RATE_LIMIT } from "./auth.service";
 
 const SECRET = "s".repeat(32);
 const PASSWORD = "correct horse battery";
@@ -25,8 +25,13 @@ describe("AuthService", () => {
       em: em as unknown as EntityManager,
       clock,
       rateLimiter: new RateLimiter({ clock }, LOGIN_RATE_LIMIT),
+      loginIpLimiter: new RateLimiter({ clock }, LOGIN_IP_RATE_LIMIT),
       env: { AUTH_SECRET: secret },
     });
+  }
+
+  function login(email: string, password: string, ip = "1.1.1.1") {
+    return service.login(email, password, ip);
   }
 
   function storedUser(overrides: Record<string, unknown> = {}) {
@@ -149,7 +154,7 @@ describe("AuthService", () => {
     it("returns the session user for the correct password", async () => {
       em.findOne.mockResolvedValue(storedUser());
 
-      const result = await service.login("Ada@Example.com", PASSWORD);
+      const result = await login("Ada@Example.com", PASSWORD);
 
       expect(result).toEqual({ id: "u1", email: "ada@example.com", name: "Ada", role: "mentee" });
       expect(em.findOne).toHaveBeenCalledWith(User, { email: "ada@example.com" });
@@ -158,7 +163,7 @@ describe("AuthService", () => {
     it("rejects a wrong password with the generic error", async () => {
       em.findOne.mockResolvedValue(storedUser());
 
-      await expect(service.login("ada@example.com", "wrong password")).rejects.toMatchObject({
+      await expect(login("ada@example.com", "wrong password")).rejects.toMatchObject({
         code: "unauthorized",
         message: "Invalid email or password",
       });
@@ -168,7 +173,7 @@ describe("AuthService", () => {
       em.findOne.mockResolvedValue(null);
       const compare = vi.spyOn(bcrypt, "compare");
 
-      const error = await service.login("nobody@example.com", PASSWORD).catch((e: unknown) => e);
+      const error = await login("nobody@example.com", PASSWORD).catch((e: unknown) => e);
 
       expect(error).toBeInstanceOf(UnauthorizedError);
       expect(error).toMatchObject({ message: "Invalid email or password" });
@@ -178,7 +183,7 @@ describe("AuthService", () => {
     it("rejects an account without a password the same way", async () => {
       em.findOne.mockResolvedValue(storedUser({ passwordHash: null }));
 
-      await expect(service.login("ada@example.com", PASSWORD)).rejects.toMatchObject({
+      await expect(login("ada@example.com", PASSWORD)).rejects.toMatchObject({
         message: "Invalid email or password",
       });
     });
@@ -187,8 +192,8 @@ describe("AuthService", () => {
       em.findOne.mockResolvedValue(null);
       const hash = vi.spyOn(bcrypt, "hash");
 
-      await service.login("a@example.com", PASSWORD).catch(() => undefined);
-      await service.login("b@example.com", PASSWORD).catch(() => undefined);
+      await login("a@example.com", PASSWORD).catch(() => undefined);
+      await login("b@example.com", PASSWORD).catch(() => undefined);
 
       expect(hash).toHaveBeenCalledOnce();
     });
@@ -196,35 +201,51 @@ describe("AuthService", () => {
     it("blocks further attempts after 5 failures, even with the right password", async () => {
       em.findOne.mockResolvedValue(storedUser());
       for (let i = 0; i < 5; i += 1) {
-        await service.login("ada@example.com", "wrong").catch(() => undefined);
+        await login("ada@example.com", "wrong").catch(() => undefined);
       }
 
-      await expect(service.login("ADA@example.com", PASSWORD)).rejects.toBeInstanceOf(TooManyRequestsError);
+      await expect(login("ADA@example.com", PASSWORD)).rejects.toBeInstanceOf(TooManyRequestsError);
     });
 
     it("allows attempts again once the window has passed", async () => {
       em.findOne.mockResolvedValue(storedUser());
       for (let i = 0; i < 5; i += 1) {
-        await service.login("ada@example.com", "wrong").catch(() => undefined);
+        await login("ada@example.com", "wrong").catch(() => undefined);
       }
       clock.advance(LOGIN_RATE_LIMIT.windowMs + 1);
 
-      await expect(service.login("ada@example.com", PASSWORD)).resolves.toMatchObject({ id: "u1" });
+      await expect(login("ada@example.com", PASSWORD)).resolves.toMatchObject({ id: "u1" });
     });
 
     it("forgets earlier failures after a successful login", async () => {
       em.findOne.mockResolvedValue(storedUser());
       for (let i = 0; i < 4; i += 1) {
-        await service.login("ada@example.com", "wrong").catch(() => undefined);
+        await login("ada@example.com", "wrong").catch(() => undefined);
       }
-      await service.login("ada@example.com", PASSWORD);
+      await login("ada@example.com", PASSWORD);
 
       for (let i = 0; i < 4; i += 1) {
-        await service.login("ada@example.com", "wrong").catch(() => undefined);
+        await login("ada@example.com", "wrong").catch(() => undefined);
       }
 
-      await expect(service.login("ada@example.com", PASSWORD)).resolves.toMatchObject({ id: "u1" });
+      await expect(login("ada@example.com", PASSWORD)).resolves.toMatchObject({ id: "u1" });
     });
+
+    it("does not let failures from one IP lock the same account for another IP", async () => {
+      em.findOne.mockResolvedValue(storedUser());
+      for (let i = 0; i < 5; i += 1) await login("ada@example.com", "wrong", "10.0.0.1").catch(() => undefined);
+
+      await expect(login("ada@example.com", PASSWORD, "10.0.0.2")).resolves.toMatchObject({ id: "u1" });
+    });
+
+    it("caps failed attempts from one IP across different email addresses", async () => {
+      em.findOne.mockResolvedValue(null);
+      for (let i = 0; i < LOGIN_IP_RATE_LIMIT.maxAttempts; i += 1) {
+        await login(`spray-${i}@example.com`, "wrong", "10.0.0.3").catch(() => undefined);
+      }
+
+      await expect(login("another@example.com", PASSWORD, "10.0.0.3")).rejects.toBeInstanceOf(TooManyRequestsError);
+    }, 30_000);
   });
 
   describe("tokens", () => {

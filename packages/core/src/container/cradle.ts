@@ -27,6 +27,7 @@ export type Cradle = {
   clock: Clock;
   paymentGateway: PaymentGateway;
   rateLimiter: RateLimiter;
+  loginIpLimiter: RateLimiter;
   invitationPreviewLimiter: RateLimiter;
   invitationRegistrationLimiter: RateLimiter;
   healthService: HealthService;
