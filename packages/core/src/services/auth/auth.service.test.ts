@@ -117,6 +117,15 @@ describe("AuthService", () => {
       expect(em.flush).toHaveBeenCalledOnce();
     });
 
+    it("revokes the account's existing sessions when the password is reset", async () => {
+      const user = storedUser();
+      em.findOne.mockResolvedValue(user);
+
+      await service.setPassword("ada@example.com", PASSWORD, { admin: false });
+
+      expect(user).toMatchObject({ sessionsRevokedAt: clock.now() });
+    });
+
     it("promotes an existing account to admin with the admin option", async () => {
       em.findOne.mockResolvedValue(storedUser());
 
@@ -333,6 +342,62 @@ describe("AuthService", () => {
     it("rejects an invalid token without touching the database", async () => {
       await expect(service.authenticate("garbage")).rejects.toBeInstanceOf(UnauthorizedError);
       expect(em.findOne).not.toHaveBeenCalled();
+    });
+
+    it("rejects a token issued before the user's sessions were revoked", async () => {
+      const token = await service.issueToken({ id: "u1", role: "mentee" });
+      clock.advance(60_000);
+      em.findOne.mockResolvedValue(storedUser({ sessionsRevokedAt: clock.now() }));
+
+      await expect(service.authenticate(token)).rejects.toBeInstanceOf(UnauthorizedError);
+    });
+
+    it("orders a logout and a login within the same second by milliseconds", async () => {
+      const before = await service.issueToken({ id: "u1", role: "mentee" });
+      clock.advance(300);
+      em.findOne.mockResolvedValue(storedUser({ sessionsRevokedAt: clock.now() }));
+      clock.advance(300);
+      const after = await service.issueToken({ id: "u1", role: "mentee" });
+
+      await expect(service.authenticate(before)).rejects.toBeInstanceOf(UnauthorizedError);
+      await expect(service.authenticate(after)).resolves.toMatchObject({ id: "u1" });
+    });
+
+    it("falls back to the second-precision iat for a token issued before iatMs existed", async () => {
+      const issuedAt = Math.floor(clock.now().getTime() / 1000);
+      const legacy = await new SignJWT({ role: "mentee" })
+        .setProtectedHeader({ alg: "HS256" })
+        .setSubject("u1")
+        .setIssuedAt(issuedAt)
+        .setExpirationTime(issuedAt + 60)
+        .sign(new TextEncoder().encode(SECRET));
+      clock.advance(5_000);
+      em.findOne.mockResolvedValue(storedUser({ sessionsRevokedAt: clock.now() }));
+
+      await expect(service.authenticate(legacy)).rejects.toBeInstanceOf(UnauthorizedError);
+    });
+  });
+
+  describe("revokeSessions", () => {
+    it("revokes every session of the token's user", async () => {
+      const token = await service.issueToken({ id: "u1", role: "mentee" });
+      const user = storedUser();
+      em.findOne.mockResolvedValue(user);
+
+      await service.revokeSessions(token);
+
+      expect(em.findOne).toHaveBeenCalledWith(User, { id: "u1" });
+      expect(user).toMatchObject({ sessionsRevokedAt: clock.now() });
+      expect(em.flush).toHaveBeenCalledOnce();
+    });
+
+    it("does nothing for a missing, invalid or orphaned token", async () => {
+      await service.revokeSessions(undefined);
+      await service.revokeSessions("garbage");
+      em.findOne.mockResolvedValue(null);
+      await service.revokeSessions(await service.issueToken({ id: "gone", role: "mentee" }));
+
+      expect(em.flush).not.toHaveBeenCalled();
     });
   });
 });
