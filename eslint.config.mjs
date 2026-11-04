@@ -63,6 +63,8 @@ const eslintConfig = defineConfig([
     "**/.next-test/**",
     // Build dir of the dev server started by .ai/scripts/test-env-up.sh.
     "**/.next-test-env/**",
+    // Cezar task worktrees: full copies of the repo, linted in their own checkout, not as part of this one.
+    ".ai/cezar/**",
     "**/out/**",
     "**/build/**",
     "**/next-env.d.ts",
