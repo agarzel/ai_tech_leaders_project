@@ -17,7 +17,7 @@
       "source": "open-mercato/skills",
       "sourceType": "github",
       "skillPath": "skills/om-apply-upgrade-notes/SKILL.md",
-      "computedHash": "85aeee1e4cf9d622712b1d72a70a7c327473ebf1cc62b3a923fd907b70b7d03d"
+      "computedHash": "81401509adb7377cdf0134a9098cd1f3b407454440899a5436b25ef626867e1c"
     },
     "om-approve-merge-pr": {
       "source": "open-mercato/skills",
@@ -29,13 +29,13 @@
       "source": "open-mercato/skills",
       "sourceType": "github",
       "skillPath": "skills/om-auto-continue-pr/SKILL.md",
-      "computedHash": "e405479fbfc794e92818779032fd6ce611b164fa5d750d31c82d6fb3aa0e06ac"
+      "computedHash": "6cc3631abb93bde78a774aa5210b077b30c4ff03fbd5de6174f7b8acd6d7a65f"
     },
     "om-auto-continue-pr-loop": {
       "source": "open-mercato/skills",
       "sourceType": "github",
       "skillPath": "skills/om-auto-continue-pr-loop/SKILL.md",
-      "computedHash": "ceb5fc4ff4c009d5d68cf3bf9fb4401ae3075f0c2ecc594ddfecff173fb30f44"
+      "computedHash": "6dbd20e8473347188ce270bdc984511437ac96fc95486e402ac67099681188b9"
     },
     "om-auto-create-pr": {
       "source": "open-mercato/skills",
@@ -59,7 +59,7 @@
       "source": "open-mercato/skills",
       "sourceType": "github",
       "skillPath": "skills/om-auto-fix-pr/SKILL.md",
-      "computedHash": "d6e0d3996e0e874bb70c3f26753bdf1339a7d9abb99d8dcd8c16651213e00c1d"
+      "computedHash": "40969fd712219f9c976c51256bd06fa7559458f4c6c64db84ba0bf60de797639"
     },
     "om-auto-implement-spec": {
       "source": "open-mercato/skills",
@@ -77,13 +77,13 @@
       "source": "open-mercato/skills",
       "sourceType": "github",
       "skillPath": "skills/om-auto-qa-pr/SKILL.md",
-      "computedHash": "1ee055c47a206e9e8dc2edcd8952540ddb7af436856fac3189ca827a3f77ba55"
+      "computedHash": "361130aca22127c06d5ff5989614e38f187f49432f26181ff87317df114221f7"
     },
     "om-auto-review-pr": {
       "source": "open-mercato/skills",
       "sourceType": "github",
       "skillPath": "skills/om-auto-review-pr/SKILL.md",
-      "computedHash": "b28eb0e16f4f93b3eda05cb51ef4fd9460aa6538aa2f25defb237faa289e5ddc"
+      "computedHash": "387c92e1b875bf0c99102057f8ea069ac22bcaa4f614ccff21a3544118348ac2"
     },
     "om-auto-update-changelog": {
       "source": "open-mercato/skills",
