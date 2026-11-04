@@ -84,6 +84,9 @@ const eslintConfig = defineConfig([
     "**/.next-test-env/**",
     // Cezar task worktrees: full copies of the repo, linted in their own checkout, not as part of this one.
     ".ai/cezar/**",
+    // Installed third-party skills (npx skills add): vendored, never edited here, and their asset scripts are not
+    // product code. #130 brought in JS assets that failed to parse and turned main's lint red.
+    ".agents/skills/**",
     "**/out/**",
     "**/build/**",
     "**/next-env.d.ts",
