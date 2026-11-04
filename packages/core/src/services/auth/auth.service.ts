@@ -95,6 +95,8 @@ export class AuthService {
       user = this.deps.em.create(User, { email: key, name: key.split("@")[0]!, role: "admin", passwordHash });
     } else {
       user.passwordHash = passwordHash;
+      // A reset password also ends every session that was opened with the old one.
+      user.sessionsRevokedAt = this.deps.clock.now();
       if (admin) user.role = "admin";
     }
     await this.deps.em.flush();
@@ -103,8 +105,10 @@ export class AuthService {
 
   /** Signed session token: HS256, `sub` = user id, `role`, issued-at and 24 h expiry. */
   async issueToken(user: Pick<SessionUserDto, "id" | "role">): Promise<string> {
-    const issuedAt = Math.floor(this.deps.clock.now().getTime() / 1000);
-    return new SignJWT({ role: user.role })
+    const nowMs = this.deps.clock.now().getTime();
+    const issuedAt = Math.floor(nowMs / 1000);
+    // `iatMs`: issue time in milliseconds, so a revocation in the same second as a login is ordered correctly.
+    return new SignJWT({ role: user.role, iatMs: nowMs })
       .setProtectedHeader({ alg: "HS256" })
       .setSubject(user.id)
       .setIssuedAt(issuedAt)
@@ -114,24 +118,46 @@ export class AuthService {
 
   /** Returns the user id from a valid token. Fails closed: any problem (signature, expiry, shape) is `UnauthorizedError`. */
   async verifyToken(token: string): Promise<string> {
+    return (await this.verifyClaims(token)).id;
+  }
+
+  /**
+   * Verifies the token and reloads the user, so a deleted user or a changed role takes effect immediately; a token
+   * issued before the user's sessions were revoked (logout, password reset) is refused.
+   */
+  async authenticate(token: string): Promise<SessionUserDto> {
+    const { id, issuedAt } = await this.verifyClaims(token);
+    const user = await this.deps.em.findOne(User, { id });
+    if (!user) throw new UnauthorizedError();
+    if (user.sessionsRevokedAt && issuedAt < user.sessionsRevokedAt.getTime()) {
+      throw new UnauthorizedError();
+    }
+    return toSessionUser(user);
+  }
+
+  /** Logout: ends every session of the token's user, on every device. A missing or invalid token changes nothing. */
+  async revokeSessions(token: string | undefined): Promise<void> {
+    if (!token) return;
+    const id = await this.verifyToken(token).catch(() => null);
+    const user = id ? await this.deps.em.findOne(User, { id }) : null;
+    if (!user) return;
+    user.sessionsRevokedAt = this.deps.clock.now();
+    await this.deps.em.flush();
+  }
+
+  /** `issuedAt` in milliseconds; tokens issued before `iatMs` existed fall back to the second-precision `iat`. */
+  private async verifyClaims(token: string): Promise<{ id: string; issuedAt: number }> {
     try {
       const { payload } = await jwtVerify(token, this.secret(), {
         algorithms: ["HS256"],
         currentDate: this.deps.clock.now(),
-        requiredClaims: ["sub", "exp"],
+        requiredClaims: ["sub", "exp", "iat"],
       });
-      return String(payload.sub);
+      const issuedAt = typeof payload.iatMs === "number" ? payload.iatMs : Number(payload.iat) * 1000;
+      return { id: String(payload.sub), issuedAt };
     } catch {
       throw new UnauthorizedError();
     }
-  }
-
-  /** Verifies the token and reloads the user, so a deleted user or a changed role takes effect immediately. */
-  async authenticate(token: string): Promise<SessionUserDto> {
-    const id = await this.verifyToken(token);
-    const user = await this.deps.em.findOne(User, { id });
-    if (!user) throw new UnauthorizedError();
-    return toSessionUser(user);
   }
 
   /** The one place a self-service account is hashed and inserted; a taken e-mail is a `ConflictError`. */
