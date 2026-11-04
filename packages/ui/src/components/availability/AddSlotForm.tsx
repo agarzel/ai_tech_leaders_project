@@ -69,7 +69,7 @@ export function AddSlotForm({ timeZone, onSubmit, onAdded }: AddSlotFormProps) {
   }
 
   return (
-    <form noValidate onSubmit={submit} className="flex max-w-xl flex-col gap-between-groups">
+    <form method="post" noValidate onSubmit={submit} className="flex max-w-xl flex-col gap-between-groups">
       {formError && <ErrorMessage title="Could not add the slot" error={formError} />}
       <SlotTimeField
         key={resetKey}

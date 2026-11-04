@@ -54,6 +54,21 @@ const eslintConfig = defineConfig([
     paths: [...uiPaths, pkg("cn", 'Import cn from "@devmentor/ui/lib/utils" (configured for design-system classes).')],
     patterns: [mikroOrm, msw],
   }),
+  // A <form> without method="post" is submitted as GET before hydration (or with JS off), putting every field –
+  // passwords, private messages, notes – into the URL, browser history and server logs. Found by ZAP in lesson 16
+  // (threat model T-13) after every review had passed it; this rule keeps it from coming back.
+  {
+    files: ["packages/app/src/**/*.tsx", "packages/ui/src/**/*.tsx"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "JSXOpeningElement[name.name='form']:not(:has(JSXAttribute[name.name='method']))",
+          message: 'Give every <form> method="post" – without it a submit before hydration sends the fields in the URL (threat model T-13).',
+        },
+      ],
+    },
+  },
   restrict(["packages/app/**"], {
     paths: [pkg("@devmentor/db", "app talks to the database through @devmentor/core services.")],
     patterns: [mikroOrm],
