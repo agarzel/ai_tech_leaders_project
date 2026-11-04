@@ -11,7 +11,7 @@ const composeDb = (state, health) => ok(JSON.stringify({ Service: "db", State: s
  * A fake machine: by default everything is already set up (a second run).
  * Override `responses` (keyed by "command args…") and `files` to model other states.
  */
-function setup({ responses = {}, files = {}, nodeVersion = "22.22.2", dbHealthAfterStart = [] } = {}) {
+function setup({ responses = {}, files = {}, nodeVersion = "24.15.0", dbHealthAfterStart = [] } = {}) {
   const defaults = {
     "docker info": ok(),
     "docker compose ps --format json db": composeDb("running", "healthy"),
@@ -62,7 +62,7 @@ describe("runSetup", () => {
 
     expect(await runSetup(ctx)).toBe(0);
 
-    expect(output()).toContain("✓ Node.js version: skipped – Node 22.22.2");
+    expect(output()).toContain("✓ Node.js version: skipped – Node 24.15.0");
     expect(output()).toContain("✓ Dependencies (npm install): skipped – up to date with package-lock.json");
     expect(output()).toContain("✓ Environment file (.env): skipped – .env exists (left untouched)");
     expect(output()).toContain("✓ PostgreSQL (docker compose): skipped – db container running and healthy");
@@ -142,9 +142,9 @@ describe("runSetup", () => {
   });
 
   it.each([
-    ["22.12.0", "skipped – Node 22.12.0"],
-    ["24.1.0", "skipped – Node 24.1.0"],
-    ["22.11.9", "done – warned"],
+    ["24.0.0", "skipped – Node 24.0.0"],
+    ["25.1.0", "skipped – Node 25.1.0"],
+    ["22.22.2", "done – warned"],
     ["20.19.0", "done – warned"],
   ])("Node %s → %s", async (nodeVersion, outcome) => {
     const { ctx, output } = setup({ nodeVersion });
@@ -154,10 +154,11 @@ describe("runSetup", () => {
   });
 
   it("warns (but continues) on an old Node", async () => {
-    const { ctx, output } = setup({ nodeVersion: "22.11.0" });
+    const { ctx, output } = setup({ nodeVersion: "22.22.2" });
 
     expect(await runSetup(ctx)).toBe(0);
-    expect(output()).toContain("⚠️  Node 22.11.0 is older than 22.12");
+    expect(output()).toContain("⚠️  Node 22.22.2 is older than 24.0");
+    expect(output()).toContain("brew install node@24");
   });
 
   describe("failures stop the run with exit code 1 and an actionable message", () => {

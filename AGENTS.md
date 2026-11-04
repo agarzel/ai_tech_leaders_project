@@ -7,7 +7,7 @@ This is an npm-workspaces monorepo. Read only what your task needs: the table in
 ## Stack
 
 - Monorepo: npm workspaces – `app`, `core`, `db`, `ui` in `packages/`
-- Next.js 16 (App Router, Cache Components enabled), React 19, TypeScript
+- Node.js 24 (`.nvmrc`), Next.js 16 (App Router, Cache Components enabled), React 19, TypeScript
 - PostgreSQL 17 (via `docker compose`) with **MikroORM 7** (entities via `defineEntity`, migrations)
 - **Awilix** – dependency injection container
 - Tailwind CSS 4 and **shadcn/ui** (Base UI, `base-nova` style) for every page – public, mentee, mentor and admin – through the DevMentor design system in `@devmentor/ui` (tokens, components, Storybook)

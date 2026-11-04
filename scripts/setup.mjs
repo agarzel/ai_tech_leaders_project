@@ -6,8 +6,8 @@ import { copyFileSync, existsSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-// Vitest 5 (unit tests) needs Node 22.12+; older versions still run the app, so this only warns.
-export const MIN_NODE_VERSION = [22, 12];
+// CI, Docker and the tooling (agent-browser, jsdom) run on Node 24; older versions may still run the app, so this only warns.
+export const MIN_NODE_VERSION = [24, 0];
 export const DB_HEALTH_TIMEOUT_MS = 60_000;
 const DB_POLL_INTERVAL_MS = 1_000;
 
@@ -67,7 +67,7 @@ export const steps = [
       return supported ? `Node ${ctx.nodeVersion}` : null;
     },
     run: (ctx) => {
-      ctx.log(`  ⚠️  Node ${ctx.nodeVersion} is older than ${MIN_NODE_VERSION.join(".")} – the app runs, but unit tests need a newer Node.`);
+      ctx.log(`  ⚠️  Node ${ctx.nodeVersion} is older than ${MIN_NODE_VERSION.join(".")} – CI, Docker and the test tooling use Node 24 (brew install node@24, or nvm use).`);
       return "warned";
     },
   },
