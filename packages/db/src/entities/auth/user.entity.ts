@@ -14,6 +14,8 @@ export const User = defineSingletonEntity("User", () =>
       role: p.enum(USER_ROLES).default("mentee"),
       // Nullable: pre-existing and invited users have no password yet. Never expose it in a DTO.
       passwordHash: p.string().nullable(),
+      // Session tokens issued before this moment are refused (logout, password reset; threat model T-07).
+      sessionsRevokedAt: p.datetime().nullable(),
     },
   }),
 );
