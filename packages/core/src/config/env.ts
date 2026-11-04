@@ -15,6 +15,9 @@ const baseSchema = z.object({
   SWEEP_SECRET: z.string().min(32),
   // Public base URL of the app; Checkout success and cancel URLs are built from it.
   APP_URL: z.url({ protocol: /^https?$/ }),
+  // Reverse proxies in front of the app that append to x-forwarded-for; the client IP is read that many entries from
+  // the right. 1 fits both no proxy (Next.js sets the socket address) and one proxy (nginx $proxy_add_x_forwarded_for).
+  TRUSTED_PROXY_HOPS: z.coerce.number().int().min(1).max(10).default(1),
 });
 
 const envSchema = baseSchema.superRefine((env, ctx) => {

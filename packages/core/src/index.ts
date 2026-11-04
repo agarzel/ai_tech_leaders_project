@@ -8,6 +8,7 @@ export type { CrudService, Page, PageQuery } from "./http/crud";
 export { parseJsonBody, parseOrThrow } from "./http/body";
 export { assertOwner, requireAdmin, requireRole, requireSession, type Session } from "./http/auth";
 export { SWEEP_SECRET_MIN_LENGTH, SWEEP_TOKEN_HEADER, verifySweepSecret } from "./http/sweep-auth";
+export { clientIp, UNKNOWN_CLIENT_IP } from "./http/client-ip";
 export * from "./http/errors";
 export { webhookHandler } from "./http/webhookHandler";
 export { makeCrudRoute } from "./http/makeCrudRoute";

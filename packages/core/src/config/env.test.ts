@@ -33,7 +33,16 @@ describe("getEnv", () => {
       PAYMENTS_PROVIDER: "fake",
       SWEEP_SECRET: "w".repeat(32),
       APP_URL: "http://localhost:3000",
+      TRUSTED_PROXY_HOPS: 1,
     });
+  });
+
+  it("reads the number of trusted proxies and refuses zero", async () => {
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "2");
+    expect((await loadGetEnv())().TRUSTED_PROXY_HOPS).toBe(2);
+
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "0");
+    expect(await loadGetEnv()).toThrow(/TRUSTED_PROXY_HOPS/);
   });
 
   it("applies defaults for optional variables", async () => {
