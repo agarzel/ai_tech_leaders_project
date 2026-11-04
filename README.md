@@ -192,3 +192,10 @@ docker run -p 3000:3000 devmentor
 ```
 
 For day-to-day coding use `npm run dev` – on macOS it's faster than running the app in a container. Docker is for the database and for deployments.
+
+### Deploying behind a reverse proxy
+
+Per-IP limits (registration, login, invitation preview) key on the client address from `x-forwarded-for`. The app takes the entry `TRUSTED_PROXY_HOPS` places from the right (default `1`), i.e. the address your own proxy appended; entries a client sends itself are ignored.
+
+- Put the app behind exactly the number of proxies you configure, each appending the client address (nginx: `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;`). One proxy → keep the default; a CDN in front of nginx → `TRUSTED_PROXY_HOPS=2`.
+- Do not publish port 3000 directly on a public host: without a proxy, a client-supplied `x-forwarded-for` is trusted and the limits can be bypassed (threat model T-03, `docs/security/threat-model.md`).
