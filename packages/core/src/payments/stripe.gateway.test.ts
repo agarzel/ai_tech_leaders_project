@@ -86,11 +86,38 @@ describe("StripeGateway.createCheckout", () => {
 
   itMapsProviderFailures((ctx) => ctx.create, (gateway) => gateway.createCheckout(input));
 
-  it("treats a session without a url as unavailable", async () => {
+  it("treats a session without a url as a definite failure", async () => {
     const { create, gateway } = setup();
     create.mockResolvedValue({ id: "cs_test_1", url: null });
 
-    await expect(gateway.createCheckout(input)).rejects.toBeInstanceOf(PaymentUnavailableError);
+    await expect(gateway.createCheckout(input)).rejects.toMatchObject({ outcome: "definite" });
+  });
+
+  it.each(["StripeCardError", "StripeInvalidRequestError", "StripeAuthenticationError", "StripePermissionError", "StripeIdempotencyError"])(
+    "marks %s as a definite failure (retrying cannot succeed)",
+    async (type) => {
+      const { create, gateway } = setup();
+      create.mockRejectedValue(Object.assign(new Error("declined"), { type }));
+
+      await expect(gateway.createCheckout(input)).rejects.toMatchObject({ code: "payment_unavailable", outcome: "definite" });
+    },
+  );
+
+  it.each(["StripeConnectionError", "StripeAPIError", "StripeRateLimitError"])(
+    "marks %s as an unknown outcome, so the sweep retries with the same key",
+    async (type) => {
+      const { create, gateway } = setup();
+      create.mockRejectedValue(Object.assign(new Error("timeout"), { type }));
+
+      await expect(gateway.createCheckout(input)).rejects.toMatchObject({ outcome: "unknown" });
+    },
+  );
+
+  it("treats an unclassified rejection as an unknown outcome", async () => {
+    const { create, gateway } = setup();
+    create.mockRejectedValue("boom");
+
+    await expect(gateway.createCheckout(input)).rejects.toMatchObject({ outcome: "unknown" });
   });
 });
 

@@ -102,7 +102,9 @@ export class BookingService {
         idempotencyKey: created.idempotencyKey,
       });
     } catch (error) {
-      if (isPaymentUnavailableError(error)) {
+      // Only a definite failure releases the slot now; with an unknown outcome the payment stays `creating` and the
+      // sweep retries it with the same idempotency key (spec: Recoverable Checkout creation).
+      if (isDefiniteCheckoutFailure(error)) {
         await this.deps.bookingTransitions.expirePayment(created.bookingId, this.deps.clock.now(), "checkout-failed");
       }
       throw error;
@@ -117,13 +119,13 @@ export class BookingService {
   }
 }
 
-function isPaymentUnavailableError(error: unknown): boolean {
+function isDefiniteCheckoutFailure(error: unknown): boolean {
   return (
     typeof error === "object" &&
     error !== null &&
     "code" in error &&
     error.code === "payment_unavailable" &&
-    "status" in error &&
-    error.status === 503
+    "outcome" in error &&
+    error.outcome === "definite"
   );
 }

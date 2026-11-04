@@ -159,7 +159,7 @@ describe("BookingService.create", () => {
   });
 
   it("expires the booking after a definite checkout failure and propagates the payment error", async () => {
-    ctx.paymentGateway.createCheckout.mockRejectedValue(new PaymentUnavailableError());
+    ctx.paymentGateway.createCheckout.mockRejectedValue(new PaymentUnavailableError(undefined, "definite"));
 
     await expect(ctx.service.create("u1", input)).rejects.toBeInstanceOf(PaymentUnavailableError);
 
@@ -167,6 +167,15 @@ describe("BookingService.create", () => {
     expect(ctx.paymentGateway.createCheckout).toHaveBeenCalledTimes(1);
     expect(ctx.bookingTransitions.expirePayment).toHaveBeenCalledWith("b1", NOW, "checkout-failed");
     expect(ctx.calls).toEqual(["tx:start", "flush", "tx:commit"]);
+  });
+
+  it("keeps the hold for the sweep after a checkout failure with an unknown outcome (timeout, 5xx)", async () => {
+    ctx.paymentGateway.createCheckout.mockRejectedValue(new PaymentUnavailableError());
+
+    await expect(ctx.service.create("u1", input)).rejects.toBeInstanceOf(PaymentUnavailableError);
+
+    expect(ctx.bookingTransitions.expirePayment).not.toHaveBeenCalled();
+    expect(ctx.em.nativeUpdate).not.toHaveBeenCalled();
   });
 
   it("does not expire a booking for an unclassified checkout failure", async () => {
