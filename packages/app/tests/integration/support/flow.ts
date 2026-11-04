@@ -27,7 +27,11 @@ export async function inviteMentor(admin: Browser, mentor: Browser, email: strin
   const link = JSON.parse(await admin.run("eval", "document.querySelector('input[readonly]').value")) as string;
 
   await mentor.open(new URL(link).pathname + new URL(link).search);
-  await mentor.waitForText(email);
+  // Wait for either outcome of the client-side preview, so a refused preview (e.g. the per-IP preview limit, #116)
+  // fails here with its reason instead of a 45 s timeout waiting for the email.
+  await mentor.run("wait", "--fn", `document.body.innerText.includes(${JSON.stringify(email)}) || document.body.innerText.includes("no longer valid")`);
+  const previewText = JSON.parse(await mentor.run("eval", "document.body.innerText")) as string;
+  expect(previewText, "invitation preview was refused – check the preview rate limit and the browser's test IP").toContain(email);
   await mentor.fill("Name", name);
   await mentor.fill("Password", TEST_PASSWORD);
   await mentor.click("button", "Create account");
