@@ -69,7 +69,7 @@ describe("access boundaries – another account swaps the id", () => {
 
     // When: the intruder reads the note and approves it.
     const read = await api(intruder, "GET", `/api/bookings/${bookingId}/note`);
-    const approve = await api(intruder, "POST", `/api/bookings/${bookingId}/note/approve`, { decision: "approve" });
+    const approve = await api(intruder, "POST", `/api/bookings/${bookingId}/note/approve`, { decision: "approve", body: "Keep the failing test first." });
 
     // Then: both are 404, and the note is still the undecided draft.
     expect(read.status).toBe(404);

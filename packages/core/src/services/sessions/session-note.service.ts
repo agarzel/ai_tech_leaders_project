@@ -51,8 +51,12 @@ export class SessionNoteService {
     return { status: "draft", body: text };
   }
 
-  /** The mentee approves or rejects the draft. Only the draft inside its approval window can be decided. */
-  async decide(bookingId: string, menteeUserId: string, decision: "approve" | "reject"): Promise<NoteDto> {
+  /**
+   * The mentee approves or rejects the draft. Only the draft inside its approval window can be decided, and only
+   * the text the mentee was shown (`seenBody`): if the mentor replaced the draft since, the decision is refused,
+   * so nobody approves a note they never read (#136).
+   */
+  async decide(bookingId: string, menteeUserId: string, decision: "approve" | "reject", seenBody: string): Promise<NoteDto> {
     const booking = await this.loadBooking(bookingId, menteeUserId, "mentee");
     const note = await this.deps.em.findOne(SessionNote, { booking: bookingId });
     if (!note) {
@@ -60,6 +64,9 @@ export class SessionNoteService {
     }
     const now = this.deps.clock.now();
     assertNoteDecidable(note.status, booking.slot.startsAt, booking.lengthMinutes, now, note.replacedAt);
+    if (seenBody.trim() !== note.body) {
+      throw new ConflictError("The mentor changed this note. Read the new version before you decide.");
+    }
 
     note.status = decision === "approve" ? "approved" : "rejected";
     note.decidedAt = now;

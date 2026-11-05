@@ -126,7 +126,7 @@ describe("SessionNoteService.decide", () => {
     const note = { status: "draft", body: "Keep the reading list short." };
     const { service } = setup({ note, now: ENDS_AT });
 
-    const dto = await service.decide("b1", "mentee", "approve");
+    const dto = await service.decide("b1", "mentee", "approve", "Keep the reading list short.");
 
     expect(note).toMatchObject({ status: "approved", decidedAt: ENDS_AT });
     expect(dto).toEqual({ status: "approved", body: "Keep the reading list short." });
@@ -136,31 +136,49 @@ describe("SessionNoteService.decide", () => {
     const note = { status: "draft", body: "x" };
     const { service } = setup({ note });
 
-    await expect(service.decide("b1", "mentee", "reject")).resolves.toMatchObject({ status: "rejected" });
+    await expect(service.decide("b1", "mentee", "reject", "x")).resolves.toMatchObject({ status: "rejected" });
   });
 
   it("answers not_found for a user who is not the mentee", async () => {
     const { service } = setup({ note: { status: "draft", body: "x" } });
 
-    await expect(service.decide("b1", "mentor", "approve")).rejects.toThrow(NotFoundError);
+    await expect(service.decide("b1", "mentor", "approve", "x")).rejects.toThrow(NotFoundError);
   });
 
   it("answers not_found when there is no note", async () => {
     const { service } = setup({ note: null });
 
-    await expect(service.decide("b1", "mentee", "approve")).rejects.toThrow(NotFoundError);
+    await expect(service.decide("b1", "mentee", "approve", "x")).rejects.toThrow(NotFoundError);
   });
 
   it("refuses a draft whose approval window has closed", async () => {
     const { service } = setup({ note: { status: "draft", body: "x" }, now: DEADLINE });
 
-    await expect(service.decide("b1", "mentee", "approve")).rejects.toThrow(ConflictError);
+    await expect(service.decide("b1", "mentee", "approve", "x")).rejects.toThrow(ConflictError);
   });
 
   it("refuses a note that is already decided", async () => {
     const { service } = setup({ note: { status: "approved", body: "x" } });
 
-    await expect(service.decide("b1", "mentee", "reject")).rejects.toThrow(ConflictError);
+    await expect(service.decide("b1", "mentee", "reject", "x")).rejects.toThrow(ConflictError);
+  });
+
+  it("refuses a decision on text the mentor has replaced since the mentee read it, and leaves the draft undecided (#136)", async () => {
+    const note = { status: "draft", body: "Version B: you should switch teams.", decidedAt: null };
+    const { em, service } = setup({ note });
+
+    await expect(service.decide("b1", "mentee", "approve", "Version A: keep the reading list short.")).rejects.toThrow(
+      "The mentor changed this note. Read the new version before you decide.",
+    );
+    expect(note).toMatchObject({ status: "draft", decidedAt: null });
+    expect(em.flush).not.toHaveBeenCalled();
+  });
+
+  it("matches the decided text after trimming, as the note itself is stored trimmed", async () => {
+    const note = { status: "draft", body: "Keep going." };
+    const { service } = setup({ note });
+
+    await expect(service.decide("b1", "mentee", "approve", "  Keep going.\n")).resolves.toMatchObject({ status: "approved" });
   });
 });
 

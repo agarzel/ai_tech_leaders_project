@@ -28,7 +28,7 @@ describe("SessionNotePanel", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Approve" }));
 
-    expect(apiCall).toHaveBeenCalledWith("/api/bookings/b1/note/approve", { method: "POST", body: { decision: "approve" } });
+    expect(apiCall).toHaveBeenCalledWith("/api/bookings/b1/note/approve", { method: "POST", body: { decision: "approve", body: "Read the RFC first." } });
     expect(await screen.findByText("You approved this note from Marek Zieliński.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Approve" })).not.toBeInTheDocument();
   });
@@ -39,7 +39,7 @@ describe("SessionNotePanel", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Reject" }));
 
-    expect(apiCall).toHaveBeenCalledWith("/api/bookings/b1/note/approve", { method: "POST", body: { decision: "reject" } });
+    expect(apiCall).toHaveBeenCalledWith("/api/bookings/b1/note/approve", { method: "POST", body: { decision: "reject", body: "x" } });
   });
 
   it("shows the sending state and keeps the draft when the decision fails", async () => {
@@ -50,6 +50,43 @@ describe("SessionNotePanel", () => {
 
     expect(await screen.findByText("Could not save your decision")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Approve" })).toBeEnabled();
+  });
+
+  it("loads the mentor's new text when the draft changed before the decision (#136)", async () => {
+    vi.mocked(apiCall)
+      .mockResolvedValueOnce({ ok: false, status: 409, error: { code: "conflict", message: "The mentor changed this note. Read the new version before you decide." } })
+      .mockResolvedValueOnce({ ok: true, status: 200, data: { status: "draft", body: "Version B." } });
+    render(<SessionNotePanel bookingId="b1" mentorName="Marek" note={{ status: "draft", body: "Version A." }} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Approve" }));
+
+    expect(await screen.findByText("Version B.")).toBeInTheDocument();
+    expect(screen.queryByText("Version A.")).not.toBeInTheDocument();
+    expect(screen.getByText("The mentor changed this note. Read the new version before you decide.")).toBeInTheDocument();
+    expect(apiCall).toHaveBeenLastCalledWith("/api/bookings/b1/note");
+    expect(screen.getByRole("button", { name: "Approve" })).toBeEnabled();
+  });
+
+  it("keeps the shown draft when a refused decision is followed by a note that is no longer a draft", async () => {
+    vi.mocked(apiCall)
+      .mockResolvedValueOnce(failure)
+      .mockResolvedValueOnce({ ok: true, status: 200, data: null });
+    render(<SessionNotePanel bookingId="b1" mentorName="Marek" note={{ status: "draft", body: "Version A." }} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Approve" }));
+
+    expect(await screen.findByText("Could not save your decision")).toBeInTheDocument();
+    expect(screen.getByText("Version A.")).toBeInTheDocument();
+  });
+
+  it("does not reload the note after a failure that is not a conflict", async () => {
+    vi.mocked(apiCall).mockResolvedValueOnce({ ok: false, status: 500, error: { code: "internal_error", message: "Something went wrong" } });
+    render(<SessionNotePanel bookingId="b1" mentorName="Marek" note={{ status: "draft", body: "x" }} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Approve" }));
+
+    expect(await screen.findByText("Something went wrong on our side")).toBeInTheDocument();
+    expect(apiCall).toHaveBeenCalledTimes(1);
   });
 
   it("shows an approved note without actions", () => {

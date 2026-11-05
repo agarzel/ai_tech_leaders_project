@@ -11,6 +11,8 @@ export type SessionNote = { status: "draft" | "approved" | "rejected"; body: str
 /**
  * The mentee's part of the session note (spec E03 S04): a draft is shown in full with Approve and Reject;
  * once approved it stays visible; a rejected note is never shown here (the server does not return it).
+ * The decision carries the text on screen; when the server refuses it because the mentor changed the draft
+ * meanwhile (409), the panel loads the new text, so the mentee decides on what they can read (#136).
  */
 export function SessionNotePanel({ bookingId, mentorName, note: initial }: { bookingId: string; mentorName: string; note: SessionNote }) {
   const id = useId();
@@ -21,10 +23,14 @@ export function SessionNotePanel({ bookingId, mentorName, note: initial }: { boo
   async function decide(decision: "approve" | "reject") {
     setBusy(decision);
     setError(undefined);
-    const result = await apiCall<SessionNote>(`/api/bookings/${bookingId}/note/approve`, { method: "POST", body: { decision } });
+    const result = await apiCall<SessionNote>(`/api/bookings/${bookingId}/note/approve`, { method: "POST", body: { decision, body: note.body } });
     setBusy(undefined);
     if (!result.ok) {
       setError(result.error);
+      if (result.status === 409) {
+        const latest = await apiCall<SessionNote | null>(`/api/bookings/${bookingId}/note`);
+        if (latest.ok && latest.data?.status === "draft") setNote(latest.data);
+      }
       return;
     }
     setNote(result.data);
