@@ -42,4 +42,25 @@ describe("site header navigation by role", () => {
     expect(adminLinks).toContain("Admin → /admin");
     expect(adminLinks.filter((link) => link.includes("bookings"))).toEqual([]);
   });
+
+  // Scenario: .ai/qa/BOOKINGS/BOOKINGS-006-header-marks-the-current-page.md
+  it("marks the current page in the header and keeps every link label on one line (issue 137)", async () => {
+    // "Log out" streams in with the account part of the header, so the links are there once it shows.
+    const current = async (path: string): Promise<{ current: string[]; wrap: string[] }> => {
+      await mentor.open(path);
+      await mentor.waitForText("Log out");
+      const result = await mentor.run(
+        "eval",
+        "JSON.stringify({ current: [...document.querySelectorAll('header a[aria-current=\"page\"]')].map((a) => a.textContent.trim()), wrap: [...new Set([...document.querySelectorAll('header a')].map((a) => getComputedStyle(a).whiteSpace))] })",
+      );
+      return JSON.parse(JSON.parse(result) as string) as { current: string[]; wrap: string[] };
+    };
+
+    const received = await current("/mentor/bookings");
+    expect(received.current).toEqual(["Bookings"]);
+    expect(received.wrap).toEqual(["nowrap"]);
+
+    const own = await current("/bookings");
+    expect(own.current).toEqual(["My bookings"]);
+  });
 });
