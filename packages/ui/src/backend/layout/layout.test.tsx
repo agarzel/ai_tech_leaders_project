@@ -1,6 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { AppHeader } from "./AppHeader";
+import { isCurrentNavHref, navLinkClassName } from "./links";
 import { RoleNav } from "./RoleNav";
 
 const adminNav = [
@@ -79,5 +80,22 @@ describe("PageLayout", () => {
 
     expect(screen.getByRole("main")).toHaveClass("max-w-sm");
     expect(screen.getByRole("main").querySelectorAll("p")).toHaveLength(1);
+  });
+});
+
+describe("navigation links", () => {
+  it("keeps a link label on one line", () => {
+    expect(navLinkClassName.split(" ")).toContain("whitespace-nowrap");
+  });
+
+  it.each([
+    ["/bookings", "/bookings", true],
+    ["/bookings/b1", "/bookings", true],
+    ["/mentor/bookings", "/bookings", false],
+    ["/bookingsx", "/bookings", false],
+    ["/mentor/bookings/b1", "/mentor/bookings", true],
+    ["/", "/admin", false],
+  ])("treats %s as current for %s: %s", (pathname, href, current) => {
+    expect(isCurrentNavHref(pathname, href)).toBe(current);
   });
 });

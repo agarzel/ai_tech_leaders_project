@@ -1,10 +1,9 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import { AppHeader } from "@devmentor/ui/backend/layout/AppHeader";
-import { navLinkClassName } from "@devmentor/ui/backend/layout/links";
 import { AccountMenuSkeleton } from "@devmentor/ui/components/auth/AccountMenu";
 import { getSessionUser } from "../lib/session";
 import { AccountMenuClient } from "./account-menu-client";
+import { HeaderNavLink } from "./header-nav-link";
 
 async function HeaderAccount() {
   const user = await getSessionUser();
@@ -13,19 +12,19 @@ async function HeaderAccount() {
     <>
       {/* A mentor receives bookings and may also book another mentor (#98), so they get both lists. */}
       {user?.role === "mentor" && (
-        <Link href="/mentor/bookings" className={navLinkClassName}>
+        <HeaderNavLink href="/mentor/bookings">
           Bookings
-        </Link>
+        </HeaderNavLink>
       )}
       {user && user.role !== "admin" && (
-        <Link href="/bookings" className={navLinkClassName}>
+        <HeaderNavLink href="/bookings">
           My bookings
-        </Link>
+        </HeaderNavLink>
       )}
       {user?.role === "admin" && (
-        <Link href="/admin" className={navLinkClassName}>
+        <HeaderNavLink href="/admin">
           Admin
-        </Link>
+        </HeaderNavLink>
       )}
       {/* Only what the header shows crosses to the client: no email. */}
       <AccountMenuClient user={user && { id: user.id, name: user.name, role: user.role }} />
