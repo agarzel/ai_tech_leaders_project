@@ -12,7 +12,7 @@ export type SessionNote = { status: "draft" | "approved" | "rejected"; body: str
  * The mentee's part of the session note (spec E03 S04): a draft is shown in full with Approve and Reject;
  * once approved it stays visible; a rejected note is never shown here (the server does not return it).
  * The decision carries the text on screen; when the server refuses it because the mentor changed the draft
- * meanwhile (409), the panel loads the new text, so the mentee decides on what they can read (#136).
+ * meanwhile (409), the panel loads the new text, so the mentee decides on what they can read (issue 136).
  */
 export function SessionNotePanel({ bookingId, mentorName, note: initial }: { bookingId: string; mentorName: string; note: SessionNote }) {
   const id = useId();
