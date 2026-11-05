@@ -1,4 +1,4 @@
-import { Booking } from "@devmentor/db";
+import { Booking, SessionNote } from "@devmentor/db";
 import { describe, expect, it, vi } from "vitest";
 import { ConflictError, NotFoundError, ValidationError } from "../../http/errors";
 import { NOTE_MAX_LENGTH } from "../../validators/sessions/session-note.schema";
@@ -21,7 +21,9 @@ function booking(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function setup(options: { booking?: ReturnType<typeof booking> | null; note?: Record<string, unknown> | null; now?: Date } = {}) {
+function setup(
+  options: { booking?: ReturnType<typeof booking> | null; note?: Record<string, unknown> | null; now?: Date; updated?: number } = {},
+) {
   const note = options.note === undefined ? null : options.note;
   const em = {
     findOne: vi.fn(async (entity: unknown) => {
@@ -29,6 +31,8 @@ function setup(options: { booking?: ReturnType<typeof booking> | null; note?: Re
     }),
     create: vi.fn((_entity: unknown, data: Record<string, unknown>) => data),
     flush: vi.fn(async () => undefined),
+    // Rows changed by a conditional update; 0 means another request changed the note first.
+    nativeUpdate: vi.fn(async () => options.updated ?? 1),
   };
   const clock = { now: () => options.now ?? ENDS_AT };
   return { em, note, service: new SessionNoteService({ em: em as never, clock }) };
@@ -44,32 +48,34 @@ describe("SessionNoteService.write", () => {
     expect(dto).toEqual({ status: "draft", body: "Good questions to ask next time." });
   });
 
-  it("replaces the body of an existing draft", async () => {
-    const existing = { status: "draft", body: "old" };
+  it("replaces the body of an existing draft, only while it is still the draft that was read", async () => {
+    const existing = { id: "n1", status: "draft", body: "old", rejectedReplacementCount: 0 };
     const { em, service } = setup({ note: existing });
 
-    await service.write("b1", "mentor", "new");
+    await expect(service.write("b1", "mentor", "new")).resolves.toEqual({ status: "draft", body: "new" });
 
-    expect(existing.body).toBe("new");
+    expect(em.nativeUpdate).toHaveBeenCalledWith(SessionNote, { id: "n1", status: "draft", rejectedReplacementCount: 0 }, { body: "new" });
     expect(em.create).not.toHaveBeenCalled();
-    expect(em.flush).toHaveBeenCalled();
+  });
+
+  it("refuses to replace a draft the mentee decided between the read and the write (#136)", async () => {
+    const { service } = setup({ note: { id: "n1", status: "draft", body: "old", rejectedReplacementCount: 0 }, updated: 0 });
+
+    await expect(service.write("b1", "mentor", "new")).rejects.toThrow("The mentee has just decided this note");
   });
 
   it("replaces a rejected note once and resets it for the mentee to decide again", async () => {
     const replacementTime = new Date(DEADLINE.getTime() + 1);
-    const existing = { status: "rejected", body: "old", rejectedReplacementCount: 0, decidedAt: new Date(), replacedAt: null };
+    const existing = { id: "n1", status: "rejected", body: "old", rejectedReplacementCount: 0, decidedAt: new Date(), replacedAt: null };
     const { em, service } = setup({ note: existing, now: replacementTime });
 
     await expect(service.write("b1", "mentor", " corrected ")).resolves.toEqual({ status: "draft", body: "corrected" });
 
-    expect(existing).toMatchObject({
-      status: "draft",
-      body: "corrected",
-      rejectedReplacementCount: 1,
-      decidedAt: null,
-      replacedAt: replacementTime,
-    });
-    expect(em.flush).toHaveBeenCalled();
+    expect(em.nativeUpdate).toHaveBeenCalledWith(
+      SessionNote,
+      { id: "n1", status: "rejected", rejectedReplacementCount: 0 },
+      { body: "corrected", status: "draft", rejectedReplacementCount: 1, decidedAt: null, replacedAt: replacementTime },
+    );
   });
 
   it("refuses a second replacement after the replacement is rejected", async () => {
@@ -123,12 +129,16 @@ describe("SessionNoteService.write", () => {
 
 describe("SessionNoteService.decide", () => {
   it("approves a draft and records the decision time", async () => {
-    const note = { status: "draft", body: "Keep the reading list short." };
-    const { service } = setup({ note, now: ENDS_AT });
+    const note = { id: "n1", status: "draft", body: "Keep the reading list short." };
+    const { em, service } = setup({ note, now: ENDS_AT });
 
-    const dto = await service.decide("b1", "mentee", "approve");
+    const dto = await service.decide("b1", "mentee", "approve", "Keep the reading list short.");
 
-    expect(note).toMatchObject({ status: "approved", decidedAt: ENDS_AT });
+    expect(em.nativeUpdate).toHaveBeenCalledWith(
+      SessionNote,
+      { id: "n1", status: "draft", body: "Keep the reading list short." },
+      { status: "approved", decidedAt: ENDS_AT },
+    );
     expect(dto).toEqual({ status: "approved", body: "Keep the reading list short." });
   });
 
@@ -136,31 +146,56 @@ describe("SessionNoteService.decide", () => {
     const note = { status: "draft", body: "x" };
     const { service } = setup({ note });
 
-    await expect(service.decide("b1", "mentee", "reject")).resolves.toMatchObject({ status: "rejected" });
+    await expect(service.decide("b1", "mentee", "reject", "x")).resolves.toMatchObject({ status: "rejected" });
   });
 
   it("answers not_found for a user who is not the mentee", async () => {
     const { service } = setup({ note: { status: "draft", body: "x" } });
 
-    await expect(service.decide("b1", "mentor", "approve")).rejects.toThrow(NotFoundError);
+    await expect(service.decide("b1", "mentor", "approve", "x")).rejects.toThrow(NotFoundError);
   });
 
   it("answers not_found when there is no note", async () => {
     const { service } = setup({ note: null });
 
-    await expect(service.decide("b1", "mentee", "approve")).rejects.toThrow(NotFoundError);
+    await expect(service.decide("b1", "mentee", "approve", "x")).rejects.toThrow(NotFoundError);
   });
 
   it("refuses a draft whose approval window has closed", async () => {
     const { service } = setup({ note: { status: "draft", body: "x" }, now: DEADLINE });
 
-    await expect(service.decide("b1", "mentee", "approve")).rejects.toThrow(ConflictError);
+    await expect(service.decide("b1", "mentee", "approve", "x")).rejects.toThrow(ConflictError);
   });
 
   it("refuses a note that is already decided", async () => {
     const { service } = setup({ note: { status: "approved", body: "x" } });
 
-    await expect(service.decide("b1", "mentee", "reject")).rejects.toThrow(ConflictError);
+    await expect(service.decide("b1", "mentee", "reject", "x")).rejects.toThrow(ConflictError);
+  });
+
+  it("refuses a decision on text the mentor has replaced since the mentee read it, and leaves the draft undecided (#136)", async () => {
+    const note = { status: "draft", body: "Version B: you should switch teams.", decidedAt: null };
+    const { em, service } = setup({ note });
+
+    await expect(service.decide("b1", "mentee", "approve", "Version A: keep the reading list short.")).rejects.toThrow(
+      "The mentor changed this note. Read the new version before you decide.",
+    );
+    expect(em.nativeUpdate).not.toHaveBeenCalled();
+  });
+
+  it("refuses the decision when the mentor replaces the draft between the read and the write (#136)", async () => {
+    const { service } = setup({ note: { id: "n1", status: "draft", body: "Version A." }, updated: 0 });
+
+    await expect(service.decide("b1", "mentee", "approve", "Version A.")).rejects.toThrow(
+      "The mentor changed this note. Read the new version before you decide.",
+    );
+  });
+
+  it("matches the decided text after trimming, as the note itself is stored trimmed", async () => {
+    const note = { status: "draft", body: "Keep going." };
+    const { service } = setup({ note });
+
+    await expect(service.decide("b1", "mentee", "approve", "  Keep going.\n")).resolves.toMatchObject({ status: "approved" });
   });
 });
 

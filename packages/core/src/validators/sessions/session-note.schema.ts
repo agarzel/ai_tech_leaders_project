@@ -11,9 +11,11 @@ export const sessionNoteWriteSchema = z.object({
     .max(NOTE_MAX_LENGTH, `The note must be at most ${NOTE_MAX_LENGTH} characters`),
 });
 
-// POST /api/bookings/[id]/note/approve. The mentee approves or rejects the draft.
+// POST /api/bookings/[id]/note/approve. The mentee approves or rejects the draft. `body` is the text the
+// mentee was shown: a decision applies only to that text, so a draft the mentor replaced since is refused (#136).
 export const sessionNoteDecisionSchema = z.object({
   decision: z.enum(["approve", "reject"], "Choose approve or reject"),
+  body: z.string("Send the note you decided on").max(NOTE_MAX_LENGTH, `The note must be at most ${NOTE_MAX_LENGTH} characters`),
 });
 
 export type SessionNoteWriteInput = z.infer<typeof sessionNoteWriteSchema>;

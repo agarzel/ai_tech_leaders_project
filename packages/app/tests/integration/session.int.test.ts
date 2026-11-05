@@ -131,6 +131,34 @@ describe("session thread, note and cancellation", () => {
     await mentee.screenshot("session-note-approved");
   });
 
+  // Scenario: .ai/qa/SESSION/SESSION-004-note-changed-before-approval-is-refused.md
+  it("refuses the mentee's approval of a draft the mentor replaced after it was shown, then shows the new text (#136)", async () => {
+    // Given: a confirmed booking whose session has ended, with the mentor's draft open on the mentee's page.
+    // Day 5 and two hours ago, so it never collides with this file's other slots (days 3 and 4, an hour ago).
+    const slotId = await publishSlot(5);
+    const booking = await bookAndPay(slotId);
+    expect((await api(mentor, "POST", `/api/mentor/bookings/${booking}/accept`)).status).toBe(200);
+    await sql(`update slots set starts_at = now() - interval '2 hours' where id = (select slot_id from bookings where id = '${booking}')`);
+    expect((await api(mentor, "PUT", `/api/mentor/bookings/${booking}/note`, { body: "Version A: keep the reading list short." })).status).toBe(200);
+    await mentee.open(`/bookings/${booking}`);
+    await mentee.waitForText("Version A: keep the reading list short.");
+
+    // When: the mentor replaces the draft, then the mentee approves the text still on their screen.
+    expect((await api(mentor, "PUT", `/api/mentor/bookings/${booking}/note`, { body: "Version B: switch to the other mentor." })).status).toBe(200);
+    await mentee.click("button", "Approve");
+
+    // Then: the approval is refused, the note stays an undecided draft, and the page now shows version B.
+    await mentee.waitForText("The mentor changed this note. Read the new version before you decide.");
+    await mentee.waitForText("Version B: switch to the other mentor.");
+    await mentee.screenshot("session-note-changed-before-approval");
+    expect(await sql(`select status || ' ' || coalesce(decided_at::text, 'none') from session_notes where booking_id = '${booking}'`)).toBe("draft none");
+
+    // And: approving again decides the text the mentee can now read.
+    await mentee.click("button", "Approve");
+    await mentee.waitForText("You approved this note");
+    expect(await sql(`select status || ' ' || body from session_notes where booking_id = '${booking}'`)).toBe("approved Version B: switch to the other mentor.");
+  });
+
   it("the mentee cancels a booking before the free deadline and sees the refund on its way", async () => {
     await mentee.open(`/bookings/${cancellable}`);
     // "Your booking" is the page title and shows before the content; the status panel renders with the cancel action.

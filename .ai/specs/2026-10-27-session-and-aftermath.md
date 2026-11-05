@@ -34,7 +34,7 @@ Recommended defaults for the open questions are marked *Recommendation*; they ap
 | `GET/POST /api/bookings/[id]/messages` | the booking's mentee or mentor | list / append a message; only inside the session window (plus 24 h after it ends for reading) |
 | `POST /api/bookings/[id]/cancel` | the mentee | `confirmed` only; returns the outcome (`refunded` or `not_refunded`) |
 | `PUT /api/mentor/bookings/[id]/note` | the mentor | create or replace a `draft` note; an approved note is final |
-| `POST /api/bookings/[id]/note/approve` | the mentee | `approve` or `reject` a `draft` note |
+| `POST /api/bookings/[id]/note/approve` | the mentee | `approve` or `reject` a `draft` note; the request carries the `body` the mentee was shown, and a draft replaced since answers 409 (#136) |
 
 All state-changing routes use the existing envelope and `x-devmentor-client: 1`.
 

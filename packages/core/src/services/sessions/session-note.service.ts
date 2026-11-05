@@ -37,22 +37,33 @@ export class SessionNoteService {
     }
 
     if (existing) {
-      existing.body = text;
-      if (existing.status === "rejected") {
-        existing.rejectedReplacementCount += 1;
-        existing.status = "draft";
-        existing.decidedAt = null;
-        existing.replacedAt = now;
+      const fields =
+        existing.status === "rejected"
+          ? { body: text, status: "draft" as const, rejectedReplacementCount: existing.rejectedReplacementCount + 1, decidedAt: null, replacedAt: now }
+          : { body: text };
+      // Conditional on the state read above: the mentee may have decided the draft in the meantime, and an
+      // approved note must keep the text that was approved (#136).
+      const updated = await em.nativeUpdate(
+        SessionNote,
+        { id: existing.id, status: existing.status, rejectedReplacementCount: existing.rejectedReplacementCount },
+        fields,
+      );
+      if (updated === 0) {
+        throw new ConflictError("The mentee has just decided this note");
       }
     } else {
       em.create(SessionNote, { booking, body: text, status: "draft" });
+      await em.flush();
     }
-    await em.flush();
     return { status: "draft", body: text };
   }
 
-  /** The mentee approves or rejects the draft. Only the draft inside its approval window can be decided. */
-  async decide(bookingId: string, menteeUserId: string, decision: "approve" | "reject"): Promise<NoteDto> {
+  /**
+   * The mentee approves or rejects the draft. Only the draft inside its approval window can be decided, and only
+   * the text the mentee was shown (`seenBody`): if the mentor replaced the draft since, the decision is refused,
+   * so nobody approves a note they never read (#136).
+   */
+  async decide(bookingId: string, menteeUserId: string, decision: "approve" | "reject", seenBody: string): Promise<NoteDto> {
     const booking = await this.loadBooking(bookingId, menteeUserId, "mentee");
     const note = await this.deps.em.findOne(SessionNote, { booking: bookingId });
     if (!note) {
@@ -60,11 +71,18 @@ export class SessionNoteService {
     }
     const now = this.deps.clock.now();
     assertNoteDecidable(note.status, booking.slot.startsAt, booking.lengthMinutes, now, note.replacedAt);
+    const changed = new ConflictError("The mentor changed this note. Read the new version before you decide.");
+    if (seenBody.trim() !== note.body) {
+      throw changed;
+    }
 
-    note.status = decision === "approve" ? "approved" : "rejected";
-    note.decidedAt = now;
-    await this.deps.em.flush();
-    return { status: note.status, body: note.body };
+    const status = decision === "approve" ? "approved" : "rejected";
+    // Conditional on the text the mentee saw: a replacement committed after the read above refuses the decision.
+    const updated = await this.deps.em.nativeUpdate(SessionNote, { id: note.id, status: "draft", body: note.body }, { status, decidedAt: now });
+    if (updated === 0) {
+      throw changed;
+    }
+    return { status, body: note.body };
   }
 
   /**

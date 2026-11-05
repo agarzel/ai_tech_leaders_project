@@ -53,7 +53,7 @@ describe("a mentor who booked another mentor", () => {
     expect(read.status).toBe(200);
     expect(read.body.data).toMatchObject({ status: "draft", body: "Good session, keep practicing." });
 
-    const decided = await api(mentorB, "POST", `/api/bookings/${noted}/note/approve`, { decision: "approve" });
+    const decided = await api(mentorB, "POST", `/api/bookings/${noted}/note/approve`, { decision: "approve", body: "Good session, keep practicing." });
     expect(decided.status).toBe(200);
     expect(decided.body.data).toMatchObject({ status: "approved" });
   });
@@ -61,6 +61,6 @@ describe("a mentor who booked another mentor", () => {
   it("still rejects someone who is not the booking's mentee, mentor role or not", async () => {
     expect((await api(mentorA, "POST", `/api/bookings/${bookingId}/cancel`)).status).toBe(404);
     expect((await api(mentorA, "GET", `/api/bookings/${bookingId}/note`)).status).toBe(404);
-    expect((await api(mentorA, "POST", `/api/bookings/${bookingId}/note/approve`, { decision: "approve" })).status).toBe(404);
+    expect((await api(mentorA, "POST", `/api/bookings/${bookingId}/note/approve`, { decision: "approve", body: "x" })).status).toBe(404);
   });
 });

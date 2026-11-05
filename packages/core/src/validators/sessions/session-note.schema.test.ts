@@ -16,11 +16,19 @@ describe("sessionNoteWriteSchema", () => {
 });
 
 describe("sessionNoteDecisionSchema", () => {
-  it.each(["approve", "reject"])("accepts %s", (decision) => {
-    expect(sessionNoteDecisionSchema.parse({ decision })).toEqual({ decision });
+  it.each(["approve", "reject"])("accepts %s with the text the mentee saw", (decision) => {
+    expect(sessionNoteDecisionSchema.parse({ decision, body: "Keep going." })).toEqual({ decision, body: "Keep going." });
   });
 
   it("rejects any other decision", () => {
-    expect(sessionNoteDecisionSchema.safeParse({ decision: "publish" }).success).toBe(false);
+    expect(sessionNoteDecisionSchema.safeParse({ decision: "publish", body: "x" }).success).toBe(false);
+  });
+
+  it("requires the text the mentee decided on (#136)", () => {
+    expect(sessionNoteDecisionSchema.safeParse({ decision: "approve" }).success).toBe(false);
+  });
+
+  it("rejects a decided text over the note limit", () => {
+    expect(sessionNoteDecisionSchema.safeParse({ decision: "approve", body: "x".repeat(NOTE_MAX_LENGTH + 1) }).success).toBe(false);
   });
 });
