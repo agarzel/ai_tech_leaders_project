@@ -106,6 +106,8 @@ describe("audit log of admin and operator actions", () => {
     expect(await sql(`select details::text from audit_events where action = 'user.deleted' and target_user_id = '${deletedUserId}'`)).toBe('{"role": "mentee"}');
 
     await admin.open("/admin");
+    // The cards render after the session check; clicking before they exist fails at random (CI run 43066942577).
+    await admin.waitForText("Who changed roles, deleted users and invited mentors.");
     await admin.click("link", "Audit log Who changed roles, deleted users and invited mentors.");
     await admin.waitForText("Role changed");
     await admin.screenshot("audit-log");
