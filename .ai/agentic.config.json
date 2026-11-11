@@ -2,7 +2,9 @@
   "version": 1,
   "baseBranch": "auto",
   "tracker": "github",
-  "browser": { "provider": "agent-browser" },
+  "browser": {
+    "provider": "agent-browser"
+  },
   "validation": {
     "commands": [
       "npm run lint",
@@ -19,15 +21,52 @@
   },
   "labels": {
     "enabled": true,
-    "pipeline": ["review", "changes-requested", "qa", "qa-failed", "merge-queue", "blocked", "do-not-merge"],
-    "category": ["bug", "feature", "refactor", "security", "dependencies", "documentation"],
-    "meta": ["needs-qa", "skip-qa", "qa-approved", "qa-self-verified", "in-progress", "ci-monitoring"],
-    "priority": ["priority-low", "priority-medium", "priority-high", "priority-extreme"],
-    "risk": ["risk-low", "risk-medium", "risk-high"]
+    "pipeline": [
+      "review",
+      "changes-requested",
+      "qa",
+      "qa-failed",
+      "merge-queue",
+      "blocked",
+      "do-not-merge"
+    ],
+    "category": [
+      "bug",
+      "feature",
+      "refactor",
+      "security",
+      "dependencies",
+      "documentation"
+    ],
+    "meta": [
+      "needs-qa",
+      "skip-qa",
+      "qa-approved",
+      "qa-self-verified",
+      "in-progress",
+      "ci-monitoring"
+    ],
+    "priority": [
+      "priority-low",
+      "priority-medium",
+      "priority-high",
+      "priority-extreme"
+    ],
+    "risk": [
+      "risk-low",
+      "risk-medium",
+      "risk-high"
+    ]
   },
   "qaGate": true,
-  "ci": { "maxWaitMinutes": 40 },
-  "engine": { "loopStepThreshold": 20, "executorTier": "standard", "stepReview": "final" },
+  "ci": {
+    "maxWaitMinutes": 40
+  },
+  "engine": {
+    "loopStepThreshold": 20,
+    "executorTier": "standard",
+    "stepReview": "final"
+  },
   "paths": {
     "runs": ".ai/runs",
     "analysis": ".ai/analysis",
@@ -38,5 +77,115 @@
     "qa": ".ai/qa"
   },
   "reviewChecklist": null,
-  "closeKeywords": []
+  "closeKeywords": [],
+  "agentHarness": {
+    "version": 1,
+    "preset": "cross-model-jury",
+    "host": "claude",
+    "delivery": {
+      "mode": "stage-only",
+      "issueClaim": "hold"
+    },
+    "retry": {
+      "maxAttempts": 4,
+      "backoffMs": 5000,
+      "backoffMultiplier": 2,
+      "timeoutEscalation": 1.5,
+      "maxTimeoutMs": 2400000
+    },
+    "models": {
+      "codex": {
+        "adapter": "command",
+        "family": "openai",
+        "model": "gpt-6-luna",
+        "reasoningEffort": "xhigh",
+        "roles": [
+          "worker",
+          "reviewer"
+        ],
+        "timeoutMs": 1200000,
+        "workerSecurity": {
+          "network": "disabled",
+          "remoteWrites": "disabled",
+          "refWrites": "disabled",
+          "enforcedBy": "codex-workspace-write-sandbox"
+        },
+        "commands": {
+          "probe": [
+            "codex",
+            "--version"
+          ],
+          "review": [
+            "codex",
+            "exec",
+            "--ignore-user-config",
+            "--ignore-rules",
+            "--ephemeral",
+            "--config",
+            "model_reasoning_effort={reasoningEffort}",
+            "--sandbox",
+            "read-only",
+            "--cd",
+            "{worktree}",
+            "--model",
+            "{model}",
+            "--output-schema",
+            "{schemaFile}",
+            "-"
+          ],
+          "worker": [
+            "codex",
+            "exec",
+            "--ignore-user-config",
+            "--ignore-rules",
+            "--ephemeral",
+            "--config",
+            "model_reasoning_effort={reasoningEffort}",
+            "--sandbox",
+            "workspace-write",
+            "--cd",
+            "{worktree}",
+            "--model",
+            "{model}",
+            "-"
+          ]
+        }
+      },
+      "qwen-local": {
+        "adapter": "openai-compatible",
+        "family": "alibaba",
+        "model": "qwen3.5-4b",
+        "roles": [
+          "reviewer"
+        ],
+        "endpoint": "http://127.0.0.1:8080/v1/chat/completions",
+        "credentialEnv": "LLAMA_API_KEY",
+        "maxOutputTokens": 8192,
+        "timeoutMs": 1200000
+      }
+    },
+    "profiles": {
+      "standard": {
+        "workers": [],
+        "reviewers": [],
+        "reviewPolicy": {
+          "mode": "advisory"
+        }
+      },
+      "multi": {
+        "workers": [],
+        "reviewers": [
+          "qwen-local"
+        ],
+        "maxParallel": 1,
+        "maxInputBytes": 120000,
+        "reviewPolicy": {
+          "mode": "all-required",
+          "requiredReviewers": [
+            "qwen-local"
+          ]
+        }
+      }
+    }
+  }
 }
