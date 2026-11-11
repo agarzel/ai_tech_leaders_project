@@ -1,8 +1,9 @@
 import { createHash, randomBytes } from "node:crypto";
-import { MentorInvitation, User, type EntityManager } from "@devmentor/db";
+import { LockMode, MentorInvitation, User, type EntityManager } from "@devmentor/db";
 import type { Clock } from "../../clock";
 import { NotFoundError, TooManyRequestsError } from "../../http/errors";
 import type { RateLimiter, RateLimiterOptions } from "../../rate-limiter";
+import type { AuditEntry, AuditService } from "../audit/audit.service";
 
 /** How long an invitation link works (spec: mentor-accounts-and-offer, MentorInvitation.expiresAt). */
 export const INVITATION_TTL_MS = 14 * 24 * 60 * 60_000;
@@ -47,6 +48,7 @@ export class InvitationService {
       /** Process-wide limiters (see container.ts), separate from the login limiter. */
       invitationPreviewLimiter: RateLimiter;
       invitationRegistrationLimiter: RateLimiter;
+      auditService: Pick<AuditService, "record" | "emit">;
     },
   ) {}
 
@@ -83,24 +85,39 @@ export class InvitationService {
     }));
   }
 
-  /** Issues a link token for the e-mail and revokes the older open invitations for it, in one transaction. */
+  /**
+   * Issues a link token for the e-mail and revokes the older open invitations for it, in one transaction.
+   * Each revoked invitation and the new one are audited in the same transaction (#119). Only the invitations read
+   * here are revoked (by id), so every revoked row has exactly one audit entry.
+   */
   async create(adminId: string, email: string): Promise<CreatedInvitationDto> {
     const now = this.deps.clock.now();
     const normalized = normalizeEmail(email);
     const token = randomBytes(32).toString("base64url");
+    const audit = this.deps.auditService;
+    const entries: AuditEntry[] = [];
 
     const invitation = await this.deps.em.transactional(async (em) => {
-      await em.nativeUpdate(MentorInvitation, { email: normalized, usedAt: null, revokedAt: null }, { revokedAt: now });
+      // Locking read: a concurrent create for the same e-mail waits here, then re-checks `revokedAt` and no longer
+      // sees these rows – so every revoked invitation gets exactly one audit entry.
+      const open = await em.find(MentorInvitation, { email: normalized, usedAt: null, revokedAt: null }, { fields: ["id"], lockMode: LockMode.PESSIMISTIC_WRITE });
+      const openIds = open.map((row) => row.id);
+      if (openIds.length) await em.nativeUpdate(MentorInvitation, { id: { $in: openIds }, usedAt: null, revokedAt: null }, { revokedAt: now });
       const created = em.create(MentorInvitation, {
         email: normalized,
         tokenHash: hashToken(token),
         expiresAt: new Date(now.getTime() + INVITATION_TTL_MS),
         createdBy: em.getReference(User, adminId),
       });
+      for (const invitationId of openIds) {
+        entries.push(audit.record(em, { action: "invitation.revoked", actorKind: "admin", actorUserId: adminId, targetUserId: null, details: { invitationId, replacedBy: created.id } }));
+      }
+      entries.push(audit.record(em, { action: "invitation.created", actorKind: "admin", actorUserId: adminId, targetUserId: null, details: { invitationId: created.id } }));
       await em.flush();
       return created;
     });
 
+    audit.emit(entries);
     return { id: invitation.id, email: invitation.email, expiresAt: invitation.expiresAt.toISOString(), token };
   }
 

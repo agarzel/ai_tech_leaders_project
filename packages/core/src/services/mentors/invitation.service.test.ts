@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { MentorInvitation, User, type EntityManager } from "@devmentor/db";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import type { AuditService } from "../audit/audit.service";
+import { LockMode, MentorInvitation, User, type EntityManager } from "@devmentor/db";
 import { NotFoundError, TooManyRequestsError } from "../../http/errors";
 import { RateLimiter } from "../../rate-limiter";
 import { FakeClock } from "../../testing/fake-clock";
@@ -29,17 +30,21 @@ let clock: FakeClock;
 let service: InvitationService;
 let previewLimiter: RateLimiter;
 let registrationLimiter: RateLimiter;
+let audit: { record: Mock<AuditService["record"]>; emit: Mock<AuditService["emit"]> };
 
 beforeEach(() => {
   em = makeEm();
+  em.find.mockResolvedValue([]);
   clock = new FakeClock(new Date("2026-10-23T10:00:00.000Z"));
   previewLimiter = new RateLimiter({ clock }, INVITATION_RATE_LIMITS.preview);
   registrationLimiter = new RateLimiter({ clock }, INVITATION_RATE_LIMITS.registration);
+  audit = { record: vi.fn((_em, entry) => entry), emit: vi.fn() };
   service = new InvitationService({
     em: em as unknown as EntityManager,
     clock,
     invitationPreviewLimiter: previewLimiter,
     invitationRegistrationLimiter: registrationLimiter,
+    auditService: audit,
   });
 });
 
@@ -83,23 +88,54 @@ describe("InvitationService.create", () => {
     });
   });
 
-  it("revokes older open invitations for the same email in the same transaction, before creating the new one", async () => {
+  it("revokes only the open invitations it read, in the same transaction, before creating the new one", async () => {
+    em.find.mockResolvedValue([{ id: "old1" }, { id: "old2" }]);
+
     await service.create("admin1", "Ada@example.com");
 
     expect(em.transactional).toHaveBeenCalledTimes(1);
-    expect(em.nativeUpdate).toHaveBeenCalledWith(
+    // A locking read, so a concurrent create waits and then no longer sees these rows (one audit entry per revoke).
+    expect(em.find).toHaveBeenCalledWith(
       MentorInvitation,
       { email: "ada@example.com", usedAt: null, revokedAt: null },
+      { fields: ["id"], lockMode: LockMode.PESSIMISTIC_WRITE },
+    );
+    expect(em.nativeUpdate).toHaveBeenCalledWith(
+      MentorInvitation,
+      { id: { $in: ["old1", "old2"] }, usedAt: null, revokedAt: null },
       { revokedAt: clock.now() },
     );
     expect(em.nativeUpdate.mock.invocationCallOrder[0]).toBeLessThan(em.create.mock.invocationCallOrder[0]!);
     expect(em.flush).toHaveBeenCalledTimes(1);
   });
 
-  it("propagates a database failure", async () => {
+  it("audits every revoked invitation and the new one in the same transaction, then logs them", async () => {
+    em.find.mockResolvedValue([{ id: "old1" }]);
+    em.flush.mockImplementation(async () => expect(audit.record).toHaveBeenCalledTimes(2));
+
+    await service.create("admin1", "ada@example.com");
+
+    const revoked = { action: "invitation.revoked", actorKind: "admin", actorUserId: "admin1", targetUserId: null, details: { invitationId: "old1", replacedBy: "inv1" } };
+    const created = { action: "invitation.created", actorKind: "admin", actorUserId: "admin1", targetUserId: null, details: { invitationId: "inv1" } };
+    expect(audit.record).toHaveBeenNthCalledWith(1, em, revoked);
+    expect(audit.record).toHaveBeenNthCalledWith(2, em, created);
+    expect(audit.emit).toHaveBeenCalledWith([revoked, created]);
+    expect(JSON.stringify(audit.record.mock.calls)).not.toContain("ada@example.com");
+  });
+
+  it("skips the revoke update and records only the creation when nothing was open", async () => {
+    await service.create("admin1", "ada@example.com");
+
+    expect(em.nativeUpdate).not.toHaveBeenCalled();
+    expect(audit.record).toHaveBeenCalledOnce();
+    expect(audit.record).toHaveBeenCalledWith(em, expect.objectContaining({ action: "invitation.created" }));
+  });
+
+  it("propagates a database failure and logs no entry", async () => {
     em.flush.mockRejectedValue(new Error("db down"));
 
     await expect(service.create("admin1", "ada@example.com")).rejects.toThrow("db down");
+    expect(audit.emit).not.toHaveBeenCalled();
   });
 });
 

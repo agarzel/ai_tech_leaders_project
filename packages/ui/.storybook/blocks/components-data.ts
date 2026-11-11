@@ -434,6 +434,15 @@ export const COMPONENTS: ComponentEntry[] = [
     whenNot: "Booking statuses: BookingStatusBadge. A status that needs an action: a sentence and a button.",
   },
   {
+    name: "AuditLogTable",
+    group: "Mentor offer (E01)",
+    section: "Product/E01",
+    importLine: `import { AuditLogTable } from "${product("audit", "AuditLogTable")}"`,
+    purpose: "Shows who changed roles, deleted users, invited mentors, set passwords from the CLI and which logins failed.",
+    when: "The list on `/admin/audit`.",
+    whenNot: "Anything that is not the audit log: DataTable with its own columns.",
+  },
+  {
     name: "TagList",
     group: "Mentor offer (E01)",
     section: "Product/E01",

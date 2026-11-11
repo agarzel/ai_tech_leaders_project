@@ -8,7 +8,7 @@ What DevMentor treats as a **protected contract surface** and how a change to on
 
 ### 1. HTTP API (`packages/app/src/app/api/**`)
 
-Current routes: `GET /api/health`; `GET, POST /api/users`; `GET, PUT, DELETE /api/users/{id}`.
+Current routes: `GET /api/health`; `GET, POST /api/users`; `GET, PUT, DELETE /api/users/{id}`; `GET /api/admin/audit-events` (admin only, read-only, `page`/`pageSize` ≤ 100/`action`/`actorUserId`; no write method – entries are append-only).
 
 - **The response envelope is a contract:** `{ ok: true, data }` / `{ ok: false, error: { code, message, fieldErrors? } }`, produced by `apiHandler` and parsed by `apiCall`. Error `code` values (`validation_error`, `unauthorized`, `forbidden`, `not_found`, `conflict`, `rate_limited`, `payment_unavailable`, `internal_error`) are part of it.
 - **The CSRF header** `x-devmentor-client: 1` on POST/PUT/PATCH/DELETE is shared by `apiHandler` (core) and `apiCall` (ui); the two must change together.
@@ -32,6 +32,7 @@ Each package exposes only what its `package.json` `exports` map lists:
 - `@devmentor/db` – `.` (ORM config, `getOrm`, entities, `EntityManager`/`MikroORM` types, `UniqueConstraintViolationException`) and `./constants` (client-safe, e.g. `USER_ROLES`).
 - `@devmentor/core` – `.` (container, `createRequestScope`, `apiHandler`, `makeCrudRoute`, errors, logger, env, services, DTO types) and `./validators/*` (client-safe Zod schemas).
 - `@devmentor/ui` – `./components/ui/*`, `./components/*` (product components by concept, e.g. `./components/auth/AccountMenu`), `./backend/*`, `./backend/api/*`, `./lib/utils`, `./lib/*` (formatting and time helpers, e.g. `./lib/format`, `./lib/time`), `./styles/*` (design tokens `tokens.css` and the Tailwind mapping `theme.css`, imported by the app's `globals.css`).
+- Audit log (#119): `@devmentor/db` exports `AuditEvent`, `AUDIT_ACTIONS` and `AUDIT_ACTOR_KINDS` (the last two also from `./constants`); `@devmentor/core` exports `AuditService`, `AuditEntry`, `AuditEventDto`, `AuditUserRef`, `CrudContext` and `./validators/audit/audit-event-list.schema`; `@devmentor/ui` adds `./components/audit/AuditLogTable`. `CrudService.create/update/delete` gained an optional last `context` parameter (additive; `makeCrudRoute` always passes it). `UserService.create/update/delete` require it in their own signatures and their constructor gained `auditService` (as did `AuthService` with `auditService` and `logger`, and `InvitationService` with `auditService`) – resolved by name from the container; only tests construct them directly.
 - **Breaking:** removing or renaming an export or subpath, changing a function signature or DTO shape, moving a client-safe entry point so that it pulls server code (MikroORM) into the browser.
 - **Required path:** update all importers in the same PR (the monorepo makes this checkable with `npm run typecheck`); keep client-safe entry points free of server imports.
 

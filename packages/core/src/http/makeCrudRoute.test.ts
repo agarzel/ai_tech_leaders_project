@@ -56,6 +56,8 @@ function send(method: string, url: string, body?: string) {
 describe("makeCrudRoute", () => {
   beforeEach(() => {
     vi.mocked(createRequestScope).mockResolvedValue({ cradle: { thingService: service, authService } } as never);
+    // The real guard either returns the session or throws; writes read the actor from it.
+    vi.mocked(requireAdmin).mockResolvedValue({ id: "admin-1", email: "a@a.io", name: "A", role: "admin" });
   });
 
   it("checks access with the request before touching the service", async () => {
@@ -132,13 +134,14 @@ describe("makeCrudRoute", () => {
 
   describe("POST", () => {
     it("creates from the parsed body and answers 201", async () => {
+      vi.mocked(requireAdmin).mockResolvedValueOnce({ id: "admin-1", email: "a@a.io", name: "A", role: "admin" });
       service.create.mockResolvedValue({ id: ID, name: "A" });
 
       const response = await routes.POST(send("POST", BASE, JSON.stringify({ name: "A", id: "smuggled" })));
 
       expect(response.status).toBe(201);
       // Only schema fields reach the service (no mass assignment).
-      expect(service.create).toHaveBeenCalledWith({ name: "A" });
+      expect(service.create).toHaveBeenCalledWith({ name: "A" }, { actorUserId: "admin-1" });
     });
 
     it("rejects an invalid body with field errors", async () => {
@@ -158,24 +161,26 @@ describe("makeCrudRoute", () => {
   });
 
   describe("PUT", () => {
-    it("updates the record with the parsed body", async () => {
+    it("updates the record with the parsed body and tells the service who acts", async () => {
+      vi.mocked(requireAdmin).mockResolvedValueOnce({ id: "admin-1", email: "a@a.io", name: "A", role: "admin" });
       service.update.mockResolvedValue({ id: ID, name: "B" });
 
       const response = await routes.PUT(send("PUT", `${BASE}/${ID}`, JSON.stringify({ name: "B" })), withId);
 
       expect(response.status).toBe(200);
-      expect(service.update).toHaveBeenCalledWith(ID, { name: "B" });
+      expect(service.update).toHaveBeenCalledWith(ID, { name: "B" }, { actorUserId: "admin-1" });
     });
   });
 
   describe("DELETE", () => {
-    it("deletes the record and returns its id", async () => {
+    it("deletes the record, tells the service who acts and returns the id", async () => {
+      vi.mocked(requireAdmin).mockResolvedValueOnce({ id: "admin-1", email: "a@a.io", name: "A", role: "admin" });
       service.delete.mockResolvedValue(undefined);
 
       const response = await routes.DELETE(send("DELETE", `${BASE}/${ID}`), withId);
 
       expect(await json(response)).toEqual({ ok: true, data: { id: ID } });
-      expect(service.delete).toHaveBeenCalledWith(ID);
+      expect(service.delete).toHaveBeenCalledWith(ID, { actorUserId: "admin-1" });
     });
   });
 });

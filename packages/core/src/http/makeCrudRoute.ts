@@ -3,8 +3,8 @@ import { createRequestScope } from "../container/container";
 import type { Cradle } from "../container/cradle";
 import { apiHandler, type HandlerArgs } from "./apiHandler";
 import { parseOrThrow, readJsonBody } from "./body";
-import { requireAdmin } from "./auth";
-import type { CrudService } from "./crud";
+import { requireAdmin, type Session } from "./auth";
+import type { CrudContext, CrudService } from "./crud";
 import { NotFoundError } from "./errors";
 
 const MAX_PAGE_SIZE = 100;
@@ -18,8 +18,8 @@ const pageQuerySchema = z.object({
 type Access = "admin";
 
 // One guard per access level; a new level must add its guard here (enforced by the type).
-// A guard reads the request (session cookie) and throws an AppError to refuse it.
-const accessGuards: Record<Access, (req: Request, cradle: Cradle) => Promise<unknown>> = {
+// A guard reads the request (session cookie) and throws an AppError to refuse it; it returns the accepted session.
+const accessGuards: Record<Access, (req: Request, cradle: Cradle) => Promise<Session>> = {
   admin: (req, cradle) => requireAdmin(req, cradle.authService),
 };
 
@@ -43,6 +43,13 @@ export function makeCrudRoute<TDto, TCreate, TUpdate>(config: CrudRouteConfig<TD
     return config.service(cradle);
   }
 
+  // Writes also tell the service who acts, so it can record the change (audit log, #119).
+  async function resolveForWrite(req: Request): Promise<{ service: CrudService<TDto, TCreate, TUpdate>; context: CrudContext }> {
+    const { cradle } = await createRequestScope();
+    const session = await accessGuards[config.access](req, cradle);
+    return { service: config.service(cradle), context: { actorUserId: session.id } };
+  }
+
   return {
     GET: apiHandler(async ({ req, params }) => {
       const service = await resolveService(req);
@@ -54,21 +61,21 @@ export function makeCrudRoute<TDto, TCreate, TUpdate>(config: CrudRouteConfig<TD
 
     POST: apiHandler(
       async ({ req }) => {
-        const service = await resolveService(req);
-        return service.create(parseOrThrow(config.createSchema, await readJsonBody(req)));
+        const { service, context } = await resolveForWrite(req);
+        return service.create(parseOrThrow(config.createSchema, await readJsonBody(req)), context);
       },
       { successStatus: 201 },
     ),
 
     PUT: apiHandler(async ({ req, params }) => {
-      const service = await resolveService(req);
-      return service.update(parseId(params), parseOrThrow(config.updateSchema, await readJsonBody(req)));
+      const { service, context } = await resolveForWrite(req);
+      return service.update(parseId(params), parseOrThrow(config.updateSchema, await readJsonBody(req)), context);
     }),
 
     DELETE: apiHandler(async ({ req, params }) => {
-      const service = await resolveService(req);
+      const { service, context } = await resolveForWrite(req);
       const id = parseId(params);
-      await service.delete(id);
+      await service.delete(id, context);
       return { id };
     }),
   };

@@ -6,6 +6,7 @@ import type { PaymentGateway } from "../payments/payment-gateway";
 import type { RateLimiter } from "../rate-limiter";
 import type { AuthService } from "../services/auth/auth.service";
 import type { UserService } from "../services/auth/user.service";
+import type { AuditService } from "../services/audit/audit.service";
 import type { SlotService } from "../services/availability/slot.service";
 import type { BookingService } from "../services/bookings/booking.service";
 import type { BookingQueryService } from "../services/bookings/booking-query.service";
@@ -31,6 +32,7 @@ export type Cradle = {
   invitationPreviewLimiter: RateLimiter;
   invitationRegistrationLimiter: RateLimiter;
   healthService: HealthService;
+  auditService: AuditService;
   userService: UserService;
   authService: AuthService;
   invitationService: InvitationService;

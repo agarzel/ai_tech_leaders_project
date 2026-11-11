@@ -6,7 +6,9 @@ import type { Env } from "../../config/env";
 import { ConflictError, NotFoundError, TooManyRequestsError, UnauthorizedError, ValidationError } from "../../http/errors";
 import { SESSION_MAX_AGE_SECONDS } from "../../http/session-cookie";
 import type { RateLimiter, RateLimiterOptions } from "../../rate-limiter";
+import type { Logger } from "../../logger";
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "../../validators/auth/password.constants";
+import type { AuditService } from "../audit/audit.service";
 
 const BCRYPT_COST = 12;
 
@@ -39,6 +41,8 @@ export class AuthService {
       rateLimiter: RateLimiter;
       loginIpLimiter: RateLimiter;
       env: Pick<Env, "AUTH_SECRET">;
+      auditService: Pick<AuditService, "record" | "emit">;
+      logger: Pick<Logger, "error">;
     },
   ) {}
 
@@ -69,6 +73,7 @@ export class AuthService {
     if (!user?.passwordHash || !matches) {
       this.deps.rateLimiter.record(key);
       this.deps.loginIpLimiter.record(ip);
+      await this.recordFailedLogin(user?.id ?? null);
       throw new UnauthorizedError(INVALID_CREDENTIALS);
     }
 
@@ -90,6 +95,8 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(password, BCRYPT_COST);
 
     let user = await this.deps.em.findOne(User, { email: key });
+    const created = !user;
+    const promoted = admin && user?.role !== "admin";
     if (!user) {
       if (!admin) throw new NotFoundError("No user with this email");
       user = this.deps.em.create(User, { email: key, name: key.split("@")[0]!, role: "admin", passwordHash });
@@ -99,8 +106,31 @@ export class AuthService {
       user.sessionsRevokedAt = this.deps.clock.now();
       if (admin) user.role = "admin";
     }
+    // Audited in the same flush (#119): the CLI is the actor, the account is the target.
+    const entry = this.deps.auditService.record(
+      this.deps.em,
+      admin
+        ? { action: "auth.admin_password_set", actorKind: "cli", actorUserId: null, targetUserId: user.id, details: { promoted, created } }
+        : { action: "auth.password_set", actorKind: "cli", actorUserId: null, targetUserId: user.id },
+    );
     await this.deps.em.flush();
+    this.deps.auditService.emit([entry]);
     return toSessionUser(user);
+  }
+
+  /**
+   * Audits a failed login on its own flush – there is no change to share a transaction with (#119). Runs for every
+   * failed attempt, known or unknown e-mail, so it adds no timing difference between them. The typed e-mail is
+   * never stored. A failure to write is logged and swallowed: the caller still gets the same 401.
+   */
+  private async recordFailedLogin(targetUserId: string | null): Promise<void> {
+    try {
+      const entry = this.deps.auditService.record(this.deps.em, { action: "auth.login_failed", actorKind: "anonymous", actorUserId: null, targetUserId });
+      await this.deps.em.flush();
+      this.deps.auditService.emit([entry]);
+    } catch (error) {
+      this.deps.logger.error({ err: error, targetUserId }, "audit: failed login could not be recorded");
+    }
   }
 
   /** Signed session token: HS256, `sub` = user id, `role`, issued-at and 24 h expiry. */

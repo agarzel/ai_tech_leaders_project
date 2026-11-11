@@ -7,6 +7,7 @@ import { createPaymentGateway } from "../payments/create-payment-gateway";
 import { RateLimiter } from "../rate-limiter";
 import { AuthService, LOGIN_IP_RATE_LIMIT, LOGIN_RATE_LIMIT } from "../services/auth/auth.service";
 import { UserService } from "../services/auth/user.service";
+import { AuditService } from "../services/audit/audit.service";
 import { SlotService } from "../services/availability/slot.service";
 import { BookingService } from "../services/bookings/booking.service";
 import { BookingQueryService } from "../services/bookings/booking-query.service";
@@ -46,6 +47,7 @@ async function createAppContainer(): Promise<AppContainer> {
     invitationPreviewLimiter: asValue(new RateLimiter({ clock: realClock }, INVITATION_RATE_LIMITS.preview)),
     invitationRegistrationLimiter: asValue(new RateLimiter({ clock: realClock }, INVITATION_RATE_LIMITS.registration)),
     healthService: asClass(HealthService).scoped(),
+    auditService: asClass(AuditService).scoped(),
     userService: asClass(UserService).scoped(),
     authService: asClass(AuthService).scoped(),
     invitationService: asClass(InvitationService).scoped(),

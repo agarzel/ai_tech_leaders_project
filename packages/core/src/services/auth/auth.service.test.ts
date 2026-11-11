@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { SignJWT } from "jose";
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import type { AuditService } from "../audit/audit.service";
 import { UniqueConstraintViolationException, User, type EntityManager } from "@devmentor/db";
 import { ConflictError, NotFoundError, TooManyRequestsError, UnauthorizedError, ValidationError } from "../../http/errors";
 import { RateLimiter } from "../../rate-limiter";
@@ -19,6 +20,8 @@ describe("AuthService", () => {
   let em: ReturnType<typeof makeEm>;
   let clock: FakeClock;
   let service: AuthService;
+  let audit: { record: Mock<AuditService["record"]>; emit: Mock<AuditService["emit"]> };
+  let logger: { error: Mock<(...args: unknown[]) => void> };
 
   function makeService(secret = SECRET) {
     return new AuthService({
@@ -27,6 +30,8 @@ describe("AuthService", () => {
       rateLimiter: new RateLimiter({ clock }, LOGIN_RATE_LIMIT),
       loginIpLimiter: new RateLimiter({ clock }, LOGIN_IP_RATE_LIMIT),
       env: { AUTH_SECRET: secret },
+      auditService: audit,
+      logger,
     });
   }
 
@@ -45,6 +50,8 @@ describe("AuthService", () => {
   beforeEach(() => {
     em = makeEm();
     clock = new FakeClock();
+    audit = { record: vi.fn((_em, entry) => entry), emit: vi.fn() };
+    logger = { error: vi.fn() };
     service = makeService();
   });
 
@@ -156,6 +163,81 @@ describe("AuthService", () => {
     it.each(["x".repeat(11), "x".repeat(129)])("rejects a password of %s characters outside 12-128", async (password) => {
       await expect(service.setPassword("ada@example.com", password, { admin: true })).rejects.toBeInstanceOf(ValidationError);
       expect(em.findOne).not.toHaveBeenCalled();
+    });
+
+    it("audits a CLI password reset in the same flush, without the e-mail", async () => {
+      em.findOne.mockResolvedValue(storedUser());
+      em.flush.mockImplementation(async () => expect(audit.record).toHaveBeenCalled());
+
+      await service.setPassword("ada@example.com", PASSWORD, { admin: false });
+
+      const entry = { action: "auth.password_set", actorKind: "cli", actorUserId: null, targetUserId: "u1" };
+      expect(audit.record).toHaveBeenCalledWith(em, entry);
+      expect(audit.emit).toHaveBeenCalledWith([entry]);
+    });
+
+    it.each([
+      ["promotes an existing mentee", storedUser(), { promoted: true, created: false }],
+      ["resets an existing admin", storedUser({ role: "admin" }), { promoted: false, created: false }],
+      ["creates a new admin", null, { promoted: true, created: true }],
+    ])("audits the admin password set when it %s", async (_label, existing, details) => {
+      em.findOne.mockResolvedValue(existing);
+      em.create.mockImplementation((_entity, data) => ({ id: "u1", ...data }));
+
+      await service.setPassword("ada@example.com", PASSWORD, { admin: true });
+
+      expect(audit.record).toHaveBeenCalledWith(em, { action: "auth.admin_password_set", actorKind: "cli", actorUserId: null, targetUserId: "u1", details });
+    });
+
+    it("logs no entry when the flush fails", async () => {
+      em.findOne.mockResolvedValue(storedUser());
+      em.flush.mockRejectedValue(new Error("db down"));
+
+      await expect(service.setPassword("ada@example.com", PASSWORD, { admin: true })).rejects.toThrow("db down");
+      expect(audit.emit).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("login audit", () => {
+    it("records a failed login for a known account with its id and no e-mail", async () => {
+      em.findOne.mockResolvedValue(storedUser());
+
+      await expect(login("ada@example.com", "wrong password")).rejects.toBeInstanceOf(UnauthorizedError);
+
+      const entry = { action: "auth.login_failed", actorKind: "anonymous", actorUserId: null, targetUserId: "u1" };
+      expect(audit.record).toHaveBeenCalledWith(em, entry);
+      expect(JSON.stringify(audit.record.mock.calls)).not.toContain("ada@example.com");
+      expect(em.flush).toHaveBeenCalledOnce();
+      expect(audit.emit).toHaveBeenCalledWith([entry]);
+    });
+
+    it("records a failed login for an unknown e-mail with a null target", async () => {
+      em.findOne.mockResolvedValue(null);
+
+      await expect(login("nobody@example.com", PASSWORD)).rejects.toBeInstanceOf(UnauthorizedError);
+
+      expect(audit.record).toHaveBeenCalledWith(em, { action: "auth.login_failed", actorKind: "anonymous", actorUserId: null, targetUserId: null });
+      expect(JSON.stringify(audit.record.mock.calls)).not.toContain("nobody@example.com");
+    });
+
+    it("keeps the same 401 when the entry cannot be written, and logs the failure without the e-mail", async () => {
+      em.findOne.mockResolvedValue(storedUser());
+      em.flush.mockRejectedValue(new Error("db down"));
+
+      await expect(login("ada@example.com", "wrong password")).rejects.toMatchObject({ code: "unauthorized", message: "Invalid email or password" });
+
+      expect(audit.emit).not.toHaveBeenCalled();
+      expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({ targetUserId: "u1" }), "audit: failed login could not be recorded");
+      expect(JSON.stringify(logger.error.mock.calls)).not.toContain("ada@example.com");
+    });
+
+    it("writes nothing for a successful login", async () => {
+      em.findOne.mockResolvedValue(storedUser());
+
+      await login("ada@example.com", PASSWORD);
+
+      expect(audit.record).not.toHaveBeenCalled();
+      expect(em.flush).not.toHaveBeenCalled();
     });
   });
 

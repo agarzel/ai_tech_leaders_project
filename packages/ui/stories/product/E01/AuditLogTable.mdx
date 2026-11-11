@@ -1,0 +1,75 @@
+import { Canvas, Controls, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./AuditLogTable.stories";
+
+<Meta of={Stories} />
+
+# AuditLogTable
+
+`import { AuditLogTable } from "@devmentor/ui/components/audit/AuditLogTable"`
+
+Product component, concept `audit` (issue 119, threat model T-09).
+
+## 1. Purpose
+
+Lets a founder see who changed roles, deleted users, invited mentors, set passwords from the CLI, and which logins failed – newest first, in plain words.
+
+## 2. When to use
+
+| Situation in DevMentor | Source |
+|---|---|
+| The list on `/admin/audit` | spec `2026-11-11-audit-log.md`, UI/UX |
+
+## 3. When not to use
+
+- Activity a mentor or mentee sees about their own bookings: the booking status panel.
+- Any list that is not the audit log: `DataTable` with your own columns.
+
+## 4. Anatomy
+
+A `DataTable` with five columns: When, Action, Actor, Target, Details.
+
+<Canvas of={Stories.EveryAction} />
+
+## 5. Variants
+
+None. The content decides the words.
+
+## 6. States
+
+Loading, error, empty and filled come from `DataTable`.
+
+<Canvas of={Stories.Empty} />
+
+## 7. Behaviour and accessibility
+
+- A real table with column headers; read row by row by screen readers.
+- No raw values: action keys, ids and ISO dates never reach the screen. An action the component does not know reads "Unknown action".
+
+## 8. Content
+
+- Actions: "Role changed", "User deleted", "Invitation created", "Invitation revoked", "Admin password set from the CLI", "Password set from the CLI", "Failed login".
+- Actor and target: "Name · email", "Deleted user", "CLI", "Anonymous", "—".
+- When: day, month and time in the viewer's zone (`formatDateTime`).
+
+## 9. Responsive
+
+At 320–390 px only the table scrolls sideways; the page does not.
+
+<Canvas of={Stories.Narrow} />
+
+## 10. API
+
+<Controls of={Stories.Playground} />
+
+## 11. Code
+
+<Source of={Stories.Playground} />
+
+## 12. Do and don't
+
+- Do pass the API items as they come; the component words them.
+- Don't format actions or dates in the page.
+
+## 13. Related
+
+`DataTable`, `InvitationStatusBadge`.
