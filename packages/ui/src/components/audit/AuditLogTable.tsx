@@ -39,6 +39,8 @@ export function AuditLogTable({ events, timeZone, isLoading, error, onRetry, pag
       emptyTitle="No audit entries yet"
       emptyDescription="Role changes, deleted users, invitations, CLI password changes and failed logins appear here."
       pagination={pagination}
+      // Read-only rows hold nothing focusable, so the scrolling region itself takes keyboard focus (320 px).
+      scrollLabel="Audit log"
     />
   );
 }

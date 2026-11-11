@@ -77,6 +77,12 @@ describe("AuditLogTable", () => {
     for (const raw of ["user.role_changed", "auth.login_failed", "2026-11-11T", "u1", "null", "undefined"]) expect(text).not.toContain(raw);
   });
 
+  it("lets a keyboard user reach and scroll the read-only table", () => {
+    render(<AuditLogTable timeZone="Europe/Warsaw" events={[event()]} />);
+
+    expect(screen.getByRole("region", { name: "Audit log" })).toHaveAttribute("tabindex", "0");
+  });
+
   it("shows the empty state", () => {
     render(<AuditLogTable timeZone="Europe/Warsaw" events={[]} />);
 

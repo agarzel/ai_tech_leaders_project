@@ -98,6 +98,17 @@ describe("DataTable", () => {
     expect(screen.getByRole("button", { name: "Edit Grace" })).toBeInTheDocument();
   });
 
+  it("makes the scrolling region a named, keyboard-focusable region only when it is labelled", () => {
+    const { rerender } = render(<DataTable columns={columns} rows={rows} getRowId={(r) => r.id} />);
+    expect(screen.queryByRole("region")).not.toBeInTheDocument();
+
+    rerender(<DataTable columns={columns} rows={rows} getRowId={(r) => r.id} scrollLabel="People" />);
+
+    const region = screen.getByRole("region", { name: "People" });
+    expect(region).toHaveAttribute("tabindex", "0");
+    expect(region).toContainElement(screen.getByRole("table"));
+  });
+
   describe("pagination", () => {
     function renderPage(page: number, total: number, isLoading = false) {
       const onPageChange = vi.fn();
