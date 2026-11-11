@@ -63,17 +63,16 @@ export function AuditAdmin() {
         </NativeSelect>
       </div>
       {timeZone && <p className="text-muted-foreground text-sm">Times in {formatZoneLabel(timeZone, new Date())}</p>}
-      <div className="overflow-x-auto">
-        <AuditLogTable
-          events={data?.items}
-          // Rows arrive after mount (client fetch), when the zone is known; UTC only covers the type.
-          timeZone={timeZone ?? "UTC"}
-          isLoading={isLoading}
-          error={error}
-          onRetry={() => void load()}
-          pagination={data ? { page, pageSize: PAGE_SIZE, total: data.total, onPageChange: setPage } : undefined}
-        />
-      </div>
+      {/* The table scrolls inside its own focusable region (AuditLogTable), so no extra scroll wrapper here. */}
+      <AuditLogTable
+        events={data?.items}
+        // Rows arrive after mount (client fetch), when the zone is known; UTC only covers the type.
+        timeZone={timeZone ?? "UTC"}
+        isLoading={isLoading}
+        error={error}
+        onRetry={() => void load()}
+        pagination={data ? { page, pageSize: PAGE_SIZE, total: data.total, onPageChange: setPage } : undefined}
+      />
     </div>
   );
 }
