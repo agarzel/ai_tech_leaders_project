@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 const sections = [
   { title: "Users", description: "Mentors, mentees and administrators.", href: "/admin/users" },
   { title: "Invitations", description: "Invite mentors by link.", href: "/admin/invitations" },
+  { title: "Audit log", description: "Who changed roles, deleted users and invited mentors.", href: "/admin/audit" },
   { title: "Mentors", description: "Profiles, verification and visibility." },
   { title: "Sessions", description: "Bookings, availability and calendar." },
   { title: "Payments", description: "Payouts, refunds and disputes." },

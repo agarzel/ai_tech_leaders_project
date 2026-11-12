@@ -101,6 +101,7 @@ Import paths are under `@devmentor/ui/`. Use by path, never a barrel. Base UI pa
 | AccountMenu | `components/auth/AccountMenu` | The account area of AppHeader. | Profile and prices: the `/mentor/profile` page. A menu for one or two items: the inline links here. |
 | InvitationLinkPanel | `components/mentors/InvitationLinkPanel` | Right after an invitation is created, until Done. | The always-available share link: CopyField on `/mentor`. An old invitation's link: it cannot be shown. |
 | InvitationStatusBadge | `components/mentors/InvitationStatusBadge` | Rows of `/admin/invitations`. | Booking statuses: BookingStatusBadge. A status that needs an action: a sentence and a button. |
+| AuditLogTable | `components/audit/AuditLogTable` | The list on `/admin/audit`. | Anything that is not the audit log: DataTable with its own columns. |
 | TagList | `components/mentors/TagList` | MentorCard and the mentor's profile. | Choosing tags: checkboxes in MentorProfileForm. Statuses: Badge. Skill levels, years, counts: nothing. |
 | PublicWorkLinks | `components/mentors/PublicWorkLinks` | MentorCard (inline) and the mentor's profile; up to five https links. | Star ratings, review counts, "Top rated": nothing. In-app navigation: RoleNav, ItemLink. |
 | PriceList | `components/mentors/PriceList` | The mentor's profile and MentorCard. | The price of one chosen booking: BookingSummary. Entering prices: MentorProfileForm. |

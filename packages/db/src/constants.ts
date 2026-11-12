@@ -1,5 +1,11 @@
 // Entry point safe for client bundles: constants only, nothing that imports @mikro-orm/*.
 export { USER_ROLES, type UserRole } from "./entities/auth/user.constants";
+export {
+  AUDIT_ACTIONS,
+  AUDIT_ACTOR_KINDS,
+  type AuditAction,
+  type AuditActorKind,
+} from "./entities/audit/audit.constants";
 
 // Bookable text-session lengths in minutes (R01).
 export const SESSION_LENGTHS = [25, 50] as const;

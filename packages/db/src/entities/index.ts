@@ -1,3 +1,4 @@
+import { AuditEvent } from "./audit/audit-event.entity";
 import { Slot } from "./availability/slot.entity";
 import { User } from "./auth/user.entity";
 import { Booking } from "./bookings/booking.entity";
@@ -7,6 +8,8 @@ import { MentorProfile } from "./mentors/mentor-profile.entity";
 import { Message } from "./sessions/message.entity";
 import { SessionNote } from "./sessions/session-note.entity";
 
+export { AuditEvent, type IAuditEvent } from "./audit/audit-event.entity";
+export { AUDIT_ACTIONS, AUDIT_ACTOR_KINDS, type AuditAction, type AuditActorKind } from "./audit/audit.constants";
 export { Slot, SLOT_STATUSES, type ISlot, type SlotStatus } from "./availability/slot.entity";
 export {
   Booking,
@@ -38,4 +41,4 @@ export {
 } from "./sessions/session-note.entity";
 
 // Every entity must be listed here – discovery is explicit so it works inside the Next.js bundle.
-export const entities = [User, MentorInvitation, MentorProfile, Slot, Booking, Payment, Message, SessionNote];
+export const entities = [AuditEvent, User, MentorInvitation, MentorProfile, Slot, Booking, Payment, Message, SessionNote];

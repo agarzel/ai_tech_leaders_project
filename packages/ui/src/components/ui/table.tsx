@@ -8,9 +8,16 @@ import { cn } from "@devmentor/ui/lib/utils"
 // on hover and in the footer instead of a /50 tint (B62, consistent with Item's row hover and
 // Button's ghost/outline hover), motion-reduce for the colour transition (B16). Scope: admin's
 // tabular lists (S21) – product lists use the dense Item row, not Table.
-function Table({ className, ...props }: React.ComponentProps<"table">) {
+// scrollLabel: a table with nothing focusable in it (read-only, no row actions) still has to be scrollable by
+// keyboard when it overflows (axe scrollable-region-focusable), so its container becomes a named, focusable region.
+function Table({ className, scrollLabel, ...props }: React.ComponentProps<"table"> & { scrollLabel?: string }) {
+  const region = scrollLabel ? { role: "region", "aria-label": scrollLabel, tabIndex: 0 } : {}
   return (
-    <div data-slot="table-container" className="relative w-full overflow-x-auto">
+    <div
+      data-slot="table-container"
+      className="relative w-full overflow-x-auto rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      {...region}
+    >
       <table data-slot="table" className={cn("w-full caption-bottom type-body", className)} {...props} />
     </div>
   )

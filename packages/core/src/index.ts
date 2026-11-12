@@ -4,7 +4,7 @@ export { createRequestScope, getContainer, type AppContainer } from "./container
 export type { Cradle } from "./container/cradle";
 export { realClock, type Clock } from "./clock";
 export { apiHandler, CLIENT_HEADER, type ApiResult, type HandlerArgs, type RouteContext } from "./http/apiHandler";
-export type { CrudService, Page, PageQuery } from "./http/crud";
+export type { CrudContext, CrudService, Page, PageQuery } from "./http/crud";
 export { parseJsonBody, parseOrThrow } from "./http/body";
 export { assertOwner, requireAdmin, requireRole, requireSession, type Session } from "./http/auth";
 export { SWEEP_SECRET_MIN_LENGTH, SWEEP_TOKEN_HEADER, verifySweepSecret } from "./http/sweep-auth";
@@ -19,6 +19,7 @@ export { logger, type Logger } from "./logger";
 export { RateLimiter, type RateLimitCheck, type RateLimiterOptions } from "./rate-limiter";
 export { AuthService, LOGIN_RATE_LIMIT, PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH, type SessionUserDto } from "./services/auth/auth.service";
 export { UserService, type UserDto } from "./services/auth/user.service";
+export { AuditService, type AuditEntry, type AuditEventDto, type AuditUserRef } from "./services/audit/audit.service";
 export {
   SLOT_GRID_MINUTES,
   SLOT_HORIZON_DAYS,

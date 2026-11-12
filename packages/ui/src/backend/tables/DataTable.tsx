@@ -35,6 +35,8 @@ type DataTableProps<T> = {
   emptyDescription?: string;
   pagination?: DataTablePagination;
   rowActions?: (row: T) => ReactNode;
+  /** Names the scrollable table region and makes it keyboard-focusable – needed when rows hold nothing focusable. */
+  scrollLabel?: string;
 };
 
 /** Column-config-driven list with built-in loading/error/empty states, pagination and row actions. */
@@ -49,6 +51,7 @@ export function DataTable<T>({
   emptyDescription,
   pagination,
   rowActions,
+  scrollLabel,
 }: DataTableProps<T>) {
   if (error) {
     return typeof error === "string" ? (
@@ -63,7 +66,7 @@ export function DataTable<T>({
   return (
     <div className="flex flex-col gap-in-group">
       <div className="rounded-lg border" aria-busy={isLoading}>
-        <Table>
+        <Table scrollLabel={scrollLabel}>
           <TableHeader>
             <TableRow>
               {columns.map((column) => (
