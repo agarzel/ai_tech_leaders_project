@@ -1,0 +1,106 @@
+name: Release
+
+# Run by hand from main after the release PR (CHANGELOG.md entry, UPGRADE_NOTES.md section and, for a new version,
+# `npm run release:bump -- <major|minor|patch|x.y.z>`) is merged. It tags the merged commit and
+# publishes a GitHub Release from the CHANGELOG.md entry. Re-running after a half-finished run (tag pushed, release
+# missing) finishes the release instead of failing; an existing release is never overwritten.
+# It never commits to a branch – its only writes are the vX.Y.Z tag and the GitHub Release.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (x.y.z). Leave empty to release the version in package.json."
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Tag and publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release only from main
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::Releases are cut from main, not ${GITHUB_REF}."
+          exit 1
+
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Check versions and extract release notes
+        id: notes
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          version=$(node scripts/release.mjs notes ${INPUT_VERSION:+"$INPUT_VERSION"} --out "$RUNNER_TEMP/notes.md")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Releasing $version from $GITHUB_SHA"
+
+      - name: CI must be green on this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          conclusion=$(gh run list --workflow ci.yml --commit "$GITHUB_SHA" --event push --status completed \
+            --limit 1 --json conclusion --jq '.[0].conclusion // ""')
+          if [ "$conclusion" != "success" ]; then
+            echo "::error::The last completed CI push run on $GITHUB_SHA is '${conclusion:-missing}', not success."
+            exit 1
+          fi
+
+      - name: Refuse to overwrite, detect recovery
+        id: state
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.notes.outputs.version }}
+        run: |
+          tag="v$VERSION"
+          # Only a 404 means "no release yet"; any other API failure stops the run instead of being read as absent.
+          if gh api "repos/$GITHUB_REPOSITORY/releases/tags/$tag" --silent 2>"$RUNNER_TEMP/release-check.err"; then
+            echo "::error::Release $tag already exists. Bump the version in a PR to release again."
+            exit 1
+          elif ! grep -q "HTTP 404" "$RUNNER_TEMP/release-check.err"; then
+            echo "::error::Could not check for an existing release: $(cat "$RUNNER_TEMP/release-check.err")"
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null; then
+            tagged=$(git rev-list -n 1 "$tag")
+            if [ "$tagged" != "$GITHUB_SHA" ]; then
+              echo "::error::Tag $tag points at $tagged, not $GITHUB_SHA. Delete it by hand only if it was never published."
+              exit 1
+            fi
+            echo "Recovery: $tag already points at this commit, publishing the missing release."
+            echo "tagged=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "tagged=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Tag
+        if: steps.state.outputs.tagged == 'false'
+        env:
+          VERSION: ${{ steps.notes.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$VERSION" -m "DevMentor $VERSION"
+          git push origin "v$VERSION"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.notes.outputs.version }}
+        run: |
+          gh release create "v$VERSION" --verify-tag --title "DevMentor $VERSION" --notes-file "$RUNNER_TEMP/notes.md"
+          echo "Published $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/v$VERSION" >> "$GITHUB_STEP_SUMMARY"

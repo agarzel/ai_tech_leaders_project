@@ -199,3 +199,13 @@ Per-IP limits (registration, login, invitation preview) key on the client addres
 
 - Put the app behind exactly the number of proxies you configure, each appending the client address (nginx: `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;`). One proxy → keep the default; a CDN in front of nginx → `TRUSTED_PROXY_HOPS=2`.
 - Do not publish port 3000 directly on a public host: without a proxy, a client-supplied `x-forwarded-for` is trusted and the limits can be bypassed (threat model T-03, `docs/security/threat-model.md`).
+
+## Releasing
+
+Versions follow semver, and every release is a git tag `vX.Y.Z` with a GitHub Release. What changed is in [CHANGELOG.md](CHANGELOG.md), and what an installation has to do is in [UPGRADE_NOTES.md](UPGRADE_NOTES.md).
+
+1. **Release PR.** On a branch, add the `# X.Y.Z (YYYY-MM-DD)` entry to `CHANGELOG.md` (`/om-auto-update-changelog`) and a section to `UPGRADE_NOTES.md`. For a new version, also run `npm run release:bump -- <major|minor|patch|X.Y.Z>`, which sets every `package.json`, the pinned `@devmentor/*` dependencies and `package-lock.json`. `npm run release:notes` shows the entry the release will publish and fails when a manifest or the changelog is out of step.
+2. **Merge** it once CI is green.
+3. **Run the Release workflow** (Actions → Release → Run workflow, on `main`). It checks that CI passed on that commit and that the version is not released yet, then tags the commit and publishes the GitHub Release. If a run stops after pushing the tag, running it again finishes the release.
+
+To get back to a released version, run `git checkout vX.Y.Z` and follow the rollback steps in `UPGRADE_NOTES.md`.

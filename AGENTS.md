@@ -68,6 +68,8 @@ npm run lint:tokens            # design tokens: no colour literals or palette cl
 npm run docs:design-system     # regenerate the component tables in .ai/docs/design-system.md from packages/ui/.storybook/blocks/components-data.ts
 npm run docs:design-system:check  # fail when those tables are stale (CI "Design tokens" job)
 npm run check:agents           # fail when AGENTS.md files exceed their budget, a routed path is missing or a CLAUDE.md is not just the import
+npm run release:bump -- minor  # set a new version in every package.json + lockfile (on a release branch; see README "Releasing")
+npm run release:notes          # check versions and print the CHANGELOG.md entry the Release workflow will publish
 npm run db:migrate             # apply pending migrations
 npm run db:migration:create    # generate a migration from entity changes
 npm run db:migration:check     # fail if entities and migrations are out of sync
