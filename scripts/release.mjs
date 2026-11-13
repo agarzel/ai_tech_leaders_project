@@ -12,6 +12,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SEMVER = /^(\d+)\.(\d+)\.(\d+)$/;
+const RELEASE_HEADING = /^# (\d+\.\d+\.\d+) \(\d{4}-\d{2}-\d{2}\)\s*$/;
 const DEPENDENCY_FIELDS = ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"];
 
 export class ReleaseError extends Error {}
@@ -91,8 +92,8 @@ export function bump(root, target) {
 /** The CHANGELOG.md entry for `version`: its heading and everything up to the next release heading or `---`. */
 export function changelogEntry(changelog, version) {
   const lines = changelog.split("\n");
-  const heading = new RegExp(`^# ${version.replaceAll(".", "\\.")} \\(\\d{4}-\\d{2}-\\d{2}\\)\\s*$`);
-  const start = lines.findIndex((line) => heading.test(line));
+  // A fixed pattern and a plain string comparison: the version never becomes part of a regular expression.
+  const start = lines.findIndex((line) => RELEASE_HEADING.exec(line)?.[1] === version);
   if (start === -1) throw new ReleaseError(`CHANGELOG.md has no "# ${version} (YYYY-MM-DD)" entry`);
   const rest = lines.slice(start + 1);
   const end = rest.findIndex((line) => /^# \d+\.\d+\.\d+ /.test(line) || line.trim() === "---");

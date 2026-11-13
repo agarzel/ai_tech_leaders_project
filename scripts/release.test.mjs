@@ -166,6 +166,12 @@ describe("changelogEntry", () => {
 
   it("does not match a version that only looks similar", () => {
     expect(() => changelogEntry("# 0x1x0 (2026-11-13)\n", "0.1.0")).toThrow(/no "# 0\.1\.0 \(YYYY-MM-DD\)" entry/);
+    expect(() => changelogEntry(CHANGELOG, "0.1")).toThrow(ReleaseError);
+  });
+
+  it("treats the version as text, never as a pattern", () => {
+    expect(() => changelogEntry(CHANGELOG, ".*")).toThrow(ReleaseError);
+    expect(() => changelogEntry(CHANGELOG, "0.1.0|0.2.0")).toThrow(ReleaseError);
   });
 });
 
