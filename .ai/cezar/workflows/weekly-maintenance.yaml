@@ -1,0 +1,124 @@
+version: 2
+name: weekly-maintenance
+description: Weekly audit of the last 7 days of merged PRs, documentation drift, context checks, Dependabot
+  PRs and dead code. Ends with a PR or an issue; merging stays with a human. Adapted from lesson 25 for
+  DevMentor.
+nodes:
+  - id: start
+    type: start
+  - id: audit
+    name: Audit of the week's changes
+    type: agent
+    prompt: >
+      Inventory the knowledge artefacts touched by pull requests merged to main in the last 7 days, and
+      the artefacts that describe the code those PRs changed: AGENTS.md and packages/*/AGENTS.md,
+      .ai/specs/ (incl. implemented/ and research/decisions/), .ai/skills/, .ai/lessons.md, .ai/docs/,
+      README.md, UPGRADE_NOTES.md, SDLC.md, CODE_REVIEW.md, BACKWARD_COMPATIBILITY.md and docs/.
+
+      For every spec set its status: fully implemented, partially implemented, not implemented or
+      abandoned. Find contradictions between documents and between a document and the code.
+
+      Base every finding on evidence: file and line in the document, and file, line and commit in the
+      code. Without evidence write "not determined".
+
+      Compare with the newest report in .ai/maintenance/: which contradictions are new and which are
+      gone (match them by id).
+
+      Save everything in .ai/maintenance/YYYY-MM-DD-audit.md. Change nothing else. Never read .env files.
+  - id: drift
+    name: Documentation drift
+    type: agent
+    prompt: >
+      Take the contradictions in today's report in .ai/maintenance/ for which the true version is
+      established. Fix the documents that contradict it, in one separate PR. Do not change code and do
+      not change the content of specs in .ai/specs/implemented/ or .ai/specs/archive/.
+
+      Move specs the report marks as fully implemented to .ai/specs/implemented/ with git mv and fix the
+      references to them. A spec replaced by a newer one gets only one "Superseded by" line under its
+      title.
+
+      List contradictions without a resolution in the PR description as decisions for the team.
+  - id: reviews
+    name: Context check
+    type: agent
+    prompt: >
+      Run npm run check:agents, npm run docs:design-system:check and npm run lint:tokens, and collect all
+      errors and warnings. Open or update one issue listing the files to fix, with a reason for each. Fix
+      nothing yourself.
+  - id: dependencies
+    name: Dependencies
+    type: agent
+    prompt: >
+      For open Dependabot PRs whose CI fails, read the changelog and migration notes. Fix the code without
+      disabling tests and without lowering the 100% coverage thresholds.
+
+      If you cannot get the tests green, commit nothing. Leave a comment on the PR: what you tried and
+      what needs deciding.
+  - id: dead-code
+    name: Dead code
+    type: agent
+    prompt: >
+      Run npx knip and npx jscpd packages scripts.
+
+      Remove only items that are certainly not used dynamically or from outside the repository (route
+      handlers, Next.js pages, Storybook stories and MikroORM migrations are entry points, not dead code).
+      Put doubtful items on a list for decision.
+
+      Describe the three largest duplicates in the PR; do not refactor them.
+  - id: verify
+    name: Tests and context check
+    type: check
+    command: npm run lint && npm run test:coverage && npm run check:agents
+  - id: verify-retry
+    type: loop
+    max: 2
+  - id: end
+    type: end
+    status: success
+edges:
+  - from: start.next
+    to: audit
+  - from: audit.done
+    to: drift
+  - from: drift.done
+    to: reviews
+  - from: reviews.done
+    to: dependencies
+  - from: dependencies.done
+    to: dead-code
+  - from: dead-code.done
+    to: verify
+  - from: verify.fail
+    to: verify-retry
+  - from: verify-retry.repeat
+    to: dead-code
+  - from: verify.pass
+    to: end
+layout:
+  start:
+    x: 32
+    y: 40
+  audit:
+    x: 188
+    y: 40
+  drift:
+    x: 518
+    y: 40
+  reviews:
+    x: 848
+    y: 40
+  dependencies:
+    x: 1179
+    y: 40
+  dead-code:
+    x: 0
+    y: 252
+  verify:
+    x: 362
+    y: 321
+  verify-retry:
+    x: 560
+    y: 462
+  end:
+    x: 580
+    y: 310

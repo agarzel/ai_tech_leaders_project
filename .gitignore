@@ -70,5 +70,6 @@ packages/ui/.storybook/public/prototypes/
 .ai/qa/test-env-build-cache.json
 .ai/qa/test-env-app.log
 
-# Cezar task worktrees and state (npx cezar-cli)
-.ai/cezar/
+# Cezar task worktrees and state (npx cezar-cli); workflow definitions are versioned (lesson 25)
+.ai/cezar/*
+!.ai/cezar/workflows/
