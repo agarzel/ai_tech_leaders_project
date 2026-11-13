@@ -5,13 +5,13 @@ Steps needed to move a running DevMentor installation from one release to the ne
 ## Every upgrade
 
 1. **Back up the database** before deploying: `pg_dump --format=custom "$DATABASE_URL" > devmentor-<old-version>.dump`.
-2. **Deploy the new image or tag**, then **apply migrations**: `npm run db:migrate`. Migrations are forward-only in normal operation, and each one ships a `down` method.
+2. **Deploy the new image or tag**, then **apply migrations**: `npm run db:migrate`. The app image ships only the server, so run this from a checkout of the release tag (`npm ci`) with `DATABASE_URL` pointing at the target database. Migrations are forward-only in normal operation, and each one ships a `down` method.
 3. **Check health**: `GET /api/health` must answer `{"status":"ok","database":"ok"}`.
 
 ### Rolling back
 
 1. Redeploy the previous tag (`git checkout v<old-version>` or the previous image).
-2. If the new release added migrations, either revert them (`npx mikro-orm migration:down` in `packages/db`, once per migration, newest first) or restore the dump from step 1 (`pg_restore --clean --dbname "$DATABASE_URL" devmentor-<old-version>.dump`).
+2. If the new release added migrations, either revert them (`npx mikro-orm migration:down` in `packages/db` of the new release's checkout, once per migration, newest first) or restore the dump from step 1 (`pg_restore --clean --dbname "$DATABASE_URL" devmentor-<old-version>.dump`).
 3. Restoring the dump discards data written after the backup. Prefer `migration:down` when the release's section below says its migrations are reversible.
 
 ---

@@ -7,6 +7,7 @@ import {
   applyVersion,
   bump,
   changelogEntry,
+  compareVersions,
   isEntryPoint,
   manifestPaths,
   nextVersion,
@@ -92,6 +93,15 @@ describe("nextVersion", () => {
   });
 });
 
+describe("compareVersions", () => {
+  it("compares numerically, part by part", () => {
+    expect(compareVersions("0.10.0", "0.9.9")).toBeGreaterThan(0);
+    expect(compareVersions("1.0.0", "1.0.0")).toBe(0);
+    expect(compareVersions("1.2.3", "1.2.4")).toBeLessThan(0);
+    expect(compareVersions("2.0.0", "10.0.0")).toBeLessThan(0);
+  });
+});
+
 describe("applyVersion", () => {
   it("leaves a manifest without a version field without one", () => {
     expect(applyVersion({ name: "x", dependencies: { a: "1" } }, new Set(["a"]), "2.0.0")).toEqual({
@@ -124,6 +134,13 @@ describe("bump", () => {
     expect(lock.packages[""].version).toBe("0.2.0");
     expect(lock.packages["packages/app"]).toMatchObject({ version: "0.2.0", dependencies: { "@devmentor/core": "0.2.0" } });
     expect(lock.packages["packages/app/node_modules/next"].version).toBe("16.0.0");
+  });
+
+  it("refuses a version that is not newer, and changes nothing", () => {
+    repo({ version: "0.2.0" });
+    expect(() => bump(root, "0.2.0")).toThrow(/0\.2\.0 is not newer than the current 0\.2\.0/);
+    expect(() => bump(root, "0.1.9")).toThrow(ReleaseError);
+    expect(read("package.json").version).toBe("0.2.0");
   });
 
   it("works without a lockfile", () => {
@@ -171,52 +188,58 @@ describe("releaseNotes", () => {
 
 describe("run", () => {
   let lines;
+  let errors;
   const log = (line) => lines.push(line);
+  const warn = (line) => errors.push(line);
 
   beforeEach(() => {
     lines = [];
+    errors = [];
   });
 
   it("bumps and prints the new version", () => {
     repo();
-    expect(run(["bump", "patch"], root, log)).toBe(0);
+    expect(run(["bump", "patch"], root, log, warn)).toBe(0);
     expect(lines).toEqual(["0.1.1"]);
   });
 
   it("prints the notes", () => {
     repo();
-    expect(run(["notes"], root, log)).toBe(0);
+    expect(run(["notes"], root, log, warn)).toBe(0);
     expect(lines[0]).toContain("# 0.1.0 (2026-11-13)");
   });
 
   it("writes the notes to a file and prints only the version", () => {
     repo({ version: "0.2.0" });
     const out = path.join(root, "notes.md");
-    expect(run(["notes", "--out", out, "0.2.0"], root, log)).toBe(0);
+    expect(run(["notes", "--out", out, "0.2.0"], root, log, warn)).toBe(0);
     expect(lines).toEqual(["0.2.0"]);
     expect(readFileSync(out, "utf8")).toContain("New thing");
   });
 
   it("reports a missing --out file name", () => {
     repo();
-    expect(run(["notes", "--out"], root, log)).toBe(1);
-    expect(lines).toEqual(["release: --out needs a file name"]);
+    expect(run(["notes", "--out"], root, log, warn)).toBe(1);
+    expect(run(["notes", "--out", "--other"], root, log, warn)).toBe(1);
+    expect(errors).toEqual(["release: --out needs a file name", "release: --out needs a file name"]);
+    expect(lines).toEqual([]);
   });
 
   it("reports release problems with exit code 1", () => {
     repo({ changelog: "# Changelog\n" });
-    expect(run(["notes"], root, log)).toBe(1);
-    expect(lines[0]).toMatch(/^release: CHANGELOG\.md has no/);
+    expect(run(["notes"], root, log, warn)).toBe(1);
+    expect(errors[0]).toMatch(/^release: CHANGELOG\.md has no/);
+    expect(lines).toEqual([]);
   });
 
   it("prints usage for an unknown command", () => {
-    expect(run(["publish"], root, log)).toBe(2);
-    expect(run(["bump"], root, log)).toBe(2);
-    expect(lines[0]).toMatch(/^Usage:/);
+    expect(run(["publish"], root, log, warn)).toBe(2);
+    expect(run(["bump"], root, log, warn)).toBe(2);
+    expect(errors[0]).toMatch(/^Usage:/);
   });
 
   it("rethrows unexpected errors", () => {
-    expect(() => run(["notes"], path.join(root, "missing"), log)).toThrow(/ENOENT/);
+    expect(() => run(["notes"], path.join(root, "missing"), log, warn)).toThrow(/ENOENT/);
   });
 });
 

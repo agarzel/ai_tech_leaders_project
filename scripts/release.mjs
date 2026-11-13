@@ -28,6 +28,12 @@ export function nextVersion(current, target) {
   throw new ReleaseError(`"${target}" is not major, minor, patch or x.y.z`);
 }
 
+/** Negative, zero or positive, like a sort comparator, for two x.y.z versions. */
+export function compareVersions(a, b) {
+  const [left, right] = [a, b].map((version) => version.split(".").map(Number));
+  return left[0] - right[0] || left[1] - right[1] || left[2] - right[2];
+}
+
 /** package.json paths relative to `root`: the root manifest first, then one per workspace under packages/. */
 export function manifestPaths(root) {
   const packages = path.join(root, "packages");
@@ -62,6 +68,9 @@ export function bump(root, target) {
   const files = manifestPaths(root);
   const manifests = files.map((file) => readJson(root, file));
   const version = nextVersion(manifests[0].version, target);
+  if (compareVersions(version, manifests[0].version) <= 0) {
+    throw new ReleaseError(`${version} is not newer than the current ${manifests[0].version}`);
+  }
   const names = new Set(manifests.map((manifest) => manifest.name));
 
   files.forEach((file, index) => writeJson(root, file, applyVersion(manifests[index], names, version)));
@@ -102,7 +111,8 @@ export function releaseNotes(root, version) {
   return { version: expected, notes: changelogEntry(readFileSync(path.join(root, "CHANGELOG.md"), "utf8"), expected) };
 }
 
-export function run(argv, root = ROOT, log = console.log) {
+// Results go to stdout (the workflow captures it), problems and usage to stderr so they show in the job log.
+export function run(argv, root = ROOT, log = console.log, warn = console.error) {
   const [command, ...args] = argv;
   try {
     if (command === "bump" && args.length === 1) {
@@ -112,7 +122,7 @@ export function run(argv, root = ROOT, log = console.log) {
     if (command === "notes") {
       const outIndex = args.indexOf("--out");
       const out = outIndex === -1 ? undefined : args[outIndex + 1];
-      if (outIndex !== -1 && !out) throw new ReleaseError("--out needs a file name");
+      if (outIndex !== -1 && (!out || out.startsWith("-"))) throw new ReleaseError("--out needs a file name");
       const rest = outIndex === -1 ? args : args.filter((_, index) => index !== outIndex && index !== outIndex + 1);
       const { version, notes } = releaseNotes(root, rest[0]);
       if (out) {
@@ -123,11 +133,11 @@ export function run(argv, root = ROOT, log = console.log) {
       }
       return 0;
     }
-    log("Usage: node scripts/release.mjs bump <major|minor|patch|x.y.z> | notes [x.y.z] [--out <file>]");
+    warn("Usage: node scripts/release.mjs bump <major|minor|patch|x.y.z> | notes [x.y.z] [--out <file>]");
     return 2;
   } catch (error) {
     if (!(error instanceof ReleaseError)) throw error;
-    log(`release: ${error.message}`);
+    warn(`release: ${error.message}`);
     return 1;
   }
 }

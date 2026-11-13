@@ -1,9 +1,10 @@
 name: Release
 
 # Run by hand from main after the release PR (CHANGELOG.md entry, UPGRADE_NOTES.md section and, for a new version,
-# `npm run release:bump -- <major|minor|patch|x.y.z>`) is merged. It never commits: it tags the merged commit and
+# `npm run release:bump -- <major|minor|patch|x.y.z>`) is merged. It tags the merged commit and
 # publishes a GitHub Release from the CHANGELOG.md entry. Re-running after a half-finished run (tag pushed, release
 # missing) finishes the release instead of failing; an existing release is never overwritten.
+# It never commits to a branch – its only writes are the vX.Y.Z tag and the GitHub Release.
 on:
   workflow_dispatch:
     inputs:
@@ -66,8 +67,12 @@ jobs:
           VERSION: ${{ steps.notes.outputs.version }}
         run: |
           tag="v$VERSION"
-          if gh release view "$tag" >/dev/null 2>&1; then
+          # Only a 404 means "no release yet"; any other API failure stops the run instead of being read as absent.
+          if gh api "repos/$GITHUB_REPOSITORY/releases/tags/$tag" --silent 2>"$RUNNER_TEMP/release-check.err"; then
             echo "::error::Release $tag already exists. Bump the version in a PR to release again."
+            exit 1
+          elif ! grep -q "HTTP 404" "$RUNNER_TEMP/release-check.err"; then
+            echo "::error::Could not check for an existing release: $(cat "$RUNNER_TEMP/release-check.err")"
             exit 1
           fi
           if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null; then
