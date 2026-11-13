@@ -38,7 +38,7 @@ Each package exposes only what its `package.json` `exports` map lists:
 
 ### 4. Configuration and environment
 
-- Environment variables: `DATABASE_URL`, `AUTH_SECRET`, `NODE_ENV`, `LOG_LEVEL`, `PAYMENTS_PROVIDER` (`stripe` or `fake`; `fake` refused in production), `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` (required for `stripe`), `SWEEP_SECRET` (at least 32 characters), `APP_URL` (validated in `packages/core/src/config/env.ts`), `POSTGRES_USER`/`POSTGRES_PASSWORD`/`POSTGRES_DB` (compose), `NEXT_DIST_DIR`, `INTEGRATION_APP_PORT`, `PORT`; `DEVMENTOR_PASSWORD` (read only by `auth:set-password`, never stored).
+- Environment variables: `DATABASE_URL`, `AUTH_SECRET`, `NODE_ENV`, `LOG_LEVEL`, `PAYMENTS_PROVIDER` (`stripe` or `fake`; `fake` refused in production), `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` (required for `stripe`), `SWEEP_SECRET` (at least 32 characters), `APP_URL`, `TRUSTED_PROXY_HOPS` (validated in `packages/core/src/config/env.ts`), `RUN_MIGRATIONS` (image entrypoint, `docker/entrypoint.sh`), `POSTGRES_USER`/`POSTGRES_PASSWORD`/`POSTGRES_DB` (compose), `NEXT_DIST_DIR`, `INTEGRATION_APP_PORT`, `PORT`; `DEVMENTOR_PASSWORD` (read only by `auth:set-password`, never stored).
 - `.env.example`, `docker-compose.yml` service names (`app`, `db`) and the single root `.env` convention.
 - `.ai/agentic.config.json` – read by every `om-*` skill.
 - **Breaking:** renaming or removing a variable, making an optional one required, changing defaults that alter behaviour, renaming compose services.
@@ -46,7 +46,7 @@ Each package exposes only what its `package.json` `exports` map lists:
 
 ### 5. Developer commands
 
-Root npm scripts are used by CI, the validation gate, docs and agents: `setup`, `dev`, `build`, `start`, `lint`, `typecheck`, `test`, `test:coverage`, `test:watch`, `test:integration`, `test:integration:setup`, `db:migrate`, `db:migration:create`, `db:migration:check`, `db:seed`, `auth:set-password`, `storybook`, `build-storybook`, `test:storybook`, `lint:tokens`, `docs:design-system`, `docs:design-system:check`, `check:agents`.
+Root npm scripts are used by CI, the validation gate, docs and agents: `setup`, `dev`, `build`, `start`, `lint`, `typecheck`, `test`, `test:coverage`, `test:watch`, `test:integration`, `test:integration:setup`, `db:migrate`, `db:migration:create`, `db:migration:check`, `db:seed`, `auth:set-password`, `storybook`, `build-storybook`, `test:storybook`, `lint:tokens`, `docs:design-system`, `docs:design-system:check`, `check:agents`, `release:bump`, `release:notes`, `db:up`, `db:down`.
 
 - **Breaking:** renaming or removing a script, or changing what it checks so that it proves less.
 - **Required path:** update `.github/workflows/ci.yml`, `.ai/agentic.config.json`, `SDLC.md`, `AGENTS.md` and README in the same PR.

@@ -25,7 +25,7 @@ We build the app like a framework: reusable components and endpoints, no duplica
 - **Next.js 16** (App Router) + **React 19** + **TypeScript**
 - **PostgreSQL 17** + **MikroORM 7** (entities, migrations, connection pooling)
 - **Awilix** – dependency injection container
-- **Tailwind CSS 4** on public pages, **shadcn/ui** in the admin panel
+- **Tailwind CSS 4** and **shadcn/ui** on every page, through the DevMentor design system in `@devmentor/ui`
 - **Monorepo** – npm workspaces, packages `app`, `core`, `db`, `ui` in `packages/`
 - **ESLint**, **Vitest**, **GitHub Actions** (CI), **Docker**
 
@@ -38,7 +38,7 @@ packages/
   app/    @devmentor/app   Next.js: pages and API endpoints (src/app)
   core/   @devmentor/core  business logic: Awilix container, services, HTTP layer, validators
   db/     @devmentor/db    MikroORM: entities, migrations (the only package that touches @mikro-orm)
-  ui/     @devmentor/ui    shadcn/ui components and admin building blocks
+  ui/     @devmentor/ui    design system: tokens, shadcn/ui components, panel building blocks, Storybook
 .ai/                       specs, AI run logs, lessons learned, documentation (docs/)
 ```
 
@@ -157,7 +157,7 @@ npm run test:coverage    # tests + coverage report (coverage/index.html)
 npm run test:watch       # watch mode
 ```
 
-The `core`, `db` and `ui` packages must have **100% unit test coverage** – CI rejects a PR if coverage drops. Tests live next to the code (`*.test.ts` / `*.test.tsx`).
+The `core`, `db` and `ui` packages and the repo `scripts/` must have **100% unit test coverage** – CI rejects a PR if coverage drops. Tests live next to the code (`*.test.ts` / `*.test.tsx`).
 
 ### Integration tests
 

@@ -15,7 +15,7 @@ Review in this order and report findings in the same order:
 
 ## Validation gate
 
-The PR must pass, in order: `npm run lint`, `npm run typecheck`, `npm run test:coverage`, `npm run build`, `npm run test:integration` (the same list as `.ai/agentic.config.json`). CI additionally runs the migrations check (`db:migrate` on an empty database + `db:migration:check`) and builds the Docker image. A red or missing required check is a **blocker**, reported together with the code findings.
+The PR must pass, in order: `npm run lint`, `npm run typecheck`, `npm run test:coverage`, `npm run build`, `npm run lint:tokens`, `npm run docs:design-system:check`, `npm run check:agents`, `npm run build-storybook`, `npm run test:storybook`, `npm run test:integration` (the same list as `.ai/agentic.config.json` and `SDLC.md`; CI runs them across its jobs).
 
 ## Repo-specific checks
 
@@ -57,7 +57,7 @@ The PR must pass, in order: `npm run lint`, `npm run typecheck`, `npm run test:c
 
 ### Tests
 
-- `core`, `db` and `ui` keep 100% unit coverage (statements, branches, functions, lines). Lowering thresholds, adding coverage-ignore comments or widening the coverage `exclude` list is a **blocker**.
+- `core`, `db`, `ui` and `scripts/` keep 100% unit coverage (statements, branches, functions, lines). Lowering thresholds, adding coverage-ignore comments or widening the coverage `exclude` list is a **blocker**.
 - Tests are colocated (`*.test.ts(x)`), test behaviour through the public API and mock only boundaries.
 - A new page or user-facing flow comes with an integration test of its main path and a screenshot (`packages/app/tests/integration/`).
 - A bug fix ships with a regression test that fails without the fix.

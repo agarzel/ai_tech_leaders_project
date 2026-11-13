@@ -14,7 +14,7 @@ Domain code is not organized into `modules/`. Each concept (`auth`, `mentors`, `
 
 Create a concept folder only when its first file is added – never scaffold empty ones. This is a directory convention, not a module runtime: there is no per-concept setup/ACL/auto-discovery. Infrastructure that is not a domain concept lives in `system` (e.g. `services/system/health.service.ts`).
 
-Event IDs follow `concept.entity.action` (e.g. `bookings.booking.created`) and are emitted through the typed emitter in `packages/core/src/events`, registered on the `Cradle` – in-process only; there is no queue/worker in this project.
+Event IDs follow `concept.entity.action` (e.g. `bookings.booking.created`) and will be emitted through a typed emitter in `packages/core/src/events`, registered on the `Cradle` – in-process only; there is no queue/worker in this project. The emitter does not exist yet: no concept emits events so far (`BACKWARD_COMPATIBILITY.md` "No events are emitted yet").
 
 ## Reusable API and UI layer
 

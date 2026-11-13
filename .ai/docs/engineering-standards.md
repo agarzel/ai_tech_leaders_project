@@ -1,7 +1,7 @@
 > **Adaptations for this repository (2026-10-13)** – read together with the original below:
 >
 > - Next.js 16 with Cache Components: `export const dynamic = "force-dynamic"` is not used. Code that touches the database calls `await connection()` (from `next/server`) and, in pages, sits inside `<Suspense>`. The app still builds and boots without a database.
-> - MikroORM 7: entities are written with `defineEntity` (no decorators); `base.entity.ts` exports shared properties instead of a base class. There is no `define.ts`.
+> - MikroORM 7: entities are written with `defineEntity` (no decorators); `base.entity.ts` exports shared properties instead of a base class, and every entity goes through `defineSingletonEntity` in `define.ts` (see `packages/db/AGENTS.md`).
 > - Items that refer to code from the course bootstrap that does not exist here yet (`mentor-profile.entity.ts`, `user.service.ts`, `/admin/users`, `withScope`, `env.ts`, `logger.ts`, `docs/product-scope.md`) are created when the corresponding step is implemented – see `.ai/specs/implemented/2026-10-13-engineering-standards.md`.
 > - Request scope helper is `createRequestScope()` from `@devmentor/core` (the course calls it `withScope`).
 
@@ -123,7 +123,7 @@ a dumping ground):
   a **port interface in `core`**, with a mock/in-memory adapter for MVP and a real
   adapter (Stripe, etc.) added later without touching callers — this is required by
   UC04/UC06's "Stripe adapter" stretch goal and keeps `db`/`core` free of vendor SDKs.
-- Domain events use a **lightweight typed emitter in `core/src/events`**, registered
+- Domain events will use a **lightweight typed emitter in `core/src/events`** (not built yet – see step 4 of the build order), registered
   as a singleton in the `Cradle` — not a queue. Background workers/queues are
   explicitly out of scope for MVP; events are for in-process side effects (logging,
   triggering a message, cache invalidation) only.
@@ -318,7 +318,7 @@ When asked to scaffold a new domain concept (e.g., "add reviews"):
    class in `container.ts` (`asClass(...).scoped()`) and its type in `cradle.ts`.
 3. Add shared validation at `packages/core/src/validators/<concept>/<name>-<action>.schema.ts`
    — this is not optional once there's a create/update input to validate.
-4. If the concept emits domain events, add them to `core/src/events` using the
+4. If the concept emits domain events, add them to `core/src/events` (create it with the first event – it does not exist yet) using the
    `concept.entity.action` naming and emit from the service after a successful
    mutation.
 5. Add the HTTP surface in `packages/app/src/app/api/<concept>/route.ts`:
@@ -366,7 +366,7 @@ setup/ACL/auto-discovery. See `.ai/docs/engineering-standards.md` for the full
 naming table and the payments-port/event-emitter patterns.
 
 Event IDs follow `concept.entity.action` (e.g. `bookings.booking.created`) and are
-emitted through the typed emitter in `packages/core/src/events`, registered on the
+emitted through the typed emitter in `packages/core/src/events` (not built yet), registered on the
 `Cradle` — this is in-process only; there is no queue/worker in this project.
 
 ### Reusable API & UI layer

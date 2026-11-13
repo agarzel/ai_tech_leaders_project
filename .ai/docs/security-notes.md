@@ -1,6 +1,6 @@
 # Security notes (lesson 9 homework)
 
-Date: 2026-10-24. Scope: this repository and the local Claude Code setup. No secret values are recorded here.
+Date: 2026-10-24 – **dated snapshot**: skill counts and the sandbox status below describe that day (the sandbox is configured since #63; see `.claude/settings.json`). Scope: this repository and the local Claude Code setup. No secret values are recorded here.
 
 ## 1. Audit of agent configuration
 - Project agent config: `.claude/settings.json` (shared, now with deny rules and a PreToolUse hook), `.claude/settings.local.json` (personal, git-ignored), `.claude/skills/` (44 skills, all `om-*` or course skills, installed from a pinned source).
