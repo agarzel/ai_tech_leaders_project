@@ -1,8 +1,31 @@
+# Local stack and the Dokploy/Coolify deployment (README "Deploying"). `migrate` applies pending migrations once per
+# `up` and exits; the app starts only after it succeeded.
+x-database-url: &database-url postgres://${POSTGRES_USER:?set it in .env (npm run setup copies .env.example)}:${POSTGRES_PASSWORD:?set it in .env (npm run setup copies .env.example)}@db:5432/${POSTGRES_DB:?set it in .env (npm run setup copies .env.example)}
+
 services:
+  migrate:
+    build: .
+    image: devmentor:local
+    command: ["devmentor-migrate"]
+    environment:
+      DATABASE_URL: *database-url
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+
   app:
     build: .
+    image: devmentor:local
     ports:
       - "3000:3000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     environment:
       AUTH_SECRET: ${AUTH_SECRET}
       PAYMENTS_PROVIDER: ${PAYMENTS_PROVIDER}
@@ -10,13 +33,17 @@ services:
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       SWEEP_SECRET: ${SWEEP_SECRET}
       APP_URL: ${APP_URL}
-      DATABASE_URL: postgres://${POSTGRES_USER:?set it in .env (npm run setup copies .env.example)}:${POSTGRES_PASSWORD:?set it in .env (npm run setup copies .env.example)}@db:5432/${POSTGRES_DB:?set it in .env (npm run setup copies .env.example)}
+      TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-1}
+      DATABASE_URL: *database-url
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   db:
     image: postgres:17-alpine
+    restart: unless-stopped
     environment:
       # No defaults: credentials come from .env only, never from this file (threat model T-11).
       POSTGRES_USER: ${POSTGRES_USER:?set it in .env (npm run setup copies .env.example)}

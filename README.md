@@ -175,8 +175,7 @@ Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 App and database together:
 
 ```bash
-docker compose up --build
-npm run db:migrate          # on first start – creates the tables (from the host, via localhost:5432)
+docker compose up --build   # the one-off `migrate` service applies migrations, then the app starts
 ```
 
 - app: [http://localhost:3000](http://localhost:3000)
@@ -199,6 +198,37 @@ Per-IP limits (registration, login, invitation preview) key on the client addres
 
 - Put the app behind exactly the number of proxies you configure, each appending the client address (nginx: `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;`). One proxy → keep the default; a CDN in front of nginx → `TRUSTED_PROXY_HOPS=2`.
 - Do not publish port 3000 directly on a public host: without a proxy, a client-supplied `x-forwarded-for` is trusted and the limits can be bypassed (threat model T-03, `docs/security/threat-model.md`).
+
+## Deploying
+
+The image (`Dockerfile`) is the unit of deployment. Besides the server, it ships `devmentor-migrate`, which applies pending migrations using `DATABASE_URL`. Every environment needs the variables listed in [UPGRADE_NOTES.md](UPGRADE_NOTES.md#010-2026-11-13), a scheduler for the sweep, and a payments webhook. In production the app refuses `PAYMENTS_PROVIDER=fake`, so a demo environment uses Stripe **test-mode** keys.
+
+Ways to run migrations:
+
+- **One-off command:** `devmentor-migrate`, as a pre-deploy command or a compose service. Use this for more than one instance.
+- **On start:** set `RUN_MIGRATIONS=true`, and the entrypoint migrates before starting the server (and refuses to start if a migration fails). Use this for a single instance (demo, staging).
+
+Health check: `GET /api/health`.
+
+### Dokploy or Coolify (Docker Compose)
+
+1. Create a Compose application from this repository; it uses `docker-compose.yml`.
+2. Set the environment in the platform: the `POSTGRES_*` credentials, `AUTH_SECRET`, `SWEEP_SECRET`, `APP_URL` (the public https URL), `PAYMENTS_PROVIDER=stripe`, `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`.
+3. Attach a domain to the `app` service on port 3000. The platform's proxy (Traefik) is the one proxy in front of the app, so keep `TRUSTED_PROXY_HOPS=1`.
+4. Deploy. `migrate` runs first and `app` starts after it succeeds; the app container's health check calls `/api/health`.
+
+### Railway
+
+The app runs as one service built from the `Dockerfile`, next to a Railway PostgreSQL service:
+
+1. `railway login`, then `railway init` (or `railway link`) in the repo.
+2. Add PostgreSQL (`railway add --database postgres`) and an app service from this repository.
+3. On the app service, set:
+   - `DATABASE_URL=${{Postgres.DATABASE_URL}}` (a reference variable, so the password never leaves Railway);
+   - `RUN_MIGRATIONS=true`, the secrets and `APP_URL` (the generated `*.up.railway.app` domain).
+   - Set secrets in the dashboard or with `railway variables --set`; never paste them into an agent prompt.
+4. Generate a domain (`railway domain`) and set the health check path to `/api/health`.
+5. Turn on PR environments in the project settings to get a preview deployment per pull request.
 
 ## Releasing
 
