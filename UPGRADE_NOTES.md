@@ -43,4 +43,4 @@ First release, so there is no earlier version to upgrade from. A fresh installat
 curl -fsS -X POST -H "x-sweep-token: $SWEEP_SECRET" -H "x-devmentor-client: 1" "$APP_URL/api/system/sweep"
 ```
 
-**Payments webhook:** point the provider at `POST /api/payments/webhook`.
+**Payments webhook:** point the provider at `POST /api/payments/webhook`. For Stripe, subscribe to `checkout.session.completed` and `refund.updated`.

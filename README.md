@@ -219,16 +219,32 @@ Health check: `GET /api/health`.
 
 ### Railway
 
-The app runs as one service built from the `Dockerfile`, next to a Railway PostgreSQL service:
+The demo environment runs three services in one Railway project: the app (built from the `Dockerfile`), PostgreSQL, and a `sweep` cron job.
 
-1. `railway login`, then `railway init` (or `railway link`) in the repo.
-2. Add PostgreSQL (`railway add --database postgres`) and an app service from this repository.
-3. On the app service, set:
+1. **Project:** `railway login`, then `railway init` (or `railway link`) in the repo.
+2. **Database:** `railway add --database postgres`. Leave its TCP proxy off, so the database is reachable only inside the project.
+3. **App service**, from this repository or uploaded with `railway up`. Set:
    - `DATABASE_URL=${{Postgres.DATABASE_URL}}` (a reference variable, so the password never leaves Railway);
-   - `RUN_MIGRATIONS=true`, the secrets and `APP_URL` (the generated `*.up.railway.app` domain).
-   - Set secrets in the dashboard or with `railway variables --set`; never paste them into an agent prompt.
-4. Generate a domain (`railway domain`) and set the health check path to `/api/health`.
-5. Turn on PR environments in the project settings to get a preview deployment per pull request.
+   - `RUN_MIGRATIONS=true`, `PAYMENTS_PROVIDER=stripe` and `APP_URL` (the generated `*.up.railway.app` domain);
+   - `AUTH_SECRET`, `SWEEP_SECRET`, `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` in the dashboard, or piped in with `railway variables --set-from-stdin <KEY>`. Never paste secrets into an agent prompt.
+
+   Changes to variables are staged until you press **Deploy** on the canvas.
+4. **Domain and health:** `railway domain --port 3000`, and set the health check path to `/api/health`.
+5. **Stripe webhook** (test mode): create a webhook endpoint at `$APP_URL/api/payments/webhook` that listens to `checkout.session.completed` and `refund.updated`, the only events the app acts on. Put its signing secret in `STRIPE_WEBHOOK_SECRET`.
+6. **Sweep:** add a service from the image `curlimages/curl` with these variables:
+   - `SWEEP_SECRET=${{devmentor.SWEEP_SECRET}}`
+   - `APP_URL=${{devmentor.APP_URL}}`
+
+   In its Settings, set **Cron Schedule** to `*/5 * * * *` and **Custom Start Command** to:
+   `sh -c 'curl -fsS -X POST -H "x-sweep-token: $SWEEP_SECRET" -H "x-devmentor-client: 1" "$APP_URL/api/system/sweep"'`
+7. **First admin:** register on `/register` with your own e-mail and password. Then promote the account inside the database container as one non-interactive command:
+
+   ```bash
+   railway ssh -s Postgres -- 'psql -U postgres -d railway -P pager=off -c "update users set role = '"'"'admin'"'"' where email = '"'"'<you>'"'"'"'
+   ```
+
+   It should print `UPDATE 1`. Pass the SQL with `-c` like this, because pasting into an interactive `psql` over `railway ssh` delivers bracketed-paste escape codes, not the text. Then sign out and back in. The audit log does not record this one bootstrap step. Later role changes go through the admin panel.
+8. **Pull request previews:** install the Railway GitHub app for the repository, connect the app service to it, and turn on PR environments in the project settings.
 
 ## Releasing
 
