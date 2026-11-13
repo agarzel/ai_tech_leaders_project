@@ -210,12 +210,15 @@ jobs:
     runs-on: ubuntu-latest
     # Smoke test of the image we deploy: migrations run from the image on an empty database, then the server starts
     # with production settings and reports a healthy database.
+    # Throwaway database: the password is generated per run, never a literal in the repo (Sonar secrets rule).
+    env:
+      DB_PASSWORD: ci-${{ github.run_id }}-${{ github.run_attempt }}
     services:
       postgres:
         image: postgres:17-alpine
         env:
           POSTGRES_USER: devmentor
-          POSTGRES_PASSWORD: devmentor
+          POSTGRES_PASSWORD: ci-${{ github.run_id }}-${{ github.run_attempt }}
           POSTGRES_DB: devmentor
         ports:
           - 5432:5432
@@ -238,10 +241,13 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Database URL for this run
+        run: echo "DATABASE_URL=postgres://devmentor:${DB_PASSWORD}@127.0.0.1:5432/devmentor" >> "$GITHUB_ENV"
+
       - name: Migrations run from the image
         run: |
           docker run --rm --network host \
-            -e DATABASE_URL=postgres://devmentor:devmentor@127.0.0.1:5432/devmentor \
+            -e DATABASE_URL \
             devmentor:ci devmentor-migrate
 
       - name: Server starts and reports a healthy database
@@ -249,7 +255,7 @@ jobs:
         # payment call is made by the health check).
         run: |
           docker run -d --name app --network host \
-            -e DATABASE_URL=postgres://devmentor:devmentor@127.0.0.1:5432/devmentor \
+            -e DATABASE_URL \
             -e AUTH_SECRET="$(openssl rand -base64 32)" -e SWEEP_SECRET="$(openssl rand -base64 32)" \
             -e APP_URL=http://127.0.0.1:3000 -e PAYMENTS_PROVIDER=stripe \
             -e STRIPE_SECRET_KEY=sk_test_placeholder -e STRIPE_WEBHOOK_SECRET=whsec_placeholder \
