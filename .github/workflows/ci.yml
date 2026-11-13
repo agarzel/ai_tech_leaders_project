@@ -208,6 +208,25 @@ jobs:
   docker:
     name: Docker image
     runs-on: ubuntu-latest
+    # Smoke test of the image we deploy: migrations run from the image on an empty database, then the server starts
+    # with production settings and reports a healthy database.
+    # Throwaway database reachable only on this runner: no credential at all (trust auth), so none lives in the repo.
+    env:
+      DATABASE_URL: postgres://devmentor@127.0.0.1:5432/devmentor
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: devmentor
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: devmentor
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U devmentor -d devmentor"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v7
 
@@ -217,6 +236,31 @@ jobs:
         with:
           context: .
           push: false
+          load: true
           tags: devmentor:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Migrations run from the image
+        run: |
+          docker run --rm --network host \
+            -e DATABASE_URL \
+            devmentor:ci devmentor-migrate
+
+      - name: Server starts and reports a healthy database
+        # Throwaway values: random secrets per run, Stripe placeholders (production refuses the fake provider; no
+        # payment call is made by the health check).
+        run: |
+          docker run -d --name app --network host \
+            -e DATABASE_URL \
+            -e AUTH_SECRET="$(openssl rand -base64 32)" -e SWEEP_SECRET="$(openssl rand -base64 32)" \
+            -e APP_URL=http://127.0.0.1:3000 -e PAYMENTS_PROVIDER=stripe \
+            -e STRIPE_SECRET_KEY=sk_test_placeholder -e STRIPE_WEBHOOK_SECRET=whsec_placeholder \
+            -e RUN_MIGRATIONS=true \
+            devmentor:ci
+          for i in $(seq 1 30); do
+            if body=$(curl -fsS http://127.0.0.1:3000/api/health); then echo "$body"; break; fi
+            sleep 2
+          done
+          docker logs app
+          echo "$body" | grep -q '"database":"ok"'
