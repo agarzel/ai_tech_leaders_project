@@ -210,15 +210,15 @@ jobs:
     runs-on: ubuntu-latest
     # Smoke test of the image we deploy: migrations run from the image on an empty database, then the server starts
     # with production settings and reports a healthy database.
-    # Throwaway database: the password is generated per run, never a literal in the repo (Sonar secrets rule).
+    # Throwaway database reachable only on this runner: no credential at all (trust auth), so none lives in the repo.
     env:
-      DB_PASSWORD: ci-${{ github.run_id }}-${{ github.run_attempt }}
+      DATABASE_URL: postgres://devmentor@127.0.0.1:5432/devmentor
     services:
       postgres:
         image: postgres:17-alpine
         env:
           POSTGRES_USER: devmentor
-          POSTGRES_PASSWORD: ci-${{ github.run_id }}-${{ github.run_attempt }}
+          POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: devmentor
         ports:
           - 5432:5432
@@ -240,9 +240,6 @@ jobs:
           tags: devmentor:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Database URL for this run
-        run: echo "DATABASE_URL=postgres://devmentor:${DB_PASSWORD}@127.0.0.1:5432/devmentor" >> "$GITHUB_ENV"
 
       - name: Migrations run from the image
         run: |
