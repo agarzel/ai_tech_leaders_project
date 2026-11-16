@@ -4,7 +4,7 @@
 import type { ReactNode } from "react";
 import { composeStories } from "@storybook/react-vite";
 
-import { COMPONENTS, GROUPS, docsHref, type ComponentEntry, type ComponentGroup } from "./components-data";
+import { COMPONENTS, docsHref, type ComponentEntry, type ComponentGroup } from "./components-data";
 
 import * as ActiveFiltersS from "../../stories/blocks/ActiveFilters.stories";
 import * as AppHeaderS from "../../stories/blocks/AppHeader.stories";
@@ -337,6 +337,3 @@ export function ComponentCatalogue({ group }: { group: ComponentGroup }) {
     </Frame>
   );
 }
-
-/** Every group with its one-line intro, for the pages that list all of them. */
-export { GROUPS };
