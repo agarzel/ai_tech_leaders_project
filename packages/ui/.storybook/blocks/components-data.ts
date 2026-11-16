@@ -15,7 +15,7 @@ export type ComponentGroup =
   | "Session and aftermath (E03)";
 
 /** The Storybook section the component's page lives in (the first part of its story title). */
-export type ComponentSection = "Primitives" | "Primitives/Panel blocks" | "Product/E01" | "Product/E02" | "Product/E03";
+type ComponentSection = "Primitives" | "Primitives/Panel blocks" | "Product/E01" | "Product/E02" | "Product/E03";
 
 export type ComponentEntry = {
   name: string;
@@ -708,12 +708,12 @@ function sanitize(text: string): string {
 }
 
 /** The story title of the component's page, e.g. `Primitives/Panel blocks/CrudForm`. */
-export function pageTitle(entry: ComponentEntry): string {
+function pageTitle(entry: ComponentEntry): string {
   return `${entry.section}/${entry.pageName ?? entry.name}`;
 }
 
 /** The Storybook id of the component's documentation page. */
-export function docsId(entry: ComponentEntry): string {
+function docsId(entry: ComponentEntry): string {
   return `${sanitize(pageTitle(entry))}--docs`;
 }
 

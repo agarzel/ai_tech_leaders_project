@@ -4,11 +4,11 @@ const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 
 /** The thread stays readable for a day after the session ends (spec: Data Model, API Contracts). */
-export const THREAD_READ_GRACE_MS = DAY;
+const THREAD_READ_GRACE_MS = DAY;
 /** The mentee has this long to approve a draft note once the session has ended (spec: Open Question 4). */
-export const NOTE_APPROVAL_WINDOW_MS = 7 * DAY;
+const NOTE_APPROVAL_WINDOW_MS = 7 * DAY;
 /** Cancelling is free until this long before the session (R04). */
-export const FREE_CANCELLATION_LEAD_MS = 12 * HOUR;
+const FREE_CANCELLATION_LEAD_MS = 12 * HOUR;
 
 export type NoteStatus = "draft" | "approved" | "rejected";
 export type CancellationOutcome = "refunded" | "not_refunded";

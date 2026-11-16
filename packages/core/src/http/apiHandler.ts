@@ -10,7 +10,7 @@ export type ApiResult<T> =
   | { ok: true; data: T }
   | { ok: false; error: { code: string; message: string; fieldErrors?: FieldErrors } };
 
-export type RouteParams = Record<string, string | string[] | undefined>;
+type RouteParams = Record<string, string | string[] | undefined>;
 
 // Routes without dynamic segments may receive no params at all.
 export type RouteContext = { params?: Promise<RouteParams> };
