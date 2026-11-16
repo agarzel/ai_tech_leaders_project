@@ -7,7 +7,7 @@ Read this when writing or changing tests. Integration tests and Storybook story 
 
 - **Runner:** Vitest (`vitest.config.mts`, one project per package: `core` and `db` in Node, `ui` in jsdom with Testing Library, `scripts` in Node).
 - **Location:** colocated `<file>.test.ts(x)` next to the code it tests; repo scripts keep `<name>.test.mjs` next to `<name>.mjs`.
-- **Excluded from unit coverage (by design):** barrels (`src/index.ts`), type-only modules, generated shadcn primitives (`ui/src/components/ui/`), migrations (checked by the CI migrations job), and the Next.js app (`packages/app` – pages and route wiring are covered by integration tests).
+- **Excluded from unit coverage (by design):** barrels (`src/index.ts`), type-only modules (`core/src/container/cradle.ts`, `core/src/http/crud.ts`, `ui/src/backend/api/types.ts`), generated shadcn primitives (`ui/src/components/ui/`), migrations (checked by the CI migrations job), and the Next.js app (`packages/app` – pages and route wiring are covered by integration tests).
 - **Style:** test behaviour through the public API; mock only boundaries (database `EntityManager`, `fetch`, the container, env). Arrange / act / assert, one behaviour per test, descriptive names.
 - A bug fix ships with a regression test that fails without the fix.
 - `vi.mock` must be called at the top level of a test file (Vitest 5 throws otherwise); `clearMocks` is on by default.

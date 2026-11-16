@@ -8,7 +8,7 @@
  *   3. Component tokens: only where a component needs its own value (list row, message stream, control).
  *
  * Sources: lekcja-06/referencje.md (R…, A…, K…, P…) and lekcja-06/tokeny.md (T1–T16, accent),
- * owner decisions in .ai/specs/2026-10-19-design-system-storybook.md (P1, P2, P4).
+ * owner decisions in .ai/specs/implemented/2026-10-19-design-system-storybook.md (P1, P2, P4).
  * Contrast of every text and UI pair is measured in Storybook: Foundations/Color.
  */
 

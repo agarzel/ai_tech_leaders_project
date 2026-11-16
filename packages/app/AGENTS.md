@@ -32,7 +32,7 @@ next.config.ts        transpilePackages for @devmentor/*, MikroORM server extern
 - Client components fetch only through `apiCall` from `@devmentor/ui/backend/api/apiCall`, never raw `fetch`.
 - Get services from a request scope: `const { healthService } = (await createRequestScope()).cradle;` (`createRequestScope` from `@devmentor/core`).
 - Cache Components: code that reads the database or request data calls `await connection()` (from `next/server`) first; in pages such components sit inside `<Suspense>` so the static shell can be prerendered. Do not use `export const dynamic`.
-- Pages: `<segment>/page.tsx` with a default export named `<Segment>Page`. Persona route groups (`(marketing)`, `(auth)`, `(student)`, `(mentor)`) are created with their first page.
+- Pages: `<segment>/page.tsx` with a default export named `<Segment>Page`. Persona route groups: `(public)`, `(auth)`, `(mentee)`, `(mentor)`; `admin/` sits outside the groups. Add a new group with its first page.
 - UI: admin pages use `@devmentor/ui` components (`@devmentor/ui/components/ui/<name>`); public pages use Tailwind with the design-system pieces (`PageLayout`, `AppHeader`, `type-*` roles, semantic tokens) – no palette classes, gradients, shadows or emoji (`npm run lint:tokens` scans `packages/app/src`). `src/app/globals.css` holds the theme and `@source`s the ui package.
 
 ## Integration tests

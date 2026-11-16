@@ -1,7 +1,7 @@
 # SECURITY-007 – Admin and operator actions are audited, and only admins can read the log
 
 - **Area:** SECURITY · **Priority:** High · **Type:** UI + API
-- **Rule:** every role change, user delete, mentor invitation (and the invitations it revokes), CLI password set and failed login leaves one append-only `audit_events` row in the same flush as the change, with ids and roles only – no names, e-mails, passwords, tokens or IPs. Only admins can read it; nobody can change it over HTTP (threat model T-09; spec `.ai/specs/2026-11-11-audit-log.md`; route `api/admin/audit-events`).
+- **Rule:** every role change, user delete, mentor invitation (and the invitations it revokes), CLI password set and failed login leaves one append-only `audit_events` row in the same flush as the change, with ids and roles only – no names, e-mails, passwords, tokens or IPs. Only admins can read it; nobody can change it over HTTP (threat model T-09; spec `.ai/specs/implemented/2026-11-11-audit-log.md`; route `api/admin/audit-events`).
 - **Test:** [packages/app/tests/integration/audit-log.int.test.ts](../../../packages/app/tests/integration/audit-log.int.test.ts) › "records a role change, a delete and invitations made through the admin UI, and shows them in plain words", "records a failed login without the typed e-mail, and the visitor still sees the usual message", "writes no entry when the change itself fails in the database", "lets only an admin read the log, and nobody change it"
 
 ## Given
