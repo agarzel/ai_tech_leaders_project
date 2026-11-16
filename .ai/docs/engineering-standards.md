@@ -461,7 +461,7 @@ packages/
         apiHandler.ts                                # try/catch + envelope, once
         makeCrudRoute.ts                             # config-driven CRUD routes
         auth.ts                                      # requireSession/requireRole/ownership
-      events/
+      events/                                       # not built yet – created with the first event (§2, step 4)
         event-bus.ts                                # typed emitter, in-process only
         event-map.ts                                # `concept.entity.action` registry
       services/

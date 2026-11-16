@@ -100,5 +100,6 @@ docker compose up --build      # app + PostgreSQL in containers
 | Storybook story tests | `packages/ui/AGENTS.md` |
 | Tickets, PRs, QA, labels | `SDLC.md` |
 | Specs, runs, lessons | `.ai/docs/ai-folder.md` |
+| Knowledge audit, documentation drift | `.ai/docs/ai-folder.md`, then the newest report in `.ai/maintenance/` |
 | AI skills: install, update, override | `.ai/docs/ai-skills.md` |
 | Editing any `AGENTS.md` | Commands section, npm run check:agents (routes exist, root ≤ 150 lines, unit ≤ 120) |

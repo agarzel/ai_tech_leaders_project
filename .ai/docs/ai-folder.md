@@ -1,6 +1,6 @@
-# The `.ai` folder – specs, runs, docs, lessons
+# The `.ai` folder – specs, runs, docs, lessons, audits
 
-Read this when you write a spec, a run log or a lesson. All AI agents working in this repository MUST use these structures.
+Read this when you write a spec, a run log, a lesson or a knowledge audit. All AI agents working in this repository MUST use these structures.
 
 - `.ai/specs/` – specifications for spec-driven development (SDD).
   - File name: `YYYY-MM-DD-slug.md` (date the spec was created, short kebab-case slug).
@@ -14,5 +14,8 @@ Read this when you write a spec, a run log or a lesson. All AI agents working in
 - `.ai/skills/` – project-specific overrides of installed skills (same name as the skill they adapt); see `.ai/docs/ai-skills.md`.
 - `.ai/lessons.md` – short, durable lessons learned (bugs found, gotchas, conventions discovered). Append an entry after fixing a bug, after a correction from the user, or whenever something is worth remembering long term.
   - `.ai/lessons/` – longer write-ups; link them from `lessons.md`.
+- `.ai/maintenance/` – dated knowledge audits (`YYYY-MM-DD-audit.md`): spec status against the code, contradictions between documents and code with stable ids (S-*, C-*, N-*), and decisions for the team. Each audit compares itself with the previous one by id. Written by the `weekly-maintenance` workflow.
+- `.ai/cezar/workflows/` – versioned workflow definitions for the cezar cockpit (e.g. `weekly-maintenance.yaml`); the rest of `.ai/cezar/` (task worktrees, runs, state) is gitignored.
+- `.ai/qa/` – QA scenarios and evidence per area (e.g. `SECURITY/`, `BOOKINGS/`, `SESSION/`) and the QA knowledge base.
 
 Use today's date in file names. Never delete specs, runs or lessons – move them instead.
