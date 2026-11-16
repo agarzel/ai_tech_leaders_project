@@ -20,7 +20,7 @@ Steps needed to move a running DevMentor installation from one release to the ne
 
 First release, so there is no earlier version to upgrade from. A fresh installation needs the following.
 
-**Environment** (validated at startup in `packages/core/src/config/env.ts`; the app refuses to start when a variable is missing or invalid):
+**Environment** (validated in `packages/core/src/config/env.ts` when the container is first built, i.e. on the first request: the server process starts, but every request fails – and the compose health check with it – when a variable is missing or invalid). The table lists the variables the app reads; the deploy paths also need `RUN_MIGRATIONS` (image entrypoint) and, with `docker-compose.yml`, `POSTGRES_USER`/`POSTGRES_PASSWORD`/`POSTGRES_DB` – see [BACKWARD_COMPATIBILITY.md](BACKWARD_COMPATIBILITY.md) §4 for the full list:
 
 | Variable | Required | Notes |
 |---|---|---|
@@ -33,7 +33,7 @@ First release, so there is no earlier version to upgrade from. A fresh installat
 | `TRUSTED_PROXY_HOPS` | no (default `1`) | Number of proxies in front of the app (see README, "Deploying behind a reverse proxy") |
 | `LOG_LEVEL` | no (default `info`) | |
 
-**Database:** run `npm run db:migrate` once. All 14 migrations of this release are reversible.
+**Database:** apply the migrations once – with the image, `devmentor-migrate` or `RUN_MIGRATIONS=true` (see "Every upgrade", step 2); from a checkout, `npm run db:migrate`. All 14 migrations of this release are reversible.
 
 **First admin:** `npm run auth:set-password -- --email <you> --admin`, with the password taken from `DEVMENTOR_PASSWORD` (never passed as an argument).
 

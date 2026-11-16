@@ -109,9 +109,9 @@ npm run dev
 
 The database listens on `localhost:5432`; the connection string is `DATABASE_URL` in `.env`.
 
-`AUTH_SECRET` in `.env` is required (at least 32 characters; the app refuses to start without it). Generate one with `openssl rand -base64 32`; never commit a real value.
+`AUTH_SECRET` in `.env` is required (at least 32 characters; without it every request fails – the environment is validated on the first request). Generate one with `openssl rand -base64 32`; never commit a real value.
 
-Payments are configured in `.env` too (all validated at startup; the app refuses to start when one is wrong):
+Payments are configured in `.env` too (validated together with the rest of the environment on the first request; every request fails when one is wrong):
 
 | Variable | Meaning |
 | --- | --- |
@@ -187,8 +187,10 @@ The app image alone, without the database:
 
 ```bash
 docker build -t devmentor .
-docker run -p 3000:3000 devmentor
+docker run -p 3000:3000 --env-file .env devmentor
 ```
+
+The container needs the environment (`DATABASE_URL`, `AUTH_SECRET`, `PAYMENTS_PROVIDER`, `SWEEP_SECRET`, `APP_URL` are required); without it every request fails. `DATABASE_URL` must point at a database the container can reach – `localhost` inside the container is the container itself.
 
 For day-to-day coding use `npm run dev` – on macOS it's faster than running the app in a container. Docker is for the database and for deployments.
 
@@ -201,7 +203,7 @@ Per-IP limits (registration, login, invitation preview) key on the client addres
 
 ## Deploying
 
-The image (`Dockerfile`) is the unit of deployment. Besides the server, it ships `devmentor-migrate`, which applies pending migrations using `DATABASE_URL`. Every environment needs the variables listed in [UPGRADE_NOTES.md](UPGRADE_NOTES.md#010-2026-11-13), a scheduler for the sweep, and a payments webhook. In production the app refuses `PAYMENTS_PROVIDER=fake`, so a demo environment uses Stripe **test-mode** keys.
+The image (`Dockerfile`) is the unit of deployment. Besides the server, it ships `devmentor-migrate`, which applies pending migrations using `DATABASE_URL`. Every environment needs the variables listed in [BACKWARD_COMPATIBILITY.md](BACKWARD_COMPATIBILITY.md) §4 (the app's own are in [UPGRADE_NOTES.md](UPGRADE_NOTES.md#010-2026-11-13); the deploy paths add `RUN_MIGRATIONS` and, for compose, the `POSTGRES_*` credentials), a scheduler for the sweep, and a payments webhook. In production the app refuses `PAYMENTS_PROVIDER=fake`, so a demo environment uses Stripe **test-mode** keys.
 
 Ways to run migrations:
 
@@ -230,7 +232,7 @@ The demo environment runs three services in one Railway project: the app (built 
 
    Changes to variables are staged until you press **Deploy** on the canvas.
 4. **Domain and health:** `railway domain --port 3000`, and set the health check path to `/api/health`.
-5. **Stripe webhook** (test mode): create a webhook endpoint at `$APP_URL/api/payments/webhook` that listens to `checkout.session.completed` and `refund.updated`, the only events the app acts on. Put its signing secret in `STRIPE_WEBHOOK_SECRET`.
+5. **Stripe webhook** (test mode): create a webhook endpoint at `$APP_URL/api/payments/webhook` that listens to `checkout.session.completed` and `refund.updated`. These two are enough; the app also maps `charge.refunded` to a refund update, so subscribing to it does no harm. Put its signing secret in `STRIPE_WEBHOOK_SECRET`.
 6. **Sweep:** add a service from the image `curlimages/curl` with these variables:
    - `SWEEP_SECRET=${{devmentor.SWEEP_SECRET}}`
    - `APP_URL=${{devmentor.APP_URL}}`
